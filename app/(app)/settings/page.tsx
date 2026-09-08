@@ -4,6 +4,7 @@ import { Hash, Lock } from "lucide-react";
 import { NotificationLevelControl } from "@/components/channel/notification-level";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { InvitePeople } from "@/components/settings/invite-people";
+import { NotificationSettings } from "@/components/settings/notifications";
 import { ThemePicker } from "@/components/settings/theme-picker";
 import { getInvites } from "@/lib/queries/invites";
 import { getJoinedChannels } from "@/lib/queries/channels";
@@ -52,6 +53,14 @@ export default async function SettingsPage() {
           <p className="mt-1 text-[13px] text-muted-foreground">Light and dark are both first-class. System follows your OS.</p>
           <div className="mt-4">
             <ThemePicker />
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
+          <h2 className="text-[16px] font-semibold tracking-tight">Notifications</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">Direct messages and mentions can reach you even when Commune isn&apos;t in front.</p>
+          <div className="mt-4">
+            <NotificationSettings dndStart={profile.dnd_start} dndEnd={profile.dnd_end} timezone={profile.timezone} />
           </div>
         </section>
 

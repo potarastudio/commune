@@ -481,6 +481,8 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string
+          dnd_end: string | null
+          dnd_start: string | null
           email: string
           handle: string
           id: string
@@ -496,6 +498,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name: string
+          dnd_end?: string | null
+          dnd_start?: string | null
           email: string
           handle: string
           id: string
@@ -511,6 +515,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string
+          dnd_end?: string | null
+          dnd_start?: string | null
           email?: string
           handle?: string
           id?: string

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Notifier } from "@/components/notifications/notifier";
 import { PresenceProvider } from "@/components/presence/presence-provider";
 import { CommandPalette } from "@/components/search/command-palette";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -29,6 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <main className="flex min-w-0 flex-1 flex-col bg-background">{children}</main>
       <CommandPalette meId={profile.id} joinedChannelIds={channels.map((c) => c.id)} />
       <PresenceProvider meId={profile.id} />
+      <Notifier meId={profile.id} mutedChannelIds={channels.filter((c) => c.notification_level === "muted").map((c) => c.id)} />
     </div>
   );
 }

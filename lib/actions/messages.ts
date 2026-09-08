@@ -1,6 +1,8 @@
 "use server";
 
+import { after } from "next/server";
 import { z } from "zod";
+import { notifyForMessage } from "@/lib/push/notify";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   addReaction,
@@ -58,6 +60,7 @@ export async function sendMessageAction(input: {
       contentText: toContentText(content),
       attachments: parsed.data.attachments,
     });
+    after(() => notifyForMessage(row.id));
     return { ok: true, message: row };
   } catch (err) {
     return fail("sendMessageAction", err);
@@ -97,6 +100,7 @@ export async function sendReplyAction(input: {
       alsoSendToContainer: parsed.data.alsoSendToContainer,
       attachments: parsed.data.attachments,
     });
+    after(() => notifyForMessage(row.id));
     return { ok: true, message: row };
   } catch (err) {
     return fail("sendReplyAction", err);

@@ -64,3 +64,25 @@ export async function saveProfileAction(input: unknown): Promise<ProfileFormResu
   }
   return { ok: true };
 }
+
+const timeSchema = z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, "Use HH:MM.").nullable();
+
+/** Do Not Disturb hours, both or neither. */
+export async function saveDndAction(input: { dnd_start: string | null; dnd_end: string | null }): Promise<ProfileFormResult> {
+  const parsed = z.object({ dnd_start: timeSchema, dnd_end: timeSchema }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Use HH:MM." };
+  if (Boolean(parsed.data.dnd_start) !== Boolean(parsed.data.dnd_end)) return { ok: false, error: "Set both a start and an end time." };
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "You're signed out." };
+
+  const { error } = await supabase.from("profiles").update({ dnd_start: parsed.data.dnd_start, dnd_end: parsed.data.dnd_end }).eq("id", user.id);
+  if (error) {
+    console.error("saveDndAction", { code: error.code, message: error.message });
+    return { ok: false, error: "Couldn't save quiet hours. Try again." };
+  }
+  return { ok: true };
+}

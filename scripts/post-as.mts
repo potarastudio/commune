@@ -23,5 +23,11 @@ if (target.startsWith("dm:")) {
   const { data: ch } = await user.from("channels").select("id").eq("name", target).single();
   container = { kind: "channel", id: ch!.id };
 }
-const row = await insertMessage(user, { container, content: docFromText(text) as Record<string, unknown>, contentText: text });
+// MENTION_HANDLE=hakim prepends an @mention node so the mentions table gets a row.
+const content = docFromText(text) as { type: string; content: { type: string; content?: unknown[] }[] };
+if (process.env.MENTION_HANDLE) {
+  const { data: p } = await user.from("profiles").select("id, handle").eq("handle", process.env.MENTION_HANDLE).single();
+  content.content[0].content = [{ type: "mention", attrs: { id: p!.id, label: p!.handle } }, { type: "text", text: " " + text }];
+}
+const row = await insertMessage(user, { container, content: content as Record<string, unknown>, contentText: text });
 console.log(`posted ${row.id} to ${container.kind} ${container.id}`);

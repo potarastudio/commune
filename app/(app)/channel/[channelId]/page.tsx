@@ -3,12 +3,14 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { ChannelHeader } from "@/components/channel/channel-header";
 import { MessagePane } from "@/components/message/message-pane";
+import { ThreadPanel } from "@/components/thread/thread-panel";
 import { getChannel, getMemberCount, getMembership } from "@/lib/queries/channel";
 import { fetchMessages } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type Params = Promise<{ channelId: string }>;
+type Search = Promise<{ thread?: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { channelId } = await params;
@@ -18,8 +20,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return { title: channel ? `#${channel.name}` : "Channel" };
 }
 
-export default async function ChannelPage({ params }: { params: Params }) {
-  const { channelId } = await params;
+export default async function ChannelPage({ params, searchParams }: { params: Params; searchParams: Search }) {
+  const [{ channelId }, { thread }] = await Promise.all([params, searchParams]);
+  const threadId = thread && z.string().uuid().safeParse(thread).success ? thread : null;
   if (!z.string().uuid().safeParse(channelId).success) notFound();
 
   const supabase = await createSupabaseServerClient();
@@ -35,14 +38,18 @@ export default async function ChannelPage({ params }: { params: Params }) {
     fetchMessages(supabase, { kind: "channel", id: channelId }),
   ]);
 
+  const me = { id: profile.id, display_name: profile.display_name, handle: profile.handle, avatar_url: profile.avatar_url };
+  const canPost = membership !== null && !channel.is_archived;
+
   return (
     <>
       <ChannelHeader channel={channel} memberCount={memberCount} />
+      <div className="flex min-h-0 flex-1">
       <MessagePane
         container={{ kind: "channel", id: channel.id }}
-        me={{ id: profile.id, display_name: profile.display_name, handle: profile.handle, avatar_url: profile.avatar_url }}
+        me={me}
         isAdmin={profile.role === "admin"}
-        canPost={membership !== null && !channel.is_archived}
+        canPost={canPost}
         lastReadAt={membership?.last_read_at ?? null}
         initialPage={firstPage}
         placeholder={`Message #${channel.name}`}
@@ -60,6 +67,17 @@ export default async function ChannelPage({ params }: { params: Params }) {
           )
         }
       />
+      {threadId && (
+        <ThreadPanel
+          parentId={threadId}
+          container={{ kind: "channel", id: channel.id }}
+          containerLabel={`#${channel.name}`}
+          me={me}
+          isAdmin={profile.role === "admin"}
+          canPost={canPost}
+        />
+      )}
+      </div>
     </>
   );
 }

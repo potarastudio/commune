@@ -19,10 +19,13 @@ export function MessageComposer({
   draftKey,
   placeholder,
   onSend,
+  compact = false,
 }: {
   draftKey: string;
   placeholder: string;
   onSend: (content: JSONContent) => void;
+  /** Narrow layouts (thread panel): hide the keyboard hint. */
+  compact?: boolean;
 }) {
   const draft = useUiStore((s) => s.drafts[draftKey]);
   const setDraft = useUiStore((s) => s.setDraft);
@@ -120,7 +123,7 @@ export function MessageComposer({
             <TooltipContent side="top">{t.label}</TooltipContent>
           </Tooltip>
         ))}
-        <span className="ml-auto mr-1 hidden text-[11px] text-muted-foreground sm:block">
+        <span className={`ml-auto mr-1 text-[11px] text-muted-foreground ${compact ? "hidden" : "hidden sm:block"}`}>
           <kbd className="font-sans">Enter</kbd> to send · <kbd className="font-sans">Shift+Enter</kbd> for a new line
         </span>
         <Tooltip>
@@ -130,7 +133,7 @@ export function MessageComposer({
               aria-label="Send message"
               disabled={empty}
               onClick={submit}
-              className="grid size-7 place-items-center rounded-md bg-primary text-primary-foreground transition-colors hover:bg-primary-hover disabled:bg-muted disabled:text-muted-foreground"
+              className="ml-auto grid size-7 place-items-center rounded-md bg-primary text-primary-foreground transition-colors hover:bg-primary-hover disabled:bg-muted disabled:text-muted-foreground"
             >
               <SendHorizontal className="size-4" aria-hidden="true" />
             </button>

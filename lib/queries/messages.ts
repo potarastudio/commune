@@ -38,8 +38,12 @@ export type MessagePage = { messages: Message[]; nextCursor: string | null };
 export const MESSAGE_SELECT =
   "*, author:profiles!messages_author_id_fkey(id, display_name, handle, avatar_url), reactions(emoji, user_id), attachments(*)";
 
+export type Thread = { parent: Message; replies: Message[] };
+
 export const messageKeys = {
   container: (c: Container) => ["messages", c.kind, c.id] as const,
+  thread: (parentId: string) => ["thread", parentId] as const,
+  participants: (c: Container) => ["thread-participants", c.kind, c.id] as const,
 };
 
 function normalise(row: unknown): Message {
@@ -77,9 +81,51 @@ export async function fetchMessageById(supabase: Supabase, id: string): Promise<
   return data ? normalise(data) : null;
 }
 
+/** A thread: the parent plus every reply, oldest first. Threads are short, so no paging yet. */
+export async function fetchThread(supabase: Supabase, parentId: string): Promise<Thread | null> {
+  const [parent, replies] = await Promise.all([
+    fetchMessageById(supabase, parentId),
+    supabase
+      .from("messages")
+      .select(MESSAGE_SELECT)
+      .eq("parent_id", parentId)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(500),
+  ]);
+  if (replies.error) throw new Error(replies.error.message);
+  if (!parent) return null;
+  return { parent, replies: replies.data.map(normalise) };
+}
+
+/** Who has replied in each thread, for the avatar row under a parent. */
+export async function fetchReplyParticipants(supabase: Supabase, parentIds: string[]): Promise<Record<string, string[]>> {
+  if (parentIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from("messages")
+    .select("parent_id, author_id, created_at")
+    .in("parent_id", parentIds)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  const out: Record<string, string[]> = {};
+  for (const row of data) {
+    if (!row.parent_id) continue;
+    const list = (out[row.parent_id] ??= []);
+    if (!list.includes(row.author_id)) list.push(row.author_id);
+  }
+  return out;
+}
+
 export async function insertMessage(
   supabase: Supabase,
-  input: { container: Container; content: Record<string, unknown>; contentText: string; parentId?: string | null },
+  input: {
+    container: Container;
+    content: Record<string, unknown>;
+    contentText: string;
+    parentId?: string | null;
+    alsoSendToContainer?: boolean;
+  },
 ): Promise<MessageRow> {
   const { data, error } = await supabase.rpc("insert_message", {
     p_content: input.content as Json,
@@ -87,6 +133,7 @@ export async function insertMessage(
     p_conversation_id: input.container.kind === "conversation" ? input.container.id : undefined,
     p_content_text: input.contentText,
     p_parent_id: input.parentId ?? undefined,
+    p_also_send_to_container: input.alsoSendToContainer ?? false,
   });
   if (error) throw new Error(error.message);
   return data;

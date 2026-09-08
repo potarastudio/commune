@@ -43,6 +43,37 @@ export async function sendMessageAction(input: { container: Container; content: 
   }
 }
 
+/** A thread reply. The database function copies it into the container when asked ("also send to channel"). */
+export async function sendReplyAction(input: {
+  container: Container;
+  parentId: string;
+  content: unknown;
+  alsoSendToContainer: boolean;
+}): Promise<Result<MessageRow>> {
+  const parsed = z
+    .object({ container: containerSchema, parentId: uuid, content: tiptapDoc, alsoSendToContainer: z.boolean() })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false, error: "That reply couldn't be read." };
+
+  const content = parsed.data.content as Parameters<typeof toContentText>[0] & Record<string, unknown>;
+  if (isEmptyDoc(content)) return { ok: false, error: "Reply is empty." };
+  if (JSON.stringify(content).length > 40_000) return { ok: false, error: "Reply is too long." };
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const row = await insertMessage(supabase, {
+      container: parsed.data.container,
+      parentId: parsed.data.parentId,
+      content,
+      contentText: toContentText(content),
+      alsoSendToContainer: parsed.data.alsoSendToContainer,
+    });
+    return { ok: true, message: row };
+  } catch (err) {
+    return fail("sendReplyAction", err);
+  }
+}
+
 export async function toggleReactionAction(input: { messageId: string; emoji: string; remove: boolean }): Promise<Result> {
   const parsed = z.object({ messageId: uuid, emoji: z.string().min(1).max(64), remove: z.boolean() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: "That reaction couldn't be read." };

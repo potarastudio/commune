@@ -1,22 +1,26 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient, type InfiniteData, type QueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import type { JSONContent } from "@tiptap/core";
-import { deleteMessageAction, sendMessageAction, toggleReactionAction } from "@/lib/actions/messages";
+import { deleteMessageAction, sendMessageAction, sendReplyAction, toggleReactionAction } from "@/lib/actions/messages";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { subscribeToMessages } from "@/lib/realtime/messages";
+import { subscribeToMessages, subscribeToThread } from "@/lib/realtime/messages";
 import { toContentText } from "@/lib/utils/tiptap";
-import { fetchMessages, messageKeys, type Container, type Message, type MessageAuthor, type MessagePage } from "./messages";
+import { patchMessages } from "./message-cache";
+import {
+  fetchMessages,
+  fetchReplyParticipants,
+  fetchThread,
+  messageKeys,
+  type Container,
+  type Message,
+  type MessageAuthor,
+  type MessagePage,
+} from "./messages";
 
-type Cache = InfiniteData<MessagePage, string | null>;
-
-function patchCache(queryClient: QueryClient, container: Container, fn: (ms: Message[]) => Message[]) {
-  queryClient.setQueryData<Cache>(messageKeys.container(container), (old) =>
-    old ? { ...old, pages: old.pages.map((p) => ({ ...p, messages: fn(p.messages) })) } : old,
-  );
-}
+type MessageKey = readonly unknown[];
 
 /** Messages for a container: server-rendered first page, older pages on demand, realtime patches. */
 export function useMessages(container: Container, initialPage: MessagePage) {
@@ -42,60 +46,113 @@ export function useMessages(container: Container, initialPage: MessagePage) {
   return { ...query, messages };
 }
 
+/** The open thread: parent + replies, with its own realtime feed. */
+export function useThread(parentId: string) {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: messageKeys.thread(parentId),
+    queryFn: () => fetchThread(getSupabaseBrowserClient(), parentId),
+    staleTime: Infinity,
+  });
+  useEffect(() => subscribeToThread(parentId, queryClient), [parentId, queryClient]);
+  return query;
+}
+
+/** Reply author ids per parent, for the avatar row under threaded messages. */
+export function useReplyParticipants(container: Container, parentIds: string[]) {
+  const ids = [...parentIds].sort();
+  return useQuery({
+    queryKey: [...messageKeys.participants(container), ids.join(",")],
+    queryFn: () => fetchReplyParticipants(getSupabaseBrowserClient(), ids),
+    enabled: ids.length > 0,
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  });
+}
+
+function optimisticMessage(container: Container, me: MessageAuthor, content: JSONContent, tempId: string, parentId: string | null): Message {
+  return {
+    id: tempId,
+    channel_id: container.kind === "channel" ? container.id : null,
+    conversation_id: container.kind === "conversation" ? container.id : null,
+    author_id: me.id,
+    parent_id: parentId,
+    content: content as Message["content"],
+    content_text: toContentText(content),
+    search_vector: null,
+    reply_count: 0,
+    last_reply_at: null,
+    is_edited: false,
+    edited_at: null,
+    deleted_at: null,
+    created_at: new Date().toISOString(),
+    author: me,
+    reactions: [],
+    attachments: [],
+    pending: true,
+  };
+}
+
 export function useSendMessage(container: Container, me: MessageAuthor) {
   const queryClient = useQueryClient();
+  const key = messageKeys.container(container);
 
   return useMutation({
     mutationFn: async (vars: { content: JSONContent; tempId: string }) => sendMessageAction({ container, content: vars.content }),
-    onMutate: async ({ content, tempId }) => {
-      const optimistic: Message = {
-        id: tempId,
-        channel_id: container.kind === "channel" ? container.id : null,
-        conversation_id: container.kind === "conversation" ? container.id : null,
-        author_id: me.id,
-        parent_id: null,
-        content: content as Message["content"],
-        content_text: toContentText(content),
-        search_vector: null,
-        reply_count: 0,
-        last_reply_at: null,
-        is_edited: false,
-        edited_at: null,
-        deleted_at: null,
-        created_at: new Date().toISOString(),
-        author: me,
-        reactions: [],
-        attachments: [],
-        pending: true,
-      };
-      patchCache(queryClient, container, (ms) => [...ms, optimistic]);
-    },
+    onMutate: ({ content, tempId }) =>
+      patchMessages(queryClient, key, (ms) => [...ms, optimisticMessage(container, me, content, tempId, null)]),
     onSuccess: (result, { tempId }) => {
       if (!result.ok) throw new Error(result.error);
       const row = result.message;
-      patchCache(queryClient, container, (ms) => {
-        if (ms.some((m) => m.id === row.id)) return ms.filter((m) => m.id !== tempId);
-        return ms.map((m) => (m.id === tempId ? { ...m, ...row, pending: false } : m));
-      });
+      patchMessages(queryClient, key, (ms) =>
+        ms.some((m) => m.id === row.id) ? ms.filter((m) => m.id !== tempId) : ms.map((m) => (m.id === tempId ? { ...m, ...row, pending: false } : m)),
+      );
     },
     onError: (err, { tempId }) => {
-      patchCache(queryClient, container, (ms) => ms.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m)));
+      patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m)));
       toast.error("Message didn't send", { description: err instanceof Error ? err.message : "Try again." });
     },
   });
 }
 
-export function useToggleReaction(container: Container, userId: string) {
+export function useSendReply(container: Container, parentId: string, me: MessageAuthor) {
   const queryClient = useQueryClient();
-  const apply = (messageId: string, emoji: string, add: boolean) =>
-    patchCache(queryClient, container, (ms) =>
-      ms.map((m) => {
-        if (m.id !== messageId) return m;
-        return add
-          ? { ...m, reactions: [...m.reactions, { emoji, user_id: userId }] }
-          : { ...m, reactions: m.reactions.filter((r) => !(r.emoji === emoji && r.user_id === userId)) };
-      }),
-    );
+  const key = messageKeys.thread(parentId);
+
+  return useMutation({
+    mutationFn: async (vars: { content: JSONContent; tempId: string; alsoSendToContainer: boolean }) =>
+      sendReplyAction({ container, parentId, content: vars.content, alsoSendToContainer: vars.alsoSendToContainer }),
+    onMutate: ({ content, tempId }) =>
+      patchMessages(queryClient, key, (ms) => [...ms, optimisticMessage(container, me, content, tempId, parentId)]),
+    onSuccess: (result, { tempId }) => {
+      if (!result.ok) throw new Error(result.error);
+      const row = result.message;
+      patchMessages(queryClient, key, (ms) =>
+        ms.some((m) => m.id === row.id) ? ms.filter((m) => m.id !== tempId) : ms.map((m) => (m.id === tempId ? { ...m, ...row, pending: false } : m)),
+      );
+    },
+    onError: (err, { tempId }) => {
+      patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m)));
+      toast.error("Reply didn't send", { description: err instanceof Error ? err.message : "Try again." });
+    },
+  });
+}
+
+/** Reactions, optimistic. `keys` are every cache that may hold the message (list and open thread). */
+export function useToggleReaction(keys: MessageKey[], userId: string) {
+  const queryClient = useQueryClient();
+  const apply = (messageId: string, emoji: string, add: boolean) => {
+    for (const key of keys) {
+      patchMessages(queryClient, key, (ms) =>
+        ms.map((m) => {
+          if (m.id !== messageId) return m;
+          const has = m.reactions.some((r) => r.emoji === emoji && r.user_id === userId);
+          if (add) return has ? m : { ...m, reactions: [...m.reactions, { emoji, user_id: userId }] };
+          return { ...m, reactions: m.reactions.filter((r) => !(r.emoji === emoji && r.user_id === userId)) };
+        }),
+      );
+    }
+  };
 
   return useMutation({
     mutationFn: async (vars: { messageId: string; emoji: string; active: boolean }) =>
@@ -111,23 +168,22 @@ export function useToggleReaction(container: Container, userId: string) {
   });
 }
 
-export function useDeleteMessage(container: Container) {
+export function useDeleteMessage(keys: MessageKey[]) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (messageId: string) => deleteMessageAction({ messageId }),
     onMutate: (messageId) => {
-      const snapshot = queryClient.getQueryData<Cache>(messageKeys.container(container));
-      patchCache(queryClient, container, (ms) =>
-        ms.map((m) => (m.id === messageId ? { ...m, deleted_at: new Date().toISOString() } : m)),
-      );
-      return { snapshot };
+      const snapshots = keys.map((key) => [key, queryClient.getQueryData(key)] as const);
+      const now = new Date().toISOString();
+      for (const key of keys) patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === messageId ? { ...m, deleted_at: now } : m)));
+      return { snapshots };
     },
     onSuccess: (result) => {
       if (!result.ok) throw new Error(result.error);
     },
     onError: (err, _id, ctx) => {
-      if (ctx?.snapshot) queryClient.setQueryData(messageKeys.container(container), ctx.snapshot);
+      for (const [key, data] of ctx?.snapshots ?? []) queryClient.setQueryData(key, data);
       toast.error("Couldn't delete the message", { description: err instanceof Error ? err.message : "Try again." });
     },
   });

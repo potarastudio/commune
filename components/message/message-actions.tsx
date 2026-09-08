@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2, SmilePlus, Trash2 } from "lucide-react";
+import { Link2, MessageSquareText, SmilePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { QuickReactionPicker } from "./quick-reaction-picker";
@@ -29,11 +29,13 @@ export function MessageActions({
   canDelete,
   onReact,
   onDelete,
+  onReply,
 }: {
   messageId: string;
   canDelete: boolean;
   onReact: (emoji: string) => void;
   onDelete: () => void;
+  onReply?: () => void;
 }) {
   const copyLink = async () => {
     const url = `${window.location.origin}${window.location.pathname}?message=${messageId}`;
@@ -56,6 +58,11 @@ export function MessageActions({
           <SmilePlus className="size-4" aria-hidden="true" />
         </button>
       </QuickReactionPicker>
+      {onReply && (
+        <ActionButton label="Reply in thread" onClick={onReply}>
+          <MessageSquareText className="size-4" aria-hidden="true" />
+        </ActionButton>
+      )}
       <ActionButton label="Copy link" onClick={() => void copyLink()}>
         <Link2 className="size-4" aria-hidden="true" />
       </ActionButton>

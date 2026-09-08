@@ -6,9 +6,10 @@ import type { JSONContent } from "@tiptap/core";
 import { markReadAction } from "@/lib/actions/messages";
 import { MessageComposer } from "@/components/message/message-composer";
 import { MessageList } from "@/components/message/message-list";
-import type { Container, MessageAuthor, MessagePage } from "@/lib/queries/messages";
+import { messageKeys, type Container, type MessageAuthor, type MessagePage } from "@/lib/queries/messages";
 import { clearUnread } from "@/lib/queries/unreads";
-import { useDeleteMessage, useMessages, useSendMessage, useToggleReaction } from "@/lib/queries/use-messages";
+import { useDeleteMessage, useMessages, useReplyParticipants, useSendMessage, useToggleReaction } from "@/lib/queries/use-messages";
+import { useThreadNav } from "@/lib/utils/use-thread-nav";
 
 /** The message list + composer for any container. Channel and DM pages wrap it with their own header. */
 export function MessagePane({
@@ -37,8 +38,12 @@ export function MessagePane({
   const queryClient = useQueryClient();
   const { messages, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(container, initialPage);
   const send = useSendMessage(container, me);
-  const toggleReaction = useToggleReaction(container, me.id);
-  const del = useDeleteMessage(container);
+  const { openThreadId, openThread } = useThreadNav();
+  const keys = openThreadId ? [messageKeys.container(container), messageKeys.thread(openThreadId)] : [messageKeys.container(container)];
+  const toggleReaction = useToggleReaction(keys, me.id);
+  const del = useDeleteMessage(keys);
+  const threaded = messages.filter((m) => m.reply_count > 0).map((m) => m.id);
+  const { data: participants } = useReplyParticipants(container, threaded);
 
   // Unread tracking (§5): mark read while the pane is visible and the window is focused.
   const latestAt = messages.length ? messages[messages.length - 1].created_at : null;
@@ -68,7 +73,7 @@ export function MessagePane({
   );
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <MessageList
         messages={messages}
         me={me}
@@ -79,6 +84,8 @@ export function MessagePane({
         onLoadMore={() => void fetchNextPage()}
         onToggleReaction={(messageId, emoji, active) => toggleReaction.mutate({ messageId, emoji, active })}
         onDelete={(messageId) => del.mutate(messageId)}
+        onOpenThread={openThread}
+        participants={participants ?? {}}
         startTitle={startTitle}
         startBody={startBody}
         startIcon={container.kind}
@@ -90,6 +97,6 @@ export function MessagePane({
           <div className="rounded-lg border border-border bg-muted px-4 py-3 text-[13px]">{readOnlyNotice}</div>
         )}
       </div>
-    </>
+    </div>
   );
 }

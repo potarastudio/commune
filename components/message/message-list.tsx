@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Message, MessageAuthor } from "@/lib/queries/messages";
 import { formatDayLabel, sameDay, shouldGroup } from "@/lib/utils/time";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReplySummary } from "@/components/thread/reply-summary";
 import { DateDivider } from "./date-divider";
 import { MessageItem } from "./message-item";
 
@@ -18,6 +19,8 @@ export function MessageList({
   onLoadMore,
   onToggleReaction,
   onDelete,
+  onOpenThread,
+  participants,
   startTitle,
   startBody,
   startIcon = "channel",
@@ -31,6 +34,8 @@ export function MessageList({
   onLoadMore: () => void;
   onToggleReaction: (messageId: string, emoji: string, active: boolean) => void;
   onDelete: (messageId: string) => void;
+  onOpenThread: (messageId: string) => void;
+  participants: Record<string, string[]>;
   startTitle: string;
   startBody: string;
   startIcon?: "channel" | "conversation";
@@ -145,6 +150,17 @@ export function MessageList({
                 canDelete={m.author_id === me.id || isAdmin}
                 onToggleReaction={(emoji, active) => onToggleReaction(m.id, emoji, active)}
                 onDelete={() => onDelete(m.id)}
+                onReply={() => onOpenThread(m.id)}
+                replySummary={
+                  m.reply_count > 0 ? (
+                    <ReplySummary
+                      count={m.reply_count}
+                      lastReplyAt={m.last_reply_at}
+                      participantIds={participants[m.id] ?? []}
+                      onOpen={() => onOpenThread(m.id)}
+                    />
+                  ) : null
+                }
               />
             </div>
           );

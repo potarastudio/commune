@@ -15,6 +15,9 @@ export function MessageItem({
   canDelete,
   onToggleReaction,
   onDelete,
+  onReply,
+  replySummary,
+  inThread = false,
 }: {
   message: Message;
   grouped: boolean;
@@ -22,6 +25,9 @@ export function MessageItem({
   canDelete: boolean;
   onToggleReaction: (emoji: string, active: boolean) => void;
   onDelete: () => void;
+  onReply?: () => void;
+  replySummary?: React.ReactNode;
+  inThread?: boolean;
 }) {
   const author = message.author;
   const name = author?.display_name ?? "Unknown";
@@ -77,6 +83,7 @@ export function MessageItem({
         )}
 
         {!deleted && <ReactionBar reactions={message.reactions} meId={meId} onToggle={onToggleReaction} />}
+        {!inThread && replySummary}
       </div>
 
       {!deleted && !message.pending && !message.failed && (
@@ -87,6 +94,7 @@ export function MessageItem({
             onToggleReaction(emoji, message.reactions.some((r) => r.emoji === emoji && r.user_id === meId))
           }
           onDelete={onDelete}
+          onReply={inThread ? undefined : onReply}
         />
       )}
     </article>

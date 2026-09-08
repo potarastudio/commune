@@ -110,7 +110,8 @@ export function useSendMessage(container: Container, me: MessageAuthor) {
     },
     onError: (err, { tempId }) => {
       patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m)));
-      toast.error("Message didn't send", { description: err instanceof Error ? err.message : "Try again." });
+      toast.error("Message didn't send", { description: "It stays here so you can copy it. Try again in a moment." });
+      console.error("sendMessage", err);
     },
   });
 }
@@ -133,7 +134,8 @@ export function useSendReply(container: Container, parentId: string, me: Message
     },
     onError: (err, { tempId }) => {
       patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m)));
-      toast.error("Reply didn't send", { description: err instanceof Error ? err.message : "Try again." });
+      toast.error("Reply didn't send", { description: "It stays here so you can copy it. Try again in a moment." });
+      console.error("sendReply", err);
     },
   });
 }

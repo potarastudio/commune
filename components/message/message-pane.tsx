@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { markReadAction } from "@/lib/actions/messages";
@@ -36,6 +37,7 @@ export function MessagePane({
   readOnlyNotice?: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
+  const highlightId = useSearchParams().get("message");
   const { messages, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(container, initialPage);
   const send = useSendMessage(container, me);
   const { openThreadId, openThread } = useThreadNav();
@@ -86,13 +88,19 @@ export function MessagePane({
         onDelete={(messageId) => del.mutate(messageId)}
         onOpenThread={openThread}
         participants={participants ?? {}}
+        highlightId={highlightId}
         startTitle={startTitle}
         startBody={startBody}
         startIcon={container.kind}
       />
       <div className="shrink-0 px-5 pb-5 pt-1">
         {canPost ? (
-          <MessageComposer draftKey={`${container.kind}:${container.id}`} placeholder={placeholder} onSend={handleSend} />
+          <MessageComposer
+            draftKey={`${container.kind}:${container.id}`}
+            placeholder={placeholder}
+            onSend={handleSend}
+            allowBroadcast={container.kind === "channel"}
+          />
         ) : (
           <div className="rounded-lg border border-border bg-muted px-4 py-3 text-[13px]">{readOnlyNotice}</div>
         )}

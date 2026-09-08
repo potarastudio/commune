@@ -21,6 +21,7 @@ export function MessageList({
   onDelete,
   onOpenThread,
   participants,
+  highlightId,
   startTitle,
   startBody,
   startIcon = "channel",
@@ -36,6 +37,8 @@ export function MessageList({
   onDelete: (messageId: string) => void;
   onOpenThread: (messageId: string) => void;
   participants: Record<string, string[]>;
+  /** From ?message=<id>: scroll to it and flash it once. */
+  highlightId?: string | null;
   startTitle: string;
   startBody: string;
   startIcon?: "channel" | "conversation";
@@ -47,6 +50,19 @@ export function MessageList({
   const stickToBottom = useRef(true);
   const prevHeight = useRef(0);
   const prevFirstId = useRef<string | null>(null);
+  const highlighted = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!highlightId || highlighted.current === highlightId) return;
+    const el = document.getElementById(`message-${highlightId}`);
+    if (!el) return;
+    highlighted.current = highlightId;
+    stickToBottom.current = false;
+    el.scrollIntoView({ block: "center" });
+    el.classList.add("message-flash");
+    const t = setTimeout(() => el.classList.remove("message-flash"), 2500);
+    return () => clearTimeout(t);
+  }, [highlightId, messages]);
 
   // Initial render and new messages: stay pinned to the bottom unless the user scrolled up.
   useLayoutEffect(() => {

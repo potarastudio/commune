@@ -3,35 +3,55 @@
 import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Bold, Code, Italic, List, SendHorizontal, SquareCode, Strikethrough } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { AtSign, Bold, Code, Italic, List, SendHorizontal, SmilePlus, SquareCode, Strikethrough } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { EmojiSuggestion } from "@/lib/composer/emoji";
+import { BROADCAST_ITEMS, createMentionExtension, type MentionItem } from "@/lib/composer/mentions";
+import { useProfiles } from "@/lib/queries/profiles";
 import { useUiStore } from "@/lib/store/ui";
 import { isEmptyDoc } from "@/lib/utils/tiptap";
+import { EmojiPicker } from "./emoji-picker";
 
 /**
  * Tiptap composer (§5): bold/italic/strike/code/code block/links/bulleted
- * lists. Enter sends, Shift+Enter breaks a line (Enter inserts a newline
- * inside code blocks). Drafts persist per channel. Mentions and the emoji
- * picker plug in next.
+ * lists, @mention autocomplete, emoji picker and :shortcode: autocomplete.
+ * Enter sends, Shift+Enter breaks a line (Enter inserts a newline inside
+ * code blocks). Drafts persist per container.
  */
 export function MessageComposer({
   draftKey,
   placeholder,
   onSend,
   compact = false,
+  allowBroadcast = true,
 }: {
   draftKey: string;
   placeholder: string;
   onSend: (content: JSONContent) => void;
   /** Narrow layouts (thread panel): hide the keyboard hint. */
   compact?: boolean;
+  /** Offer @channel / @here (channels only). */
+  allowBroadcast?: boolean;
 }) {
   const draft = useUiStore((s) => s.drafts[draftKey]);
   const setDraft = useUiStore((s) => s.setDraft);
   const [empty, setEmpty] = useState(true);
   const onSendRef = useRef(onSend);
   onSendRef.current = onSend;
+
+  // Mention candidates come from the profiles cache; a ref keeps the extension stable.
+  const { data: profiles } = useProfiles();
+  const mentionItems = useMemo<MentionItem[]>(
+    () => [
+      ...(profiles ?? []).map((p) => ({ id: p.id, label: p.handle, name: p.display_name, avatar_url: p.avatar_url })),
+      ...(allowBroadcast ? BROADCAST_ITEMS : []),
+    ],
+    [profiles, allowBroadcast],
+  );
+  const mentionItemsRef = useRef(mentionItems);
+  mentionItemsRef.current = mentionItems;
+  const [mentionExtension] = useState(() => createMentionExtension(() => mentionItemsRef.current));
   // handleKeyDown is captured once by Tiptap, before the editor exists; always call the latest submit.
   const submitRef = useRef<() => void>(() => {});
 
@@ -46,6 +66,8 @@ export function MessageComposer({
         link: { openOnClick: false, autolink: true, defaultProtocol: "https", protocols: ["http", "https", "mailto"] },
       }),
       Placeholder.configure({ placeholder }),
+      mentionExtension,
+      EmojiSuggestion,
     ],
     content: draft ?? "",
     editorProps: {
@@ -80,7 +102,8 @@ export function MessageComposer({
   function submit() {
     if (!editor) return;
 
-    const doc = editor.getJSON();
+    // ProseMirror attrs have a null prototype, which Server Actions refuse to serialise.
+    const doc = JSON.parse(JSON.stringify(editor.getJSON())) as JSONContent;
     if (isEmptyDoc(doc)) return;
     onSendRef.current(doc);
     editor.commands.clearContent(true);
@@ -123,6 +146,33 @@ export function MessageComposer({
             <TooltipContent side="top">{t.label}</TooltipContent>
           </Tooltip>
         ))}
+        <span className="mx-0.5 h-4 w-px bg-border" aria-hidden="true" />
+        <EmojiPicker
+          onPick={(e) => editor?.chain().focus().insertContent(`${e.native} `).run()}
+        >
+          <button
+            type="button"
+            aria-label="Add emoji"
+            onMouseDown={(e) => e.preventDefault()}
+            className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <SmilePlus className="size-4" aria-hidden="true" />
+          </button>
+        </EmojiPicker>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="Mention someone"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => editor?.chain().focus().insertContent("@").run()}
+              className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <AtSign className="size-4" aria-hidden="true" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">Mention someone</TooltipContent>
+        </Tooltip>
         <span className={`ml-auto mr-1 text-[11px] text-muted-foreground ${compact ? "hidden" : "hidden sm:block"}`}>
           <kbd className="font-sans">Enter</kbd> to send · <kbd className="font-sans">Shift+Enter</kbd> for a new line
         </span>

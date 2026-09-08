@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Hash, Lock, Plus } from "lucide-react";
+import { AtSign, ChevronRight, Hash, Lock, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,6 +43,14 @@ export function SidebarNav({
 
   return (
     <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label="Sidebar">
+      <ul className="mb-4">
+        <li>
+          <NavLink href="/activity" active={isActive("/activity")} bold={false} count={0} mention={false}>
+            <AtSign className="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+            <span className="truncate">Activity</span>
+          </NavLink>
+        </li>
+      </ul>
       <SectionHeader label="Channels" open={channelsOpen} onToggle={() => toggleSection("channels")} />
       <ul className="mb-4">
         {channels.map((c) => {

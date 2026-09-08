@@ -126,7 +126,13 @@ export function ThreadPanel({
 
       {canPost && thread && !thread.parent.deleted_at && (
         <div className="shrink-0 px-4 pb-4 pt-1">
-          <MessageComposer draftKey={`thread:${parentId}`} placeholder="Reply…" onSend={handleSend} compact />
+          <MessageComposer
+            draftKey={`thread:${parentId}`}
+            placeholder="Reply…"
+            onSend={handleSend}
+            compact
+            allowBroadcast={container.kind === "channel"}
+          />
           <label className="mt-2 flex w-fit cursor-pointer items-center gap-2 text-[12px] text-muted-foreground">
             <input
               type="checkbox"

@@ -2,12 +2,33 @@
 
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { EmojiPicker } from "./emoji-picker";
 
-/** A small, fast set for now; the full emoji picker with :shortcode: search comes with the composer. */
+/** Frequent reactions first; "More" opens the full picker. */
 export const QUICK_EMOJI = ["👍", "✅", "👀", "🎉", "❤️", "😂", "🔥", "🙏", "💯", "🤔", "👏", "😮"];
 
 export function QuickReactionPicker({ children, onPick }: { children: React.ReactNode; onPick: (emoji: string) => void }) {
   const [open, setOpen] = useState(false);
+  const [full, setFull] = useState(false);
+
+  if (full) {
+    return (
+      <EmojiPicker
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          if (!o) setFull(false);
+        }}
+        onPick={(e) => {
+          onPick(e.native);
+          setFull(false);
+        }}
+      >
+        {children}
+      </EmojiPicker>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -30,6 +51,13 @@ export function QuickReactionPicker({ children, onPick }: { children: React.Reac
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          onClick={() => setFull(true)}
+          className="mt-1 w-full rounded-md px-2 py-1 text-left text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          More emoji…
+        </button>
       </PopoverContent>
     </Popover>
   );

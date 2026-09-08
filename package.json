@@ -20,6 +20,8 @@
     "dev:hosted": "sh -c \"set -a; . ./.env.hosted; set +a; exec next dev --turbopack -p 3001\""
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@livekit/components-react": "^2.9.24",
     "@supabase/ssr": "^0.12.6",
     "@supabase/supabase-js": "^2.115.0",
@@ -36,6 +38,7 @@
     "clsx": "^2.1.1",
     "cn": "^0.2.6",
     "date-fns": "^4.4.0",
+    "emoji-mart": "^5.6.0",
     "livekit-client": "^2.22.3",
     "livekit-server-sdk": "^2.18.0",
     "lucide-react": "^1.42.0",

@@ -27,6 +27,10 @@ export type Message = MessageRow & {
   author: MessageAuthor | null;
   reactions: Reaction[];
   attachments: (AttachmentRow & { preview_url?: string })[];
+  /** Pinned in its channel/conversation (visible to everyone there). */
+  is_pinned: boolean;
+  /** Saved for later by the current user (RLS only returns own rows). */
+  is_saved: boolean;
   /** Client-only: optimistic message not yet confirmed by the server. */
   pending?: boolean;
   /** Client-only: the send failed; the row stays so the user can retry or copy. */
@@ -46,7 +50,7 @@ export type AttachmentInput = {
 };
 
 export const MESSAGE_SELECT =
-  "*, author:profiles!messages_author_id_fkey(id, display_name, handle, avatar_url), reactions(emoji, user_id), attachments(*)";
+  "*, author:profiles!messages_author_id_fkey(id, display_name, handle, avatar_url), reactions(emoji, user_id), attachments(*), pins(pinned_by), saved_messages(user_id)";
 
 export type Thread = { parent: Message; replies: Message[] };
 
@@ -57,11 +61,19 @@ export const messageKeys = {
 };
 
 function normalise(row: unknown): Message {
-  const r = row as Omit<Message, "reactions" | "attachments"> & {
+  const { pins, saved_messages, ...r } = row as Omit<Message, "reactions" | "attachments" | "is_pinned" | "is_saved"> & {
     reactions: Reaction[] | null;
     attachments: AttachmentRow[] | null;
+    pins: { pinned_by: string | null }[] | null;
+    saved_messages: { user_id: string }[] | null;
   };
-  return { ...r, reactions: r.reactions ?? [], attachments: r.attachments ?? [] };
+  return {
+    ...r,
+    reactions: r.reactions ?? [],
+    attachments: r.attachments ?? [],
+    is_pinned: (pins?.length ?? 0) > 0,
+    is_saved: (saved_messages?.length ?? 0) > 0,
+  };
 }
 
 /** One page of top-level messages, ascending; the newest page comes first. */
@@ -176,5 +188,32 @@ export async function markRead(supabase: Supabase, container: Container) {
     p_channel_id: container.kind === "channel" ? container.id : undefined,
     p_conversation_id: container.kind === "conversation" ? container.id : undefined,
   });
+  if (error) throw new Error(error.message);
+}
+
+export async function editMessage(
+  supabase: Supabase,
+  input: { messageId: string; content: Record<string, unknown>; contentText: string },
+): Promise<MessageRow> {
+  const { data, error } = await supabase.rpc("update_message", {
+    p_message_id: input.messageId,
+    p_content: input.content as Json,
+    p_content_text: input.contentText,
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function setPinned(supabase: Supabase, messageId: string, userId: string, pinned: boolean) {
+  const { error } = pinned
+    ? await supabase.from("pins").upsert({ message_id: messageId, pinned_by: userId }, { onConflict: "message_id", ignoreDuplicates: true })
+    : await supabase.from("pins").delete().eq("message_id", messageId);
+  if (error) throw new Error(error.message);
+}
+
+export async function setSaved(supabase: Supabase, messageId: string, userId: string, saved: boolean) {
+  const { error } = saved
+    ? await supabase.from("saved_messages").upsert({ message_id: messageId, user_id: userId }, { onConflict: "user_id,message_id", ignoreDuplicates: true })
+    : await supabase.from("saved_messages").delete().eq("message_id", messageId).eq("user_id", userId);
   if (error) throw new Error(error.message);
 }

@@ -8,7 +8,15 @@ import { MessageItem } from "@/components/message/message-item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { messageKeys, type Container, type MessageAuthor } from "@/lib/queries/messages";
-import { useDeleteMessage, useSendReply, useThread, useToggleReaction } from "@/lib/queries/use-messages";
+import {
+  useDeleteMessage,
+  useEditMessage,
+  useSendReply,
+  useThread,
+  useTogglePin,
+  useToggleReaction,
+  useToggleSave,
+} from "@/lib/queries/use-messages";
 import { useAttachmentUploads } from "@/lib/queries/use-uploads";
 import { shouldGroup } from "@/lib/utils/time";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
@@ -35,6 +43,9 @@ export function ThreadPanel({
   const sendReply = useSendReply(container, parentId, me);
   const toggleReaction = useToggleReaction(keys, me.id);
   const del = useDeleteMessage(keys);
+  const edit = useEditMessage(keys);
+  const pin = useTogglePin(keys);
+  const save = useToggleSave(keys);
   const [alsoSend, setAlsoSend] = useState(false);
   const uploads = useAttachmentUploads();
 
@@ -107,6 +118,10 @@ export function ThreadPanel({
               canDelete={thread.parent.author_id === me.id || isAdmin}
               onToggleReaction={(emoji, active) => toggleReaction.mutate({ messageId: thread.parent.id, emoji, active })}
               onDelete={() => del.mutate(thread.parent.id)}
+              onEdit={(content) => edit.mutate({ messageId: thread.parent.id, content })}
+              onTogglePin={(on) => pin.mutate({ messageId: thread.parent.id, on })}
+              onToggleSave={(on) => save.mutate({ messageId: thread.parent.id, on })}
+              allowBroadcast={container.kind === "channel"}
               inThread
             />
             {thread.replies.length > 0 && (
@@ -126,6 +141,10 @@ export function ThreadPanel({
                 canDelete={m.author_id === me.id || isAdmin}
                 onToggleReaction={(emoji, active) => toggleReaction.mutate({ messageId: m.id, emoji, active })}
                 onDelete={() => del.mutate(m.id)}
+                onEdit={(content) => edit.mutate({ messageId: m.id, content })}
+                onTogglePin={(on) => pin.mutate({ messageId: m.id, on })}
+                onToggleSave={(on) => save.mutate({ messageId: m.id, on })}
+                allowBroadcast={container.kind === "channel"}
                 inThread
               />
             ))}

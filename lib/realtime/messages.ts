@@ -12,6 +12,16 @@ import {
 import { appendMessage, patchMessages } from "@/lib/queries/message-cache";
 
 type ReactionRow = Reaction & { message_id: string };
+type PinRow = { message_id: string; pinned_by: string | null };
+
+function pinPatcher(queryClient: QueryClient, key: readonly unknown[]) {
+  return (payload: RealtimePostgresChangesPayload<PinRow>) => {
+    const row = (payload.eventType === "DELETE" ? payload.old : payload.new) as Partial<PinRow>;
+    if (!row.message_id) return;
+    const on = payload.eventType !== "DELETE";
+    patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === row.message_id ? { ...m, is_pinned: on } : m)));
+  };
+}
 
 /**
  * Realtime needs the user's JWT so RLS applies to the change feed. The browser
@@ -97,7 +107,8 @@ export function subscribeToMessages(container: Container, queryClient: QueryClie
           { event: "*", schema: "public", table: "messages", filter: `${containerColumn(container)}=eq.${container.id}` },
           onMessage,
         )
-        .on<ReactionRow>("postgres_changes", { event: "*", schema: "public", table: "reactions" }, reactionPatcher(queryClient, key)),
+        .on<ReactionRow>("postgres_changes", { event: "*", schema: "public", table: "reactions" }, reactionPatcher(queryClient, key))
+        .on<PinRow>("postgres_changes", { event: "*", schema: "public", table: "pins" }, pinPatcher(queryClient, key)),
     `${container.kind}:${container.id}`,
   );
 }
@@ -132,7 +143,8 @@ export function subscribeToThread(parentId: string, queryClient: QueryClient): (
           { event: "*", schema: "public", table: "messages", filter: `parent_id=eq.${parentId}` },
           onReply,
         )
-        .on<ReactionRow>("postgres_changes", { event: "*", schema: "public", table: "reactions" }, reactionPatcher(queryClient, key)),
+        .on<ReactionRow>("postgres_changes", { event: "*", schema: "public", table: "reactions" }, reactionPatcher(queryClient, key))
+        .on<PinRow>("postgres_changes", { event: "*", schema: "public", table: "pins" }, pinPatcher(queryClient, key)),
     `thread:${parentId}`,
   );
 }

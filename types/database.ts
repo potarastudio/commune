@@ -753,6 +753,31 @@ export type Database = {
         }
       }
       tiptap_to_text: { Args: { p_node: Json }; Returns: string }
+      update_message: {
+        Args: { p_content: Json; p_content_text?: string; p_message_id: string }
+        Returns: {
+          author_id: string
+          channel_id: string | null
+          content: Json
+          content_text: string
+          conversation_id: string | null
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          is_edited: boolean
+          last_reply_at: string | null
+          parent_id: string | null
+          reply_count: number
+          search_vector: unknown
+        }
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never

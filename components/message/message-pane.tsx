@@ -13,7 +13,16 @@ import { TypingIndicator } from "@/components/message/typing-indicator";
 import { useTyping } from "@/lib/realtime/presence";
 import { messageKeys, type Container, type MessageAuthor, type MessagePage } from "@/lib/queries/messages";
 import { clearUnread } from "@/lib/queries/unreads";
-import { useDeleteMessage, useMessages, useReplyParticipants, useSendMessage, useToggleReaction } from "@/lib/queries/use-messages";
+import {
+  useDeleteMessage,
+  useEditMessage,
+  useMessages,
+  useReplyParticipants,
+  useSendMessage,
+  useTogglePin,
+  useToggleReaction,
+  useToggleSave,
+} from "@/lib/queries/use-messages";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
 
 /** The message list + composer for any container. Channel and DM pages wrap it with their own header. */
@@ -50,6 +59,9 @@ export function MessagePane({
   const keys = openThreadId ? [messageKeys.container(container), messageKeys.thread(openThreadId)] : [messageKeys.container(container)];
   const toggleReaction = useToggleReaction(keys, me.id);
   const del = useDeleteMessage(keys);
+  const edit = useEditMessage(keys);
+  const pin = useTogglePin(keys);
+  const save = useToggleSave(keys);
   const threaded = messages.filter((m) => m.reply_count > 0).map((m) => m.id);
   const { data: participants } = useReplyParticipants(container, threaded);
 
@@ -95,6 +107,10 @@ export function MessagePane({
         onLoadMore={() => void fetchNextPage()}
         onToggleReaction={(messageId, emoji, active) => toggleReaction.mutate({ messageId, emoji, active })}
         onDelete={(messageId) => del.mutate(messageId)}
+        onEdit={(messageId, content) => edit.mutate({ messageId, content })}
+        onTogglePin={(messageId, on) => pin.mutate({ messageId, on })}
+        onToggleSave={(messageId, on) => save.mutate({ messageId, on })}
+        allowBroadcast={container.kind === "channel"}
         onOpenThread={openThread}
         participants={participants ?? {}}
         highlightId={highlightId}

@@ -4,9 +4,12 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   addReaction,
+  editMessage,
   insertMessage,
   markRead,
   removeReaction,
+  setPinned,
+  setSaved,
   softDeleteMessage,
   type Container,
   type MessageRow,
@@ -140,5 +143,53 @@ export async function markReadAction(input: { container: Container }): Promise<R
     return { ok: true, message: undefined };
   } catch (err) {
     return fail("markReadAction", err);
+  }
+}
+
+export async function editMessageAction(input: { messageId: string; content: unknown }): Promise<Result<MessageRow>> {
+  const parsed = z.object({ messageId: uuid, content: tiptapDoc }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "That edit couldn't be read." };
+  const content = parsed.data.content as Parameters<typeof toContentText>[0] & Record<string, unknown>;
+  if (JSON.stringify(content).length > 40_000) return { ok: false, error: "Message is too long." };
+  try {
+    const supabase = await createSupabaseServerClient();
+    const row = await editMessage(supabase, { messageId: parsed.data.messageId, content, contentText: toContentText(content) });
+    return { ok: true, message: row };
+  } catch (err) {
+    return fail("editMessageAction", err);
+  }
+}
+
+async function currentUserId() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return { supabase, userId: user?.id ?? null };
+}
+
+export async function togglePinAction(input: { messageId: string; pinned: boolean }): Promise<Result> {
+  const parsed = z.object({ messageId: uuid, pinned: z.boolean() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "That message couldn't be read." };
+  try {
+    const { supabase, userId } = await currentUserId();
+    if (!userId) return { ok: false, error: "You're signed out." };
+    await setPinned(supabase, parsed.data.messageId, userId, parsed.data.pinned);
+    return { ok: true, message: undefined };
+  } catch (err) {
+    return fail("togglePinAction", err);
+  }
+}
+
+export async function toggleSaveAction(input: { messageId: string; saved: boolean }): Promise<Result> {
+  const parsed = z.object({ messageId: uuid, saved: z.boolean() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "That message couldn't be read." };
+  try {
+    const { supabase, userId } = await currentUserId();
+    if (!userId) return { ok: false, error: "You're signed out." };
+    await setSaved(supabase, parsed.data.messageId, userId, parsed.data.saved);
+    return { ok: true, message: undefined };
+  } catch (err) {
+    return fail("toggleSaveAction", err);
   }
 }

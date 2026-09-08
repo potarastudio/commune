@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2, MessageSquareText, SmilePlus, Trash2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, Link2, MessageSquareText, Pencil, Pin, PinOff, SmilePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { QuickReactionPicker } from "./quick-reaction-picker";
@@ -27,15 +27,27 @@ function ActionButton({ label, onClick, children }: { label: string; onClick?: (
 export function MessageActions({
   messageId,
   canDelete,
+  canEdit,
+  isPinned,
+  isSaved,
   onReact,
   onDelete,
   onReply,
+  onEdit,
+  onTogglePin,
+  onToggleSave,
 }: {
   messageId: string;
   canDelete: boolean;
+  canEdit: boolean;
+  isPinned: boolean;
+  isSaved: boolean;
   onReact: (emoji: string) => void;
   onDelete: () => void;
   onReply?: () => void;
+  onEdit: () => void;
+  onTogglePin: () => void;
+  onToggleSave: () => void;
 }) {
   const copyLink = async () => {
     const url = `${window.location.origin}${window.location.pathname}?message=${messageId}`;
@@ -63,9 +75,20 @@ export function MessageActions({
           <MessageSquareText className="size-4" aria-hidden="true" />
         </ActionButton>
       )}
+      <ActionButton label={isSaved ? "Remove from saved" : "Save for later"} onClick={onToggleSave}>
+        {isSaved ? <BookmarkCheck className="size-4 text-primary" aria-hidden="true" /> : <Bookmark className="size-4" aria-hidden="true" />}
+      </ActionButton>
+      <ActionButton label={isPinned ? "Unpin" : "Pin"} onClick={onTogglePin}>
+        {isPinned ? <PinOff className="size-4" aria-hidden="true" /> : <Pin className="size-4" aria-hidden="true" />}
+      </ActionButton>
       <ActionButton label="Copy link" onClick={() => void copyLink()}>
         <Link2 className="size-4" aria-hidden="true" />
       </ActionButton>
+      {canEdit && (
+        <ActionButton label="Edit message" onClick={onEdit}>
+          <Pencil className="size-4" aria-hidden="true" />
+        </ActionButton>
+      )}
       {canDelete && (
         <ActionButton label="Delete message" onClick={onDelete}>
           <Trash2 className="size-4" aria-hidden="true" />

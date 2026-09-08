@@ -225,7 +225,7 @@ begin
     end if;
 
     insert into public.messages (channel_id, author_id, content, content_text, created_at)
-    values (v_channel, v_author, v_content, btrim(public.tiptap_to_text(v_content)), v_ts)
+    values (v_channel, v_author, v_content, public.tiptap_to_text(v_content), v_ts)
     returning id into v_msg;
 
     insert into public.mentions (message_id, user_id, kind)
@@ -251,7 +251,7 @@ begin
           jsonb_build_object('type', 'paragraph', 'content', jsonb_build_array(
             jsonb_build_object('type', 'text', 'text', reply_lines[1 + ((v_i + v_j * 3) % array_length(reply_lines, 1))])))));
         insert into public.messages (channel_id, author_id, parent_id, content, content_text, created_at)
-        values (v_channel, v_reactor, v_msg, v_content, btrim(public.tiptap_to_text(v_content)),
+        values (v_channel, v_reactor, v_msg, v_content, public.tiptap_to_text(v_content),
                 v_ts + make_interval(mins => v_j * 4))
         returning id into v_reply;
         if v_j = 1 then

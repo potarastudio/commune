@@ -10,7 +10,7 @@ do $$ begin
 end $$;
 set local search_path = public, extensions;
 
-select plan(43);
+select plan(52);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as superuser)
@@ -224,6 +224,49 @@ select is((select count(*) from public.messages where channel_id = '20000000-000
   'admin can soft-delete any message');
 select is((select reply_count from public.messages where id = '30000000-0000-4000-8000-000000000001'), 0,
   'soft-deleting a reply decrements reply_count');
+
+
+-- ---------------------------------------------------------------------------
+-- Edit, pin, save (as Bob, member of the private channel)
+-- ---------------------------------------------------------------------------
+reset role;
+select pg_temp.login('10000000-0000-4000-8000-000000000002');
+
+select throws_ok(
+  $$ select public.update_message('30000000-0000-4000-8000-000000000001',
+       '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"bob was here"}]}]}'::jsonb) $$,
+  '42501', null, 'non-author cannot edit through update_message');
+
+select lives_ok(
+  $$ insert into public.pins (message_id, pinned_by) values ('30000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002') $$,
+  'member can pin a message in their channel');
+select lives_ok(
+  $$ insert into public.saved_messages (user_id, message_id) values ('10000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000001') $$,
+  'member can save a readable message');
+select throws_ok(
+  $$ insert into public.saved_messages (user_id, message_id) values ('10000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001') $$,
+  '42501', null, 'cannot save a message on behalf of someone else');
+
+-- Alice edits her own message: content, content_text and mentions all move together.
+reset role;
+select pg_temp.login('10000000-0000-4000-8000-000000000001');
+select lives_ok(
+  $$ select public.update_message('30000000-0000-4000-8000-000000000001',
+       '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"launch date moved "},{"type":"mention","attrs":{"id":"10000000-0000-4000-8000-000000000002","label":"bob"}}]}]}'::jsonb) $$,
+  'author can edit through update_message');
+select is((select content_text from public.messages where id = '30000000-0000-4000-8000-000000000001'), 'launch date moved @bob',
+  'update_message derives content_text');
+select is((select is_edited from public.messages where id = '30000000-0000-4000-8000-000000000001'), true,
+  'update_message flags the message as edited');
+select is((select count(*) from public.mentions where message_id = '30000000-0000-4000-8000-000000000001'
+  and user_id = '10000000-0000-4000-8000-000000000002'), 1::bigint,
+  'update_message re-syncs mentions');
+
+-- Mallory still sees none of it.
+reset role;
+select pg_temp.login('10000000-0000-4000-8000-000000000003');
+select is((select count(*) from public.pins where message_id = '30000000-0000-4000-8000-000000000001'), 0::bigint,
+  'non-member cannot see pins in a private channel');
 
 reset role;
 select * from finish();

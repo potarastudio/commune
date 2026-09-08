@@ -4,7 +4,15 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useEffect } from "react";
 import { toast } from "sonner";
 import type { JSONContent } from "@tiptap/core";
-import { deleteMessageAction, sendMessageAction, sendReplyAction, toggleReactionAction } from "@/lib/actions/messages";
+import {
+  deleteMessageAction,
+  editMessageAction,
+  sendMessageAction,
+  sendReplyAction,
+  togglePinAction,
+  toggleReactionAction,
+  toggleSaveAction,
+} from "@/lib/actions/messages";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { subscribeToMessages, subscribeToThread } from "@/lib/realtime/messages";
 import { toContentText } from "@/lib/utils/tiptap";
@@ -130,6 +138,8 @@ function optimisticMessage(
     author: me,
     reactions: [],
     attachments,
+    is_pinned: false,
+    is_saved: false,
     pending: true,
   };
 }
@@ -240,4 +250,65 @@ export function useDeleteMessage(keys: MessageKey[]) {
       toast.error("Couldn't delete the message", { description: err instanceof Error ? err.message : "Try again." });
     },
   });
+}
+
+/** Edit a message: optimistic content swap, server re-derives content_text and mentions. */
+export function useEditMessage(keys: MessageKey[]) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { messageId: string; content: JSONContent }) => editMessageAction(vars),
+    onMutate: ({ messageId, content }) => {
+      const snapshots = keys.map((key) => [key, queryClient.getQueryData(key)] as const);
+      for (const key of keys) {
+        patchMessages(queryClient, key, (ms) =>
+          ms.map((m) =>
+            m.id === messageId
+              ? { ...m, content: content as Message["content"], content_text: toContentText(content), is_edited: true, edited_at: new Date().toISOString() }
+              : m,
+          ),
+        );
+      }
+      return { snapshots };
+    },
+    onSuccess: (result) => {
+      if (!result.ok) throw new Error(result.error);
+    },
+    onError: (err, _vars, ctx) => {
+      for (const [key, data] of ctx?.snapshots ?? []) queryClient.setQueryData(key, data);
+      toast.error("Couldn't save the edit", { description: "Try again in a moment." });
+      console.error("editMessage", err);
+    },
+  });
+}
+
+function useFlagToggle(
+  keys: MessageKey[],
+  flag: "is_pinned" | "is_saved",
+  action: (messageId: string, on: boolean) => Promise<{ ok: true } | { ok: false; error: string } | { ok: true; message: undefined }>,
+  failText: string,
+) {
+  const queryClient = useQueryClient();
+  const apply = (messageId: string, on: boolean) => {
+    for (const key of keys) patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === messageId ? { ...m, [flag]: on } : m)));
+  };
+  return useMutation({
+    mutationFn: async (vars: { messageId: string; on: boolean }) => action(vars.messageId, vars.on),
+    onMutate: ({ messageId, on }) => apply(messageId, on),
+    onSuccess: (result) => {
+      if (!result.ok) throw new Error(result.error);
+    },
+    onError: (err, { messageId, on }) => {
+      apply(messageId, !on);
+      toast.error(failText, { description: "Try again in a moment." });
+      console.error(flag, err);
+    },
+  });
+}
+
+export function useTogglePin(keys: MessageKey[]) {
+  return useFlagToggle(keys, "is_pinned", (messageId, on) => togglePinAction({ messageId, pinned: on }), "Couldn't change the pin");
+}
+
+export function useToggleSave(keys: MessageKey[]) {
+  return useFlagToggle(keys, "is_saved", (messageId, on) => toggleSaveAction({ messageId, saved: on }), "Couldn't save that message");
 }

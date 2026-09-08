@@ -2,6 +2,7 @@
 
 import { Hash, MessageCircle } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef } from "react";
+import type { JSONContent } from "@tiptap/core";
 import type { Message, MessageAuthor } from "@/lib/queries/messages";
 import { formatDayLabel, sameDay, shouldGroup } from "@/lib/utils/time";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +20,10 @@ export function MessageList({
   onLoadMore,
   onToggleReaction,
   onDelete,
+  onEdit,
+  onTogglePin,
+  onToggleSave,
+  allowBroadcast,
   onOpenThread,
   participants,
   highlightId,
@@ -35,6 +40,10 @@ export function MessageList({
   onLoadMore: () => void;
   onToggleReaction: (messageId: string, emoji: string, active: boolean) => void;
   onDelete: (messageId: string) => void;
+  onEdit: (messageId: string, content: JSONContent) => void;
+  onTogglePin: (messageId: string, pinned: boolean) => void;
+  onToggleSave: (messageId: string, saved: boolean) => void;
+  allowBroadcast: boolean;
   onOpenThread: (messageId: string) => void;
   participants: Record<string, string[]>;
   /** From ?message=<id>: scroll to it and flash it once. */
@@ -166,6 +175,10 @@ export function MessageList({
                 canDelete={m.author_id === me.id || isAdmin}
                 onToggleReaction={(emoji, active) => onToggleReaction(m.id, emoji, active)}
                 onDelete={() => onDelete(m.id)}
+                onEdit={(doc) => onEdit(m.id, doc)}
+                onTogglePin={(pinned) => onTogglePin(m.id, pinned)}
+                onToggleSave={(saved) => onToggleSave(m.id, saved)}
+                allowBroadcast={allowBroadcast}
                 onReply={() => onOpenThread(m.id)}
                 replySummary={
                   m.reply_count > 0 ? (

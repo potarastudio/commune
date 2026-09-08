@@ -10,6 +10,8 @@ type UiState = {
   setDraft: (key: string, doc: JSONContent | undefined) => void;
   collapsed: Record<string, boolean>;
   toggleSection: (key: string) => void;
+  paletteOpen: boolean;
+  setPaletteOpen: (open: boolean) => void;
 };
 
 export const useUiStore = create<UiState>()(
@@ -25,6 +27,8 @@ export const useUiStore = create<UiState>()(
         }),
       collapsed: {},
       toggleSection: (key) => set((s) => ({ collapsed: { ...s.collapsed, [key]: !s.collapsed[key] } })),
+      paletteOpen: false,
+      setPaletteOpen: (open) => set({ paletteOpen: open }),
     }),
     { name: "commune-ui", partialize: (s) => ({ drafts: s.drafts, collapsed: s.collapsed }) },
   ),

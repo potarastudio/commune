@@ -3,6 +3,7 @@ import type { JoinedChannel } from "@/lib/queries/channels";
 import type { ConversationSummary } from "@/lib/queries/conversations";
 import type { Profile } from "@/lib/queries/profile";
 import type { UnreadMap } from "@/lib/utils/unreads";
+import { SidebarSearchButton } from "./sidebar-search-button";
 import { SidebarNav } from "./sidebar-nav";
 import { UserMenu } from "./user-menu";
 
@@ -22,6 +23,10 @@ export function Sidebar({
       <div className="flex h-12 items-center gap-1.5 border-b border-sidebar-border px-4">
         <span className="text-[15px] font-semibold tracking-tight">Potara Studio</span>
         <ChevronDown className="size-3.5 text-sidebar-muted" aria-hidden="true" />
+      </div>
+
+      <div className="px-2 pt-2">
+        <SidebarSearchButton />
       </div>
 
       <SidebarNav me={profile} channels={channels} conversations={conversations} initialUnreads={unreads} />

@@ -4,7 +4,7 @@ Slack-style team chat for Potara Studio. **[CLAUDE.md](./CLAUDE.md) is the sourc
 
 ## Status
 
-Phase 1 foundation: schema, RLS, functions, seed, generated types, Supabase clients and env validation. No UI yet.
+Phase 1 feature-complete as of 2026-09-09: channels, DMs, threads, reactions, files, search, mentions, activity, settings, presence and typing. Now in team-trial hardening (§10).
 
 ## Local development
 
@@ -51,7 +51,17 @@ The hosted database is not seeded with the fake team; only the allowlist is popu
 pnpm lint && pnpm typecheck && pnpm test
 ```
 
-`pnpm test:rls` is a hard requirement before Phase 1 ships (§8).
+RLS suite (pgTAP, needs the local stack):
+
+```bash
+pnpm supabase test db
+```
+
+Playwright smoke (§8): signs in through the local-only `/auth/dev-login` route, sends in `#general`, sees it in a second context, reacts, replies in a thread. Needs the local stack and the dev server on 3001 (started automatically if not running).
+
+```bash
+pnpm test:e2e
+```
 
 ## Schema notes
 

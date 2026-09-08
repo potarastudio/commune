@@ -28,3 +28,22 @@ export function useProfileMap() {
   for (const p of data ?? []) map.set(p.id, p);
   return map;
 }
+
+/** True when nobody else uses this handle. Undefined while checking or when the handle is invalid. */
+export function useHandleAvailable(handle: string, excludeId: string) {
+  return useQuery({
+    queryKey: ["handle-available", handle, excludeId],
+    queryFn: async () => {
+      const { data, error } = await getSupabaseBrowserClient()
+        .from("profiles")
+        .select("id")
+        .eq("handle", handle)
+        .neq("id", excludeId)
+        .limit(1);
+      if (error) throw new Error(error.message);
+      return data.length === 0;
+    },
+    enabled: handle.length > 0,
+    staleTime: 10_000,
+  });
+}

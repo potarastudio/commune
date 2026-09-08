@@ -8,6 +8,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const supabase = await createSupabaseServerClient();
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
+  if (!profile.onboarded_at) redirect("/welcome");
 
   const channels = await getJoinedChannels(supabase, profile.id);
 

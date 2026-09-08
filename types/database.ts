@@ -484,6 +484,7 @@ export type Database = {
           email: string
           handle: string
           id: string
+          onboarded_at: string | null
           role: string
           status_emoji: string | null
           status_expires_at: string | null
@@ -498,6 +499,7 @@ export type Database = {
           email: string
           handle: string
           id: string
+          onboarded_at?: string | null
           role?: string
           status_emoji?: string | null
           status_expires_at?: string | null
@@ -512,6 +514,7 @@ export type Database = {
           email?: string
           handle?: string
           id?: string
+          onboarded_at?: string | null
           role?: string
           status_emoji?: string | null
           status_expires_at?: string | null

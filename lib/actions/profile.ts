@@ -1,0 +1,66 @@
+"use server";
+
+import { z } from "zod";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { DISPLAY_NAME_MAX, HANDLE_RE, TITLE_MAX, handleProblem } from "@/lib/utils/profile";
+
+export type ProfileFormResult = { ok: true } | { ok: false; error: string; field?: "display_name" | "handle" | "title" };
+
+const schema = z.object({
+  display_name: z.string().trim().min(1, "Add a display name.").max(DISPLAY_NAME_MAX, "Keep it under 80 characters."),
+  handle: z.string().trim().regex(HANDLE_RE, "Use lowercase letters, numbers, dots, dashes or underscores."),
+  title: z.string().trim().max(TITLE_MAX, "Keep it under 80 characters.").optional().or(z.literal("")),
+  timezone: z.string().trim().min(1).max(64),
+  avatar_url: z.string().url().nullable().optional(),
+});
+
+/** Saves the profile fields the user controls; the first save also completes onboarding. */
+export async function saveProfileAction(input: unknown): Promise<ProfileFormResult> {
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const field = issue.path[0];
+    return {
+      ok: false,
+      error: issue.message,
+      field: field === "display_name" || field === "handle" || field === "title" ? field : undefined,
+    };
+  }
+  const problem = handleProblem(parsed.data.handle);
+  if (problem) return { ok: false, error: problem, field: "handle" };
+
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: parsed.data.timezone });
+  } catch {
+    return { ok: false, error: "That timezone isn't recognised." };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "You're signed out. Sign in and try again." };
+
+  if (parsed.data.avatar_url && !parsed.data.avatar_url.includes(`/avatars/${user.id}/`)) {
+    return { ok: false, error: "That avatar doesn't belong to you." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      display_name: parsed.data.display_name,
+      handle: parsed.data.handle,
+      title: parsed.data.title ? parsed.data.title : null,
+      timezone: parsed.data.timezone,
+      ...(parsed.data.avatar_url !== undefined ? { avatar_url: parsed.data.avatar_url } : {}),
+      onboarded_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "Someone already has that handle.", field: "handle" };
+    console.error("saveProfileAction", { code: error.code, message: error.message });
+    return { ok: false, error: "Couldn't save your profile. Try again." };
+  }
+  return { ok: true };
+}

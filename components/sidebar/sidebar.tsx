@@ -1,9 +1,8 @@
 import { ChevronDown } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Channel } from "@/lib/queries/channels";
 import type { Profile } from "@/lib/queries/profile";
 import { ChannelLink } from "./channel-link";
-import { SignOutButton } from "./sign-out-button";
+import { UserMenu } from "./user-menu";
 
 export function Sidebar({ profile, channels }: { profile: Profile; channels: Channel[] }) {
   return (
@@ -24,24 +23,8 @@ export function Sidebar({ profile, channels }: { profile: Profile; channels: Cha
         </ul>
       </nav>
 
-      <div className="flex items-center gap-2.5 border-t border-sidebar-border px-3 py-2.5">
-        <span className="relative">
-          <Avatar className="size-8 rounded-md">
-            <AvatarImage src={profile.avatar_url ?? undefined} alt="" />
-            <AvatarFallback className="rounded-md bg-primary text-[12px] font-semibold text-primary-foreground">
-              {profile.display_name.slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span
-            className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-sidebar bg-online"
-            aria-label="Online"
-          />
-        </span>
-        <div className="min-w-0 flex-1 leading-tight">
-          <p className="truncate text-[13px] font-medium">{profile.display_name}</p>
-          <p className="truncate text-[12px] text-sidebar-muted">@{profile.handle}</p>
-        </div>
-        <SignOutButton />
+      <div className="border-t border-sidebar-border px-1.5 py-1.5">
+        <UserMenu profile={profile} />
       </div>
     </aside>
   );

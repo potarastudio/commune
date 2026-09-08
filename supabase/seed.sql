@@ -162,6 +162,7 @@ begin
      '{"provider":"google","providers":["google"]}', jsonb_build_object('full_name', 'Raka Pratama', 'avatar_url', 'https://api.dicebear.com/9.x/notionists/svg?seed=raka'),
      now() - interval '28 days', now(), '', '', '', '');
 
+  update public.profiles set onboarded_at = now() where id = any (v_users);
   update public.profiles set handle = 'hakim', title = 'Founder & Design Lead', status_emoji = '🎧', status_text = 'Heads down' where id = u_hakim;
   update public.profiles set handle = 'nadia', title = 'Product Designer' where id = u_nadia;
   update public.profiles set handle = 'raka',  title = 'Brand Designer', status_emoji = '🌴', status_text = 'On leave Friday' where id = u_raka;

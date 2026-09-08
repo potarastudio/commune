@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "commune",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 3001
+    },
+    {
+      "name": "commune-hosted",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:hosted"],
+      "port": 3001
+    }
+  ]
+}

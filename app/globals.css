@@ -1,26 +1,197 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Commune design tokens (§6). Every colour in the app comes from here.
+  Light and dark are both first-class; the sidebar is deliberately dark in
+  both themes, like a studio pinboard that stays put while the page changes.
+*/
 :root {
+  --radius: 0.5rem;
+
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1b1b1a;
+  --card: #ffffff;
+  --card-foreground: #1b1b1a;
+  --popover: #ffffff;
+  --popover-foreground: #1b1b1a;
+
+  --primary: #1b6b5c;
+  --primary-foreground: #ffffff;
+  --primary-hover: #155448;
+
+  --secondary: #f3f3f0;
+  --secondary-foreground: #1b1b1a;
+  --muted: #f3f3f0;
+  --muted-foreground: #6e6e69;
+  --accent: #eaf2ef;
+  --accent-foreground: #14453b;
+
+  --destructive: #c93b3b;
+  --destructive-foreground: #ffffff;
+
+  --border: #e4e4df;
+  --input: #d9d9d3;
+  --ring: #1b6b5c;
+
+  /* app-specific */
+  --sidebar: #1e2a28;
+  --sidebar-foreground: #e8ecea;
+  --sidebar-muted: #9aa6a2;
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-active: #2f3f3b;
+  --sidebar-active-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-unread: #ffffff;
+
+  --mention: #fff1c7;
+  --mention-foreground: #7a4b00;
+  --mention-self: #ffe39a;
+  --online: #2fb37a;
+  --link: #1b6b5c;
+  --message-hover: #f7f7f5;
+  --divider: #e4e4df;
+}
+
+.dark {
+  --background: #131514;
+  --foreground: #eceeed;
+  --card: #1a1d1c;
+  --card-foreground: #eceeed;
+  --popover: #1f2322;
+  --popover-foreground: #eceeed;
+
+  --primary: #4db89f;
+  --primary-foreground: #0b1f1a;
+  --primary-hover: #63c9b1;
+
+  --secondary: #202423;
+  --secondary-foreground: #eceeed;
+  --muted: #202423;
+  --muted-foreground: #9a9f9c;
+  --accent: #1c2b28;
+  --accent-foreground: #a9e3d3;
+
+  --destructive: #e05656;
+  --destructive-foreground: #ffffff;
+
+  --border: #2a2e2c;
+  --input: #343937;
+  --ring: #4db89f;
+
+  --sidebar: #0e1514;
+  --sidebar-foreground: #e3e8e6;
+  --sidebar-muted: #8d9895;
+  --sidebar-hover: rgba(255, 255, 255, 0.05);
+  --sidebar-active: #1f2c29;
+  --sidebar-active-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --sidebar-unread: #ffffff;
+
+  --mention: #3d2e0b;
+  --mention-foreground: #ffd27a;
+  --mention-self: #5a4310;
+  --online: #3fcb8c;
+  --link: #6fd0b8;
+  --message-hover: #191c1b;
+  --divider: #2a2e2c;
 }
 
 @theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-unread: var(--sidebar-unread);
+  --color-mention: var(--mention);
+  --color-mention-foreground: var(--mention-foreground);
+  --color-mention-self: var(--mention-self);
+  --color-online: var(--online);
+  --color-link: var(--link);
+  --color-message-hover: var(--message-hover);
+  --color-divider: var(--divider);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "cv11", "ss01", "calt";
+  }
+  code, kbd, pre, samp {
+    @apply font-mono;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Tiptap composer */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
+.tiptap p + p { margin-top: 0.25rem; }
+.tiptap strong { font-weight: 600; }
+.tiptap code { font-family: var(--font-mono); font-size: 0.92em; background: var(--muted); padding: 0.1em 0.3em; border-radius: 4px; }
+.tiptap pre { font-family: var(--font-mono); font-size: 12.5px; background: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.75rem; margin: 0.35rem 0; }
+.tiptap pre code { background: transparent; padding: 0; }
+.tiptap ul { list-style: disc; padding-left: 1.5rem; margin: 0.25rem 0; }
+.tiptap ol { list-style: decimal; padding-left: 1.5rem; margin: 0.25rem 0; }
+.tiptap a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+.tiptap blockquote { border-left: 3px solid var(--border); padding-left: 0.75rem; color: var(--muted-foreground); }

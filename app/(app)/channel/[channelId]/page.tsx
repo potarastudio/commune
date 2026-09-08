@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { ChannelHeader } from "@/components/channel/channel-header";
+import { JoinLeaveButton } from "@/components/channel/join-leave-button";
 import { MessagePane } from "@/components/message/message-pane";
 import { ThreadPanel } from "@/components/thread/thread-panel";
-import { getChannel, getMemberCount, getMembership } from "@/lib/queries/channel";
+import { getChannel, getChannelMembers, getMembership } from "@/lib/queries/channel";
 import { fetchMessages } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -32,9 +33,9 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
   const channel = await getChannel(supabase, channelId);
   if (!channel) notFound();
 
-  const [membership, memberCount, firstPage] = await Promise.all([
+  const [membership, members, firstPage] = await Promise.all([
     getMembership(supabase, channelId, profile.id),
-    getMemberCount(supabase, channelId),
+    getChannelMembers(supabase, channelId),
     fetchMessages(supabase, { kind: "channel", id: channelId }),
   ]);
 
@@ -43,7 +44,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
 
   return (
     <>
-      <ChannelHeader channel={channel} memberCount={memberCount} />
+      <ChannelHeader channel={channel} members={members} isMember={membership !== null} isAdmin={profile.role === "admin"} />
       <div className="flex min-h-0 flex-1">
       <MessagePane
         container={{ kind: "channel", id: channel.id }}
@@ -61,8 +62,11 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
               <strong>#{channel.name}</strong> is archived. You can read it, but nobody can post.
             </span>
           ) : (
-            <span>
-              You&apos;re previewing <strong>#{channel.name}</strong>. Join to post.
+            <span className="flex items-center justify-between gap-3">
+              <span>
+                You&apos;re previewing <strong>#{channel.name}</strong>. Join to post.
+              </span>
+              <JoinLeaveButton channelId={channel.id} channelName={channel.name} joined={false} />
             </span>
           )
         }

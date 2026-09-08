@@ -1,6 +1,6 @@
 "use client";
 
-import { AtSign, ChevronRight, Hash, Lock, Plus } from "lucide-react";
+import { AtSign, ChevronRight, Compass, Hash, Lock, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,6 +10,7 @@ import { conversationLabel, type ConversationSummary } from "@/lib/queries/conve
 import type { Profile } from "@/lib/queries/profile";
 import { useUnreadCounts, type UnreadMap } from "@/lib/queries/unreads";
 import { useUiStore } from "@/lib/store/ui";
+import { CreateChannelPopover } from "@/components/channel/create-channel-popover";
 
 /** Sidebar lists with unread bold + badges (§5). Sections collapse and remember it. */
 export function SidebarNav({
@@ -51,7 +52,22 @@ export function SidebarNav({
           </NavLink>
         </li>
       </ul>
-      <SectionHeader label="Channels" open={channelsOpen} onToggle={() => toggleSection("channels")} />
+      <SectionHeader
+        label="Channels"
+        open={channelsOpen}
+        onToggle={() => toggleSection("channels")}
+        action={
+          <CreateChannelPopover align="start">
+            <button
+              type="button"
+              aria-label="Create channel"
+              className="grid size-6 place-items-center rounded-md text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <Plus className="size-3.5" aria-hidden="true" />
+            </button>
+          </CreateChannelPopover>
+        }
+      />
       <ul className="mb-4">
         {channels.map((c) => {
           const href = `/channel/${c.id}`;
@@ -67,6 +83,14 @@ export function SidebarNav({
             </li>
           );
         })}
+        {channelsOpen && (
+          <li>
+            <NavLink href="/channels" active={isActive("/channels")} bold={false} count={0} mention={false} muted>
+              <Compass className="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+              <span className="truncate">Browse channels</span>
+            </NavLink>
+          </li>
+        )}
       </ul>
 
       <SectionHeader

@@ -1,23 +1,30 @@
-import { Hash, Lock, Users } from "lucide-react";
-import type { ChannelRow } from "@/lib/queries/channel";
+import { Users } from "lucide-react";
+import type { ChannelMember, ChannelRow } from "@/lib/queries/channel";
+import { ChannelDetails } from "./channel-details";
 
-export function ChannelHeader({ channel, memberCount }: { channel: ChannelRow; memberCount: number }) {
-  const Icon = channel.is_private ? Lock : Hash;
+export function ChannelHeader({
+  channel,
+  members,
+  isMember,
+  isAdmin,
+}: {
+  channel: ChannelRow;
+  members: ChannelMember[];
+  isMember: boolean;
+  isAdmin: boolean;
+}) {
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-5">
-      <h1 className="flex items-center gap-1 text-[15px] font-semibold tracking-tight">
-        <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-        {channel.name}
-      </h1>
+    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-3.5">
+      <ChannelDetails channel={channel} members={members} isMember={isMember} isAdmin={isAdmin} />
       {channel.topic && (
         <>
           <span className="h-4 w-px bg-border" aria-hidden="true" />
           <p className="min-w-0 truncate text-[13px] text-muted-foreground">{channel.topic}</p>
         </>
       )}
-      <span className="ml-auto flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground">
+      <span className="ml-auto mr-1.5 flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground">
         <Users className="size-3.5" aria-hidden="true" />
-        {memberCount}
+        {members.length}
       </span>
     </header>
   );

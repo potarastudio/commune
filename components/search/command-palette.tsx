@@ -1,6 +1,6 @@
 "use client";
 
-import { Hash, Lock, Search } from "lucide-react";
+import { Compass, Hash, Lock, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -87,6 +87,10 @@ export function CommandPalette({ meId, joinedChannelIds }: { meId: string; joine
         )}
 
         <CommandGroup heading="Channels">
+          <CommandItem value="browse channels" onSelect={() => go("/channels")}>
+            <Compass className="size-4 text-muted-foreground" aria-hidden="true" />
+            <span>Browse channels</span>
+          </CommandItem>
           {(channels ?? []).map((c) => (
             <CommandItem key={c.id} value={`channel ${c.name} ${c.topic ?? ""}`} onSelect={() => go(`/channel/${c.id}`)}>
               {c.is_private ? (

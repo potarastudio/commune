@@ -637,6 +637,25 @@ export type Database = {
       can_read_channel: { Args: { p_channel_id: string }; Returns: boolean }
       can_read_message: { Args: { p_message_id: string }; Returns: boolean }
       can_write_message: { Args: { p_message_id: string }; Returns: boolean }
+      create_channel: {
+        Args: { p_description?: string; p_is_private?: boolean; p_name: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_archived: boolean
+          is_private: boolean
+          name: string
+          topic: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "channels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       extract_mentions: {
         Args: { p_content: Json }
         Returns: {

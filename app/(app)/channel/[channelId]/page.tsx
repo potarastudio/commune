@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { ChannelHeader } from "@/components/channel/channel-header";
-import { ChannelView } from "@/components/channel/channel-view";
+import { MessagePane } from "@/components/message/message-pane";
 import { getChannel, getMemberCount, getMembership } from "@/lib/queries/channel";
-import { fetchChannelMessages } from "@/lib/queries/messages";
+import { fetchMessages } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -32,19 +32,33 @@ export default async function ChannelPage({ params }: { params: Params }) {
   const [membership, memberCount, firstPage] = await Promise.all([
     getMembership(supabase, channelId, profile.id),
     getMemberCount(supabase, channelId),
-    fetchChannelMessages(supabase, channelId),
+    fetchMessages(supabase, { kind: "channel", id: channelId }),
   ]);
 
   return (
     <>
       <ChannelHeader channel={channel} memberCount={memberCount} />
-      <ChannelView
-        channel={channel}
+      <MessagePane
+        container={{ kind: "channel", id: channel.id }}
         me={{ id: profile.id, display_name: profile.display_name, handle: profile.handle, avatar_url: profile.avatar_url }}
         isAdmin={profile.role === "admin"}
-        isMember={membership !== null}
+        canPost={membership !== null && !channel.is_archived}
         lastReadAt={membership?.last_read_at ?? null}
         initialPage={firstPage}
+        placeholder={`Message #${channel.name}`}
+        startTitle={`This is the start of #${channel.name}`}
+        startBody="Everything the channel has ever said is below."
+        readOnlyNotice={
+          channel.is_archived ? (
+            <span>
+              <strong>#{channel.name}</strong> is archived. You can read it, but nobody can post.
+            </span>
+          ) : (
+            <span>
+              You&apos;re previewing <strong>#{channel.name}</strong>. Join to post.
+            </span>
+          )
+        }
       />
     </>
   );

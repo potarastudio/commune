@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { getJoinedChannels } from "@/lib/queries/channels";
+import { getMyConversations } from "@/lib/queries/conversations";
 import { getCurrentProfile } from "@/lib/queries/profile";
+import { toUnreadMap } from "@/lib/utils/unreads";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -10,11 +12,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!profile) redirect("/login");
   if (!profile.onboarded_at) redirect("/welcome");
 
-  const channels = await getJoinedChannels(supabase, profile.id);
+  const [channels, conversations, unreadRows] = await Promise.all([
+    getJoinedChannels(supabase, profile.id),
+    getMyConversations(supabase),
+    supabase.rpc("get_unread_counts").then(({ data, error }) => {
+      if (error) throw new Error(error.message);
+      return data;
+    }),
+  ]);
 
   return (
     <div className="flex h-dvh overflow-hidden">
-      <Sidebar profile={profile} channels={channels} />
+      <Sidebar profile={profile} channels={channels} conversations={conversations} unreads={toUnreadMap(unreadRows)} />
       <main className="flex min-w-0 flex-1 flex-col bg-background">{children}</main>
     </div>
   );

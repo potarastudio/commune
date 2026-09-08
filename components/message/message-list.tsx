@@ -1,6 +1,6 @@
 "use client";
 
-import { Hash } from "lucide-react";
+import { Hash, MessageCircle } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Message, MessageAuthor } from "@/lib/queries/messages";
 import { formatDayLabel, sameDay, shouldGroup } from "@/lib/utils/time";
@@ -18,7 +18,9 @@ export function MessageList({
   onLoadMore,
   onToggleReaction,
   onDelete,
-  channelName,
+  startTitle,
+  startBody,
+  startIcon = "channel",
 }: {
   messages: Message[];
   me: MessageAuthor;
@@ -29,8 +31,11 @@ export function MessageList({
   onLoadMore: () => void;
   onToggleReaction: (messageId: string, emoji: string, active: boolean) => void;
   onDelete: (messageId: string) => void;
-  channelName: string;
+  startTitle: string;
+  startBody: string;
+  startIcon?: "channel" | "conversation";
 }) {
+  const StartIcon = startIcon === "conversation" ? MessageCircle : Hash;
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinel = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -116,13 +121,11 @@ export function MessageList({
         {!hasMore && (
           <div className="px-5 pt-10 pb-4">
             <span className="grid size-12 place-items-center rounded-xl bg-accent text-accent-foreground">
-              <Hash className="size-5" aria-hidden="true" />
+              <StartIcon className="size-5" aria-hidden="true" />
             </span>
-            <h2 className="mt-4 text-[20px] font-semibold tracking-tight">This is the start of #{channelName}</h2>
+            <h2 className="mt-4 text-[20px] font-semibold tracking-tight">{startTitle}</h2>
             <p className="mt-1 text-muted-foreground">
-              {messages.length === 0
-                ? "Nothing here yet. Say hello, share a link, or drop the first file."
-                : "Everything the channel has ever said is below."}
+              {messages.length === 0 ? "Nothing here yet. Say hello, share a link, or drop the first file." : startBody}
             </p>
           </div>
         )}

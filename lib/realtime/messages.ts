@@ -1,25 +1,64 @@
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { RealtimeChannel, RealtimePostgresChangesPayload, SupabaseClient } from "@supabase/supabase-js";
 import type { QueryClient, InfiniteData } from "@tanstack/react-query";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { fetchMessageById, messageKeys, type Message, type MessagePage, type MessageRow, type Reaction } from "@/lib/queries/messages";
+import {
+  containerColumn,
+  fetchMessageById,
+  messageKeys,
+  type Container,
+  type Message,
+  type MessagePage,
+  type MessageRow,
+  type Reaction,
+} from "@/lib/queries/messages";
 
 type Cache = InfiniteData<MessagePage, string | null>;
 type ReactionRow = Reaction & { message_id: string };
 
 /**
- * Postgres Changes for the open channel (§7): patch the TanStack cache in
- * place, never refetch the list. Reactions are subscribed table-wide (the team
- * is small) and applied only when the message is in this channel's cache.
+ * Realtime needs the user's JWT so RLS applies to the change feed. The browser
+ * client loads the session from cookies asynchronously, so wait for it before
+ * subscribing; otherwise the channel would be authorised as `anon` and see nothing.
  */
-export function subscribeToChannelMessages(channelId: string, queryClient: QueryClient): RealtimeChannel {
+export function subscribeWithAuth(
+  supabase: SupabaseClient,
+  build: () => RealtimeChannel,
+  label: string,
+): () => void {
+  let channel: RealtimeChannel | undefined;
+  let cancelled = false;
+  void (async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (cancelled) return;
+    if (session?.access_token) await supabase.realtime.setAuth(session.access_token);
+    if (cancelled) return;
+    channel = build().subscribe((status, err) => {
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.warn(`realtime ${label}: ${status}`, err?.message);
+      }
+    });
+  })();
+  return () => {
+    cancelled = true;
+    if (channel) void supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * Postgres Changes for the open container (§7): patch the TanStack cache in
+ * place, never refetch the list. Reactions are subscribed table-wide (the team
+ * is small) and applied only when the message is in this cache.
+ */
+export function subscribeToMessages(container: Container, queryClient: QueryClient): () => void {
   const supabase = getSupabaseBrowserClient();
-  const key = messageKeys.channel(channelId);
+  const key = messageKeys.container(container);
 
   const patch = (fn: (messages: Message[]) => Message[]) => {
-    queryClient.setQueryData<Cache>(key, (old) => {
-      if (!old) return old;
-      return { ...old, pages: old.pages.map((p, i) => (i === 0 ? { ...p, messages: fn(p.messages) } : { ...p, messages: fn(p.messages) })) };
-    });
+    queryClient.setQueryData<Cache>(key, (old) =>
+      old ? { ...old, pages: old.pages.map((p) => ({ ...p, messages: fn(p.messages) })) } : old,
+    );
   };
 
   const onMessage = async (payload: RealtimePostgresChangesPayload<MessageRow>) => {
@@ -41,8 +80,7 @@ export function subscribeToChannelMessages(channelId: string, queryClient: Query
     if (!full) return;
     queryClient.setQueryData<Cache>(key, (old) => {
       if (!old) return old;
-      const already = old.pages.some((p) => p.messages.some((m) => m.id === full.id));
-      if (already) return old;
+      if (old.pages.some((p) => p.messages.some((m) => m.id === full.id))) return old;
       const pages = old.pages.map((p, i) => {
         if (i !== 0) return p;
         const withoutTwin = p.messages.filter(
@@ -70,13 +108,17 @@ export function subscribeToChannelMessages(channelId: string, queryClient: Query
     );
   };
 
-  return supabase
-    .channel(`channel:${channelId}:messages`)
-    .on<MessageRow>(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "messages", filter: `channel_id=eq.${channelId}` },
-      onMessage,
-    )
-    .on<ReactionRow>("postgres_changes", { event: "*", schema: "public", table: "reactions" }, onReaction)
-    .subscribe();
+  return subscribeWithAuth(
+    supabase,
+    () =>
+      supabase
+        .channel(`${container.kind}:${container.id}:messages`)
+        .on<MessageRow>(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "messages", filter: `${containerColumn(container)}=eq.${container.id}` },
+          onMessage,
+        )
+        .on<ReactionRow>("postgres_changes", { event: "*", schema: "public", table: "reactions" }, onReaction),
+    `${container.kind}:${container.id}`,
+  );
 }

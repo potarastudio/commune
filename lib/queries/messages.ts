@@ -4,12 +4,19 @@ import { PAGE_SIZE, beforeCursorFilter, decodeCursor, nextCursorFromPage } from 
 import type { Profile } from "./profile";
 
 /**
- * Message reads and writes. Shared by Server Components (initial page),
- * client hooks (older pages, realtime patches) and Server Actions (writes).
- * No component talks to Supabase directly (§3).
+ * Message reads and writes for channels and conversations. Shared by Server
+ * Components (initial page), client hooks (older pages, realtime patches) and
+ * Server Actions (writes). No component talks to Supabase directly (§3).
  */
 
 type Supabase = SupabaseClient<Database>;
+
+/** Where a message lives: a channel or a DM/group DM. */
+export type Container = { kind: "channel"; id: string } | { kind: "conversation"; id: string };
+
+export function containerColumn(c: Container): "channel_id" | "conversation_id" {
+  return c.kind === "channel" ? "channel_id" : "conversation_id";
+}
 
 export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 export type AttachmentRow = Database["public"]["Tables"]["attachments"]["Row"];
@@ -32,7 +39,7 @@ export const MESSAGE_SELECT =
   "*, author:profiles!messages_author_id_fkey(id, display_name, handle, avatar_url), reactions(emoji, user_id), attachments(*)";
 
 export const messageKeys = {
-  channel: (channelId: string) => ["messages", "channel", channelId] as const,
+  container: (c: Container) => ["messages", c.kind, c.id] as const,
 };
 
 function normalise(row: unknown): Message {
@@ -43,16 +50,12 @@ function normalise(row: unknown): Message {
   return { ...r, reactions: r.reactions ?? [], attachments: r.attachments ?? [] };
 }
 
-/** One page of top-level channel messages, ascending, newest page first. */
-export async function fetchChannelMessages(
-  supabase: Supabase,
-  channelId: string,
-  before: string | null = null,
-): Promise<MessagePage> {
+/** One page of top-level messages, ascending; the newest page comes first. */
+export async function fetchMessages(supabase: Supabase, container: Container, before: string | null = null): Promise<MessagePage> {
   let q = supabase
     .from("messages")
     .select(MESSAGE_SELECT)
-    .eq("channel_id", channelId)
+    .eq(containerColumn(container), container.id)
     .is("parent_id", null)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
@@ -74,13 +77,14 @@ export async function fetchMessageById(supabase: Supabase, id: string): Promise<
   return data ? normalise(data) : null;
 }
 
-export async function insertChannelMessage(
+export async function insertMessage(
   supabase: Supabase,
-  input: { channelId: string; content: Record<string, unknown>; contentText: string; parentId?: string | null },
+  input: { container: Container; content: Record<string, unknown>; contentText: string; parentId?: string | null },
 ): Promise<MessageRow> {
   const { data, error } = await supabase.rpc("insert_message", {
     p_content: input.content as Json,
-    p_channel_id: input.channelId,
+    p_channel_id: input.container.kind === "channel" ? input.container.id : undefined,
+    p_conversation_id: input.container.kind === "conversation" ? input.container.id : undefined,
     p_content_text: input.contentText,
     p_parent_id: input.parentId ?? undefined,
   });
@@ -108,7 +112,10 @@ export async function softDeleteMessage(supabase: Supabase, messageId: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function markChannelRead(supabase: Supabase, channelId: string) {
-  const { error } = await supabase.rpc("mark_read", { p_channel_id: channelId });
+export async function markRead(supabase: Supabase, container: Container) {
+  const { error } = await supabase.rpc("mark_read", {
+    p_channel_id: container.kind === "channel" ? container.id : undefined,
+    p_conversation_id: container.kind === "conversation" ? container.id : undefined,
+  });
   if (error) throw new Error(error.message);
 }

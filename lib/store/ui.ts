@@ -8,6 +8,8 @@ import { persist } from "zustand/middleware";
 type UiState = {
   drafts: Record<string, JSONContent | undefined>;
   setDraft: (key: string, doc: JSONContent | undefined) => void;
+  collapsed: Record<string, boolean>;
+  toggleSection: (key: string) => void;
 };
 
 export const useUiStore = create<UiState>()(
@@ -21,7 +23,9 @@ export const useUiStore = create<UiState>()(
           else delete drafts[key];
           return { drafts };
         }),
+      collapsed: {},
+      toggleSection: (key) => set((s) => ({ collapsed: { ...s.collapsed, [key]: !s.collapsed[key] } })),
     }),
-    { name: "commune-ui", partialize: (s) => ({ drafts: s.drafts }) },
+    { name: "commune-ui", partialize: (s) => ({ drafts: s.drafts, collapsed: s.collapsed }) },
   ),
 );

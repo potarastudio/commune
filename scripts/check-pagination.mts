@@ -1,7 +1,7 @@
 // Dev check: walks three pages of #general through RLS as a seeded member. Run: pnpm tsx scripts/check-pagination.mts
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import { fetchChannelMessages } from "@/lib/queries/messages";
+import { fetchMessages } from "@/lib/queries/messages";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -16,9 +16,10 @@ const { error: vErr } = await user.auth.verifyOtp({ type: "magiclink", token_has
 if (vErr) throw vErr;
 
 const { data: ch } = await user.from("channels").select("id").eq("name", "general").single();
-const p1 = await fetchChannelMessages(user, ch!.id);
-const p2 = await fetchChannelMessages(user, ch!.id, p1.nextCursor);
-const p3 = await fetchChannelMessages(user, ch!.id, p2.nextCursor);
+const c = { kind: "channel" as const, id: ch!.id };
+const p1 = await fetchMessages(user, c);
+const p2 = await fetchMessages(user, c, p1.nextCursor);
+const p3 = await fetchMessages(user, c, p2.nextCursor);
 const ids = new Set([...p1.messages, ...p2.messages, ...p3.messages].map((m) => m.id));
 console.log({
   page1: p1.messages.length, page2: p2.messages.length, page3: p3.messages.length,

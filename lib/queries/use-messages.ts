@@ -9,16 +9,50 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { subscribeToMessages, subscribeToThread } from "@/lib/realtime/messages";
 import { toContentText } from "@/lib/utils/tiptap";
 import { patchMessages } from "./message-cache";
+import type { PendingUpload } from "./use-uploads";
 import {
+  fetchMessageById,
   fetchMessages,
   fetchReplyParticipants,
   fetchThread,
   messageKeys,
+  type AttachmentInput,
   type Container,
   type Message,
   type MessageAuthor,
   type MessagePage,
 } from "./messages";
+
+export type SendVars = { content: JSONContent; tempId: string; attachments: AttachmentInput[]; previews: PendingUpload[] };
+
+/** Swap the optimistic row for the confirmed one, with real attachment rows, then drop local previews. */
+async function confirmSent(queryClient: ReturnType<typeof useQueryClient>, key: MessageKey, tempId: string, rowId: string, vars: SendVars) {
+  const full = vars.attachments.length ? await fetchMessageById(getSupabaseBrowserClient(), rowId) : null;
+  patchMessages(queryClient, key, (ms) => {
+    const already = ms.some((m) => m.id === rowId);
+    return ms.flatMap((m) => {
+      if (m.id === tempId) return already ? [] : [full ? { ...full, pending: false } : { ...m, id: rowId, pending: false }];
+      if (m.id === rowId && full) return [{ ...full, pending: false }];
+      return [m];
+    });
+  });
+  for (const p of vars.previews) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+}
+
+function optimisticAttachments(vars: SendVars, messageId: string): Message["attachments"] {
+  return vars.attachments.map((a, i) => ({
+    id: `${messageId}-att-${i}`,
+    message_id: messageId,
+    storage_path: a.storage_path,
+    file_name: a.file_name,
+    mime_type: a.mime_type,
+    size_bytes: a.size_bytes,
+    width: a.width,
+    height: a.height,
+    created_at: new Date().toISOString(),
+    preview_url: vars.previews.find((p) => p.result?.storage_path === a.storage_path)?.previewUrl ?? undefined,
+  }));
+}
 
 type MessageKey = readonly unknown[];
 
@@ -70,7 +104,14 @@ export function useReplyParticipants(container: Container, parentIds: string[]) 
   });
 }
 
-function optimisticMessage(container: Container, me: MessageAuthor, content: JSONContent, tempId: string, parentId: string | null): Message {
+function optimisticMessage(
+  container: Container,
+  me: MessageAuthor,
+  content: JSONContent,
+  tempId: string,
+  parentId: string | null,
+  attachments: Message["attachments"] = [],
+): Message {
   return {
     id: tempId,
     channel_id: container.kind === "channel" ? container.id : null,
@@ -88,7 +129,7 @@ function optimisticMessage(container: Container, me: MessageAuthor, content: JSO
     created_at: new Date().toISOString(),
     author: me,
     reactions: [],
-    attachments: [],
+    attachments,
     pending: true,
   };
 }
@@ -98,15 +139,17 @@ export function useSendMessage(container: Container, me: MessageAuthor) {
   const key = messageKeys.container(container);
 
   return useMutation({
-    mutationFn: async (vars: { content: JSONContent; tempId: string }) => sendMessageAction({ container, content: vars.content }),
-    onMutate: ({ content, tempId }) =>
-      patchMessages(queryClient, key, (ms) => [...ms, optimisticMessage(container, me, content, tempId, null)]),
-    onSuccess: (result, { tempId }) => {
+    mutationFn: async (vars: SendVars) => sendMessageAction({ container, content: vars.content, attachments: vars.attachments }),
+    onMutate: (vars) =>
+      patchMessages(queryClient, key, (ms) => [
+        ...ms,
+        optimisticMessage(container, me, vars.content, vars.tempId, null, optimisticAttachments(vars, vars.tempId)),
+      ]),
+    onSuccess: async (result, vars) => {
       if (!result.ok) throw new Error(result.error);
       const row = result.message;
-      patchMessages(queryClient, key, (ms) =>
-        ms.some((m) => m.id === row.id) ? ms.filter((m) => m.id !== tempId) : ms.map((m) => (m.id === tempId ? { ...m, ...row, pending: false } : m)),
-      );
+      patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === vars.tempId ? { ...m, ...row, id: vars.tempId } : m)));
+      await confirmSent(queryClient, key, vars.tempId, row.id, vars);
     },
     onError: (err, { tempId }) => {
       patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m)));
@@ -121,16 +164,24 @@ export function useSendReply(container: Container, parentId: string, me: Message
   const key = messageKeys.thread(parentId);
 
   return useMutation({
-    mutationFn: async (vars: { content: JSONContent; tempId: string; alsoSendToContainer: boolean }) =>
-      sendReplyAction({ container, parentId, content: vars.content, alsoSendToContainer: vars.alsoSendToContainer }),
-    onMutate: ({ content, tempId }) =>
-      patchMessages(queryClient, key, (ms) => [...ms, optimisticMessage(container, me, content, tempId, parentId)]),
-    onSuccess: (result, { tempId }) => {
+    mutationFn: async (vars: SendVars & { alsoSendToContainer: boolean }) =>
+      sendReplyAction({
+        container,
+        parentId,
+        content: vars.content,
+        alsoSendToContainer: vars.alsoSendToContainer,
+        attachments: vars.attachments,
+      }),
+    onMutate: (vars) =>
+      patchMessages(queryClient, key, (ms) => [
+        ...ms,
+        optimisticMessage(container, me, vars.content, vars.tempId, parentId, optimisticAttachments(vars, vars.tempId)),
+      ]),
+    onSuccess: async (result, vars) => {
       if (!result.ok) throw new Error(result.error);
       const row = result.message;
-      patchMessages(queryClient, key, (ms) =>
-        ms.some((m) => m.id === row.id) ? ms.filter((m) => m.id !== tempId) : ms.map((m) => (m.id === tempId ? { ...m, ...row, pending: false } : m)),
-      );
+      patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === vars.tempId ? { ...m, ...row, id: vars.tempId } : m)));
+      await confirmSent(queryClient, key, vars.tempId, row.id, vars);
     },
     onError: (err, { tempId }) => {
       patchMessages(queryClient, key, (ms) => ms.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m)));

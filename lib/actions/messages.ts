@@ -18,6 +18,15 @@ type Result<T = undefined> = { ok: true; message: T } | { ok: false; error: stri
 const uuid = z.string().uuid();
 const containerSchema = z.object({ kind: z.enum(["channel", "conversation"]), id: uuid });
 const tiptapDoc = z.object({ type: z.literal("doc") }).passthrough();
+const attachmentSchema = z.object({
+  storage_path: z.string().min(1).max(500),
+  file_name: z.string().min(1).max(255),
+  mime_type: z.string().max(255),
+  size_bytes: z.number().int().nonnegative().max(26214400),
+  width: z.number().int().positive().nullable(),
+  height: z.number().int().positive().nullable(),
+});
+const attachmentsSchema = z.array(attachmentSchema).max(10).default([]);
 
 function fail(context: string, err: unknown): { ok: false; error: string } {
   const message = err instanceof Error ? err.message : String(err);
@@ -26,17 +35,26 @@ function fail(context: string, err: unknown): { ok: false; error: string } {
 }
 
 /** content_text and mentions are derived server-side; the client only sends the document (§7). */
-export async function sendMessageAction(input: { container: Container; content: unknown }): Promise<Result<MessageRow>> {
-  const parsed = z.object({ container: containerSchema, content: tiptapDoc }).safeParse(input);
+export async function sendMessageAction(input: {
+  container: Container;
+  content: unknown;
+  attachments?: unknown;
+}): Promise<Result<MessageRow>> {
+  const parsed = z.object({ container: containerSchema, content: tiptapDoc, attachments: attachmentsSchema }).safeParse(input);
   if (!parsed.success) return { ok: false, error: "That message couldn't be read." };
 
   const content = parsed.data.content as Parameters<typeof toContentText>[0] & Record<string, unknown>;
-  if (isEmptyDoc(content)) return { ok: false, error: "Message is empty." };
+  if (isEmptyDoc(content) && parsed.data.attachments.length === 0) return { ok: false, error: "Message is empty." };
   if (JSON.stringify(content).length > 40_000) return { ok: false, error: "Message is too long." };
 
   try {
     const supabase = await createSupabaseServerClient();
-    const row = await insertMessage(supabase, { container: parsed.data.container, content, contentText: toContentText(content) });
+    const row = await insertMessage(supabase, {
+      container: parsed.data.container,
+      content,
+      contentText: toContentText(content),
+      attachments: parsed.data.attachments,
+    });
     return { ok: true, message: row };
   } catch (err) {
     return fail("sendMessageAction", err);
@@ -49,14 +67,21 @@ export async function sendReplyAction(input: {
   parentId: string;
   content: unknown;
   alsoSendToContainer: boolean;
+  attachments?: unknown;
 }): Promise<Result<MessageRow>> {
   const parsed = z
-    .object({ container: containerSchema, parentId: uuid, content: tiptapDoc, alsoSendToContainer: z.boolean() })
+    .object({
+      container: containerSchema,
+      parentId: uuid,
+      content: tiptapDoc,
+      alsoSendToContainer: z.boolean(),
+      attachments: attachmentsSchema,
+    })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: "That reply couldn't be read." };
 
   const content = parsed.data.content as Parameters<typeof toContentText>[0] & Record<string, unknown>;
-  if (isEmptyDoc(content)) return { ok: false, error: "Reply is empty." };
+  if (isEmptyDoc(content) && parsed.data.attachments.length === 0) return { ok: false, error: "Reply is empty." };
   if (JSON.stringify(content).length > 40_000) return { ok: false, error: "Reply is too long." };
 
   try {
@@ -67,6 +92,7 @@ export async function sendReplyAction(input: {
       content,
       contentText: toContentText(content),
       alsoSendToContainer: parsed.data.alsoSendToContainer,
+      attachments: parsed.data.attachments,
     });
     return { ok: true, message: row };
   } catch (err) {

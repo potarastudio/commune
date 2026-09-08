@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { messageKeys, type Container, type MessageAuthor } from "@/lib/queries/messages";
 import { useDeleteMessage, useSendReply, useThread, useToggleReaction } from "@/lib/queries/use-messages";
+import { useAttachmentUploads } from "@/lib/queries/use-uploads";
 import { shouldGroup } from "@/lib/utils/time";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
 
@@ -35,6 +36,7 @@ export function ThreadPanel({
   const toggleReaction = useToggleReaction(keys, me.id);
   const del = useDeleteMessage(keys);
   const [alsoSend, setAlsoSend] = useState(false);
+  const uploads = useAttachmentUploads();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -46,10 +48,17 @@ export function ThreadPanel({
 
   const handleSend = useCallback(
     (content: JSONContent) => {
-      sendReply.mutate({ content, tempId: `temp-${crypto.randomUUID()}`, alsoSendToContainer: alsoSend });
+      sendReply.mutate({
+        content,
+        tempId: `temp-${crypto.randomUUID()}`,
+        alsoSendToContainer: alsoSend,
+        attachments: uploads.ready,
+        previews: uploads.uploads,
+      });
+      uploads.clear();
       setAlsoSend(false);
     },
-    [sendReply, alsoSend],
+    [sendReply, alsoSend, uploads],
   );
 
   return (
@@ -132,6 +141,7 @@ export function ThreadPanel({
             onSend={handleSend}
             compact
             allowBroadcast={container.kind === "channel"}
+            uploads={uploads}
           />
           <label className="mt-2 flex w-fit cursor-pointer items-center gap-2 text-[12px] text-muted-foreground">
             <input

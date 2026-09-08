@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { Message } from "@/lib/queries/messages";
 import { renderContent } from "@/lib/utils/render";
 import { formatFullTimestamp, formatMessageTime } from "@/lib/utils/time";
+import { AttachmentList } from "./attachment-list";
 import { MessageActions } from "./message-actions";
 import { ReactionBar } from "./reaction-bar";
 
@@ -82,6 +83,7 @@ export function MessageItem({
           </div>
         )}
 
+        {!deleted && <AttachmentList attachments={message.attachments} />}
         {!deleted && <ReactionBar reactions={message.reactions} meId={meId} onToggle={onToggleReaction} />}
         {!inThread && replySummary}
       </div>

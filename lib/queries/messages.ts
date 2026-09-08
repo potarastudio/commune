@@ -26,7 +26,7 @@ export type Reaction = { emoji: string; user_id: string };
 export type Message = MessageRow & {
   author: MessageAuthor | null;
   reactions: Reaction[];
-  attachments: AttachmentRow[];
+  attachments: (AttachmentRow & { preview_url?: string })[];
   /** Client-only: optimistic message not yet confirmed by the server. */
   pending?: boolean;
   /** Client-only: the send failed; the row stays so the user can retry or copy. */
@@ -34,6 +34,16 @@ export type Message = MessageRow & {
 };
 
 export type MessagePage = { messages: Message[]; nextCursor: string | null };
+
+/** What the client sends after a successful upload; the row is created by insert_message. */
+export type AttachmentInput = {
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  width: number | null;
+  height: number | null;
+};
 
 export const MESSAGE_SELECT =
   "*, author:profiles!messages_author_id_fkey(id, display_name, handle, avatar_url), reactions(emoji, user_id), attachments(*)";
@@ -125,6 +135,7 @@ export async function insertMessage(
     contentText: string;
     parentId?: string | null;
     alsoSendToContainer?: boolean;
+    attachments?: AttachmentInput[];
   },
 ): Promise<MessageRow> {
   const { data, error } = await supabase.rpc("insert_message", {
@@ -134,6 +145,7 @@ export async function insertMessage(
     p_content_text: input.contentText,
     p_parent_id: input.parentId ?? undefined,
     p_also_send_to_container: input.alsoSendToContainer ?? false,
+    p_attachments: (input.attachments ?? []) as unknown as Json,
   });
   if (error) throw new Error(error.message);
   return data;

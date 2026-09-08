@@ -7,6 +7,8 @@ import type { JSONContent } from "@tiptap/core";
 import { markReadAction } from "@/lib/actions/messages";
 import { MessageComposer } from "@/components/message/message-composer";
 import { MessageList } from "@/components/message/message-list";
+import { DropZone } from "@/components/message/drop-zone";
+import { useAttachmentUploads } from "@/lib/queries/use-uploads";
 import { messageKeys, type Container, type MessageAuthor, type MessagePage } from "@/lib/queries/messages";
 import { clearUnread } from "@/lib/queries/unreads";
 import { useDeleteMessage, useMessages, useReplyParticipants, useSendMessage, useToggleReaction } from "@/lib/queries/use-messages";
@@ -40,6 +42,7 @@ export function MessagePane({
   const highlightId = useSearchParams().get("message");
   const { messages, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(container, initialPage);
   const send = useSendMessage(container, me);
+  const uploads = useAttachmentUploads();
   const { openThreadId, openThread } = useThreadNav();
   const keys = openThreadId ? [messageKeys.container(container), messageKeys.thread(openThreadId)] : [messageKeys.container(container)];
   const toggleReaction = useToggleReaction(keys, me.id);
@@ -70,12 +73,15 @@ export function MessagePane({
   }, [container.kind, container.id, canPost, latestAt, queryClient]);
 
   const handleSend = useCallback(
-    (content: JSONContent) => send.mutate({ content, tempId: `temp-${crypto.randomUUID()}` }),
-    [send],
+    (content: JSONContent) => {
+      send.mutate({ content, tempId: `temp-${crypto.randomUUID()}`, attachments: uploads.ready, previews: uploads.uploads });
+      uploads.clear();
+    },
+    [send, uploads],
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <DropZone label={placeholder.replace(/^Message /, "")} onFiles={uploads.addFiles}>
       <MessageList
         messages={messages}
         me={me}
@@ -100,11 +106,12 @@ export function MessagePane({
             placeholder={placeholder}
             onSend={handleSend}
             allowBroadcast={container.kind === "channel"}
+            uploads={uploads}
           />
         ) : (
           <div className="rounded-lg border border-border bg-muted px-4 py-3 text-[13px]">{readOnlyNotice}</div>
         )}
       </div>
-    </div>
+    </DropZone>
   );
 }

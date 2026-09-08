@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { OnlineDot } from "@/components/presence/online-dot";
 import { conversationLabel, type ConversationMember } from "@/lib/queries/conversations";
 
 export function DmHeader({ members, meId }: { members: ConversationMember[]; meId: string }) {
@@ -19,7 +20,10 @@ export function DmHeader({ members, meId }: { members: ConversationMember[]; meI
           </Avatar>
         ))}
       </div>
-      <h1 className="text-[15px] font-semibold tracking-tight">{label}</h1>
+      <h1 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
+        {label}
+        {single && <OnlineDot userId={single.id} />}
+      </h1>
       {single && (
         <>
           <span className="h-4 w-px bg-border" aria-hidden="true" />

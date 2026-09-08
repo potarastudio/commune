@@ -9,6 +9,8 @@ import { MessageComposer } from "@/components/message/message-composer";
 import { MessageList } from "@/components/message/message-list";
 import { DropZone } from "@/components/message/drop-zone";
 import { useAttachmentUploads } from "@/lib/queries/use-uploads";
+import { TypingIndicator } from "@/components/message/typing-indicator";
+import { useTyping } from "@/lib/realtime/presence";
 import { messageKeys, type Container, type MessageAuthor, type MessagePage } from "@/lib/queries/messages";
 import { clearUnread } from "@/lib/queries/unreads";
 import { useDeleteMessage, useMessages, useReplyParticipants, useSendMessage, useToggleReaction } from "@/lib/queries/use-messages";
@@ -43,6 +45,7 @@ export function MessagePane({
   const { messages, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(container, initialPage);
   const send = useSendMessage(container, me);
   const uploads = useAttachmentUploads();
+  const typing = useTyping(container, { id: me.id, name: me.display_name });
   const { openThreadId, openThread } = useThreadNav();
   const keys = openThreadId ? [messageKeys.container(container), messageKeys.thread(openThreadId)] : [messageKeys.container(container)];
   const toggleReaction = useToggleReaction(keys, me.id);
@@ -99,7 +102,8 @@ export function MessagePane({
         startBody={startBody}
         startIcon={container.kind}
       />
-      <div className="shrink-0 px-5 pb-5 pt-1">
+      <div className="shrink-0 px-5 pb-4 pt-0">
+        <TypingIndicator people={typing.others} />
         {canPost ? (
           <MessageComposer
             draftKey={`${container.kind}:${container.id}`}
@@ -107,6 +111,8 @@ export function MessagePane({
             onSend={handleSend}
             allowBroadcast={container.kind === "channel"}
             uploads={uploads}
+            onTyping={typing.onKeystroke}
+            onStopTyping={typing.stopTyping}
           />
         ) : (
           <div className="rounded-lg border border-border bg-muted px-4 py-3 text-[13px]">{readOnlyNotice}</div>

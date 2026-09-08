@@ -28,6 +28,8 @@ export function MessageComposer({
   compact = false,
   allowBroadcast = true,
   uploads,
+  onTyping,
+  onStopTyping,
 }: {
   draftKey: string;
   placeholder: string;
@@ -35,6 +37,9 @@ export function MessageComposer({
   onSend: (content: JSONContent) => void;
   /** From useAttachmentUploads(); enables the attach button, paste and the pending list. */
   uploads?: ReturnType<typeof useAttachmentUploads>;
+  /** Presence typing hooks (§7). */
+  onTyping?: () => void;
+  onStopTyping?: () => void;
   /** Narrow layouts (thread panel): hide the keyboard hint. */
   compact?: boolean;
   /** Offer @channel / @here (channels only). */
@@ -47,6 +52,8 @@ export function MessageComposer({
   onSendRef.current = onSend;
   const uploadsRef = useRef(uploads);
   uploadsRef.current = uploads;
+  const typingRef = useRef({ onTyping, onStopTyping });
+  typingRef.current = { onTyping, onStopTyping };
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mention candidates come from the profiles cache; a ref keeps the extension stable.
@@ -108,6 +115,11 @@ export function MessageComposer({
       const isEmpty = isEmptyDoc(doc);
       setEmpty(isEmpty);
       setDraft(draftKey, isEmpty ? undefined : doc);
+      if (isEmpty) typingRef.current.onStopTyping?.();
+      else typingRef.current.onTyping?.();
+    },
+    onBlur() {
+      typingRef.current.onStopTyping?.();
     },
   });
 
@@ -127,6 +139,7 @@ export function MessageComposer({
     const doc = JSON.parse(JSON.stringify(editor.getJSON())) as JSONContent;
     if (isEmptyDoc(doc) && !(uploadsRef.current?.ready.length ?? 0)) return;
     onSendRef.current(doc);
+    typingRef.current.onStopTyping?.();
     editor.commands.clearContent(true);
     setDraft(draftKey, undefined);
     setEmpty(true);

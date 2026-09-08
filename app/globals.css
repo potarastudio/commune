@@ -230,3 +230,10 @@
   100% { background-color: transparent; }
 }
 .message-flash { animation: message-flash 2.5s ease-out; }
+
+/* Typing indicator */
+@keyframes typing-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+  40% { transform: translateY(-3px); opacity: 1; }
+}
+.typing-dot { animation: typing-bounce 1.2s infinite ease-in-out; }

@@ -10,6 +10,7 @@ import { conversationLabel, type ConversationSummary } from "@/lib/queries/conve
 import type { Profile } from "@/lib/queries/profile";
 import { useUnreadCounts, type UnreadMap } from "@/lib/queries/unreads";
 import { useUiStore } from "@/lib/store/ui";
+import { AvatarPresence } from "@/components/presence/online-dot";
 import { CreateChannelPopover } from "@/components/channel/create-channel-popover";
 
 /** Sidebar lists with unread bold + badges (§5). Sections collapse and remember it. */
@@ -127,12 +128,15 @@ export function SidebarNav({
                     {c.members.length}
                   </span>
                 ) : (
-                  <Avatar className="size-4 shrink-0 rounded-sm">
-                    <AvatarImage src={face.avatar_url ?? undefined} alt="" className="object-cover" />
-                    <AvatarFallback className="rounded-sm bg-sidebar-active text-[9px] font-semibold">
-                      {face.display_name.slice(0, 1).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <span className="relative shrink-0">
+                    <Avatar className="size-4 rounded-sm">
+                      <AvatarImage src={face.avatar_url ?? undefined} alt="" className="object-cover" />
+                      <AvatarFallback className="rounded-sm bg-sidebar-active text-[9px] font-semibold">
+                        {face.display_name.slice(0, 1).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {others.length === 1 && <AvatarPresence userId={face.id} ring="border-sidebar" />}
+                  </span>
                 )}
                 <span className="truncate">{conversationLabel(c.members, me.id, { short: true })}</span>
               </NavLink>

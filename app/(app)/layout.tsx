@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { PresenceProvider } from "@/components/presence/presence-provider";
 import { CommandPalette } from "@/components/search/command-palette";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { getJoinedChannels } from "@/lib/queries/channels";
@@ -27,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar profile={profile} channels={channels} conversations={conversations} unreads={toUnreadMap(unreadRows)} />
       <main className="flex min-w-0 flex-1 flex-col bg-background">{children}</main>
       <CommandPalette meId={profile.id} joinedChannelIds={channels.map((c) => c.id)} />
+      <PresenceProvider meId={profile.id} />
     </div>
   );
 }

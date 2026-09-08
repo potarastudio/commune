@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { Hash, Lock } from "lucide-react";
 import { NotificationLevelControl } from "@/components/channel/notification-level";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { InvitePeople } from "@/components/settings/invite-people";
 import { ThemePicker } from "@/components/settings/theme-picker";
+import { getInvites } from "@/lib/queries/invites";
 import { getJoinedChannels } from "@/lib/queries/channels";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -14,7 +16,10 @@ export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
-  const channels = await getJoinedChannels(supabase, profile.id);
+  const [channels, invites] = await Promise.all([
+    getJoinedChannels(supabase, profile.id),
+    profile.role === "admin" ? getInvites(supabase) : Promise.resolve([]),
+  ]);
 
   return (
     <>
@@ -29,6 +34,18 @@ export default async function SettingsPage() {
             <ProfileForm profile={profile} mode="settings" />
           </div>
         </section>
+
+        {profile.role === "admin" && (
+          <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
+            <h2 className="text-[16px] font-semibold tracking-tight">Invite people</h2>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Anyone you add can sign in with Google using that exact address. They get an email with a link.
+            </p>
+            <div className="mt-4">
+              <InvitePeople invites={invites} />
+            </div>
+          </section>
+        )}
 
         <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
           <h2 className="text-[16px] font-semibold tracking-tight">Appearance</h2>

@@ -1,5 +1,6 @@
 import { Users } from "lucide-react";
 import type { ChannelMember, ChannelRow } from "@/lib/queries/channel";
+import type { NotificationLevel } from "@/lib/queries/channels";
 import { ChannelDetails } from "./channel-details";
 
 export function ChannelHeader({
@@ -7,15 +8,17 @@ export function ChannelHeader({
   members,
   isMember,
   isAdmin,
+  notificationLevel,
 }: {
   channel: ChannelRow;
   members: ChannelMember[];
   isMember: boolean;
   isAdmin: boolean;
+  notificationLevel: NotificationLevel | null;
 }) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-3.5">
-      <ChannelDetails channel={channel} members={members} isMember={isMember} isAdmin={isAdmin} />
+      <ChannelDetails channel={channel} members={members} isMember={isMember} isAdmin={isAdmin} notificationLevel={notificationLevel} />
       {channel.topic && (
         <>
           <span className="h-4 w-px bg-border" aria-hidden="true" />

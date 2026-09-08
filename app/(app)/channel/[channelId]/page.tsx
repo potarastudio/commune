@@ -44,7 +44,13 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
 
   return (
     <>
-      <ChannelHeader channel={channel} members={members} isMember={membership !== null} isAdmin={profile.role === "admin"} />
+      <ChannelHeader
+        channel={channel}
+        members={members}
+        isMember={membership !== null}
+        isAdmin={profile.role === "admin"}
+        notificationLevel={(membership?.notification_level as "all" | "mentions" | "muted" | undefined) ?? null}
+      />
       <div className="flex min-h-0 flex-1">
       <MessagePane
         container={{ kind: "channel", id: channel.id }}

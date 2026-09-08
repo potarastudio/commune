@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Hash, Lock } from "lucide-react";
+import { NotificationLevelControl } from "@/components/channel/notification-level";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { ThemePicker } from "@/components/settings/theme-picker";
+import { getJoinedChannels } from "@/lib/queries/channels";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -10,6 +14,7 @@ export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
+  const channels = await getJoinedChannels(supabase, profile.id);
 
   return (
     <>
@@ -23,6 +28,36 @@ export default async function SettingsPage() {
           <div className="mt-6">
             <ProfileForm profile={profile} mode="settings" />
           </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
+          <h2 className="text-[16px] font-semibold tracking-tight">Appearance</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">Light and dark are both first-class. System follows your OS.</p>
+          <div className="mt-4">
+            <ThemePicker />
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
+          <h2 className="text-[16px] font-semibold tracking-tight">Channel notifications</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            What counts as unread in the sidebar. Mentions always include @you, @channel and @here.
+          </p>
+          <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
+            {channels.map((c) => (
+              <li key={c.id} className="flex items-center gap-3 px-3 py-2.5">
+                {c.is_private ? (
+                  <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                ) : (
+                  <Hash className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                )}
+                <span className="min-w-0 flex-1 truncate text-[14px]">{c.name}</span>
+                <div className="w-56">
+                  <NotificationLevelControl channelId={c.id} level={c.notification_level} />
+                </div>
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
     </>

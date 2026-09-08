@@ -112,3 +112,23 @@ export async function addChannelMembersAction(input: { channelId: string; userId
   revalidatePath("/", "layout");
   return { ok: true, data: undefined };
 }
+
+export async function setNotificationLevelAction(input: { channelId: string; level: "all" | "mentions" | "muted" }): Promise<Result> {
+  const parsed = z.object({ channelId: uuid, level: z.enum(["all", "mentions", "muted"]) }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Unknown setting." };
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "You're signed out." };
+
+  const { error, count } = await supabase
+    .from("channel_members")
+    .update({ notification_level: parsed.data.level }, { count: "exact" })
+    .eq("channel_id", parsed.data.channelId)
+    .eq("user_id", user.id);
+  if (error) return fail("setNotificationLevelAction", error, "Couldn't change notifications.");
+  if (count === 0) return { ok: false, error: "Join the channel first." };
+  revalidatePath("/", "layout");
+  return { ok: true, data: undefined };
+}

@@ -11,7 +11,9 @@ import { addChannelMembersAction, updateChannelAction } from "@/lib/actions/chan
 import type { ChannelRow } from "@/lib/queries/channel";
 import type { Profile } from "@/lib/queries/profile";
 import { useProfiles } from "@/lib/queries/profiles";
+import type { NotificationLevel } from "@/lib/queries/channels";
 import { JoinLeaveButton } from "./join-leave-button";
+import { NotificationLevelControl } from "./notification-level";
 
 type Member = Pick<Profile, "id" | "display_name" | "handle" | "avatar_url" | "title">;
 
@@ -175,11 +177,13 @@ export function ChannelDetails({
   members,
   isMember,
   isAdmin,
+  notificationLevel,
 }: {
   channel: ChannelRow;
   members: Member[];
   isMember: boolean;
   isAdmin: boolean;
+  notificationLevel: NotificationLevel | null;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<"about" | "add">("about");
@@ -239,6 +243,14 @@ export function ChannelDetails({
               canEdit={canEdit}
               onSave={save("description")}
             />
+            {isMember && notificationLevel && (
+              <div>
+                <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Notifications</span>
+                <div className="mt-1.5">
+                  <NotificationLevelControl channelId={channel.id} level={notificationLevel} />
+                </div>
+              </div>
+            )}
             <div>
               <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Members</span>
               <ul className="mt-1.5 max-h-44 space-y-1 overflow-y-auto">

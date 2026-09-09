@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { DmAwayNotice, DmHeader } from "@/components/dm/dm-header";
+import { DmAwayNotice, DmFilesButton, DmHeader } from "@/components/dm/dm-header";
+import { ComposerNoticeProvider } from "@/components/message/message-list";
 import { MessagePane } from "@/components/message/message-pane";
-import { PinsButton } from "@/components/pins/pins-button";
 import { ContainerPanel } from "@/components/panel/container-panel";
 import { ThreadPanel } from "@/components/thread/thread-panel";
 import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
@@ -55,15 +55,19 @@ export default async function ConversationPage({ params, searchParams }: { param
 
   return (
     <>
+      {/* Elements built here end up in a children array inside the client
+          components they are handed to, so each one carries its own key. */}
       <DmHeader
         members={conversation.members}
         meId={profile.id}
-        huddle={membership ? <HuddleButton {...huddleProps} /> : undefined}
-        pins={membership ? <PinsButton container={container} initialPins={pins} /> : undefined}
+        huddle={membership ? <HuddleButton key="huddle" {...huddleProps} /> : undefined}
+        files={membership ? <DmFilesButton key="files" container={container} /> : undefined}
       />
       {membership && <HuddleBanner {...huddleProps} />}
-      {membership && others.length === 1 && <DmAwayNotice person={others[0]} />}
       <div className="flex min-h-0 flex-1">
+      {/* The away line belongs in the 22px slot above the composer, which the
+          message pane owns — so it is handed down rather than stacked here. */}
+      <ComposerNoticeProvider notice={membership && others.length === 1 ? <DmAwayNotice key="away" person={others[0]} /> : null}>
       <MessagePane
         container={{ kind: "conversation", id: conversation.id }}
         me={me}
@@ -88,6 +92,7 @@ export default async function ConversationPage({ params, searchParams }: { param
         }
         readOnlyNotice={<span>You&apos;re not part of this conversation.</span>}
       />
+      </ComposerNoticeProvider>
       {threadId && (
         <ThreadPanel
           parentId={threadId}

@@ -223,10 +223,9 @@ export function CommandPalette({ meId, joinedChannelIds }: { meId: string; joine
                   <Hash className="size-[13px]" aria-hidden="true" />
                 )}
               </Tile>
-              <span className="min-w-0 flex-1 truncate">
-                {c.name}
-                {c.topic && <span className="ml-2 font-normal text-muted-foreground">{c.topic}</span>}
-              </span>
+              {/* The design's channel row is the name alone; the topic stays in
+                  the match value so typing it still finds the channel. */}
+              <span className="min-w-0 flex-1 truncate">{c.name}</span>
               <CommandShortcut>{joined.has(c.id) ? "Jump to" : "Not joined"}</CommandShortcut>
             </CommandItem>
           ))}

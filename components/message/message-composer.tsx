@@ -102,7 +102,7 @@ export function MessageComposer({
     content: draft ?? "",
     editorProps: {
       attributes: {
-        class: "tiptap min-h-[44px] max-h-64 caret-primary overflow-y-auto px-3.5 py-3 text-[14px] leading-[1.55] outline-none",
+        class: "tiptap box-content min-h-[44px] max-h-64 caret-primary overflow-y-auto px-3.5 py-3 text-[14px] leading-[1.55] outline-none",
         "aria-label": placeholder,
         role: "textbox",
         "aria-multiline": "true",

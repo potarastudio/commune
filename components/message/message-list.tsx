@@ -1,7 +1,7 @@
 "use client";
 
 import { Hash, MessageCircle } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef } from "react";
 import type { JSONContent } from "@tiptap/core";
 import type { Message, MessageAuthor } from "@/lib/queries/messages";
 import { formatDayLabel, sameDay, shouldGroup } from "@/lib/utils/time";
@@ -9,6 +9,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ReplySummary } from "@/components/thread/reply-summary";
 import { DateDivider } from "./date-divider";
 import { MessageItem } from "./message-item";
+
+/**
+ * The design reserves one 22px line between the log and the composer, and the
+ * container decides what goes in it — the typing indicator, or a DM's "they are
+ * away" line. A page sets it here rather than passing a prop, because the pane
+ * that owns the composer sits between the page and this list.
+ */
+const ComposerNoticeContext = createContext<React.ReactNode>(null);
+
+export function ComposerNoticeProvider({ notice, children }: { notice: React.ReactNode; children: React.ReactNode }) {
+  return <ComposerNoticeContext.Provider value={notice}>{children}</ComposerNoticeContext.Provider>;
+}
 
 /** Skeleton bar widths, row by row — the design's 86 / 64+58 / 92 / 52 rhythm. */
 const SKELETON_ROWS: [string, string | null][] = [
@@ -67,12 +79,14 @@ export function MessageList({
   startIcon?: "channel" | "conversation";
 }) {
   const StartIcon = startIcon === "conversation" ? MessageCircle : Hash;
+  const composerNotice = useContext(ComposerNoticeContext);
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinel = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   const prevHeight = useRef(0);
   const prevFirstId = useRef<string | null>(null);
+  const prevLastId = useRef<string | null>(null);
   const highlighted = useRef<string | null>(null);
 
   useEffect(() => {
@@ -87,12 +101,20 @@ export function MessageList({
     return () => clearTimeout(t);
   }, [highlightId, messages]);
 
-  // Initial render and new messages: stay pinned to the bottom unless the user scrolled up.
+  // Initial render and new messages: open on the newest message and stay there
+  // unless the reader scrolled up.
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const firstId = messages[0]?.id ?? null;
-    if (prevFirstId.current && firstId !== prevFirstId.current) {
+    const lastId = messages[messages.length - 1]?.id ?? null;
+    // The message we last ended on is still here ⇒ this is the same list, so a
+    // changed first id means an older page was prepended. If it is gone the
+    // list was replaced (another container, or a refetch): open at the bottom
+    // again rather than inheriting where the previous conversation was read.
+    const sameList = prevLastId.current !== null && messages.some((m) => m.id === prevLastId.current);
+    if (prevLastId.current !== null && !sameList) stickToBottom.current = true;
+    if (sameList && prevFirstId.current !== null && firstId !== prevFirstId.current) {
       // Older page prepended: keep the viewport where it was.
       el.scrollTop += el.scrollHeight - prevHeight.current;
     } else if (stickToBottom.current) {
@@ -100,6 +122,7 @@ export function MessageList({
     }
     prevHeight.current = el.scrollHeight;
     prevFirstId.current = firstId;
+    prevLastId.current = lastId;
   }, [messages]);
 
   useEffect(() => {
@@ -110,11 +133,17 @@ export function MessageList({
       stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
     };
     el.addEventListener("scroll", onScroll, { passive: true });
-    // Content grows after paint (avatars, fonts, images): stay pinned to the bottom.
+    // Two things move the newest message off screen after first paint, and both
+    // have to be watched. The content grows (avatars, images, link previews,
+    // late fonts) — that is `inner`. And the viewport shrinks under a banner or
+    // notice mounting above the pane, which leaves scrollTop short of the new
+    // bottom without changing the content at all — that is `el`. Neither fires
+    // a scroll event, so the pin survives both.
     const ro = new ResizeObserver(() => {
       if (stickToBottom.current) el.scrollTop = el.scrollHeight;
       prevHeight.current = el.scrollHeight;
     });
+    ro.observe(el);
     ro.observe(inner);
     return () => {
       el.removeEventListener("scroll", onScroll);
@@ -145,7 +174,8 @@ export function MessageList({
     : undefined;
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain" role="log" aria-live="polite" aria-label="Messages">
+    <div className="flex min-h-0 flex-1 flex-col">
+    <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain" role="log" aria-live="polite" aria-label="Messages">
       <div ref={innerRef} className="flex min-h-full flex-col pb-2">
         <div ref={topSentinel} aria-hidden="true" />
         {isLoadingMore && (
@@ -227,6 +257,8 @@ export function MessageList({
           );
         })}
       </div>
+    </div>
+    {composerNotice}
     </div>
   );
 }

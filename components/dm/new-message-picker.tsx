@@ -146,8 +146,9 @@ export function NewMessagePicker({ people, meId }: { people: Profile[]; meId: st
                     {p.title ? ` · ${p.title}` : ""}
                   </span>
                 </span>
+                {/* The design set draws exactly one checkbox: 16px, 4px radius. */}
                 <span
-                  className={`grid size-[18px] shrink-0 place-items-center rounded-sm border ${
+                  className={`grid size-4 shrink-0 place-items-center rounded-[4px] border ${
                     selected
                       ? "border-accent-border bg-primary text-primary-foreground"
                       : "border-border-input text-transparent"

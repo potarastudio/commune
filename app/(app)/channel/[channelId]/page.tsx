@@ -138,45 +138,49 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
     : "Everything the channel has ever said is below.";
 
   return (
-    <>
-      <ChannelHeader
-        channel={channel}
-        members={members}
-        huddle={canPost ? <HuddleButton {...huddleProps} /> : undefined}
-        pins={<PinsButton container={container} initialPins={pins} />}
-      />
-      <ConnectionBanner />
-      <BookmarksBar channelId={channel.id} initialBookmarks={bookmarks} canEdit={(membership !== null || profile.role === "admin") && !channel.is_archived} />
-      {canPost && <HuddleBanner {...huddleProps} />}
-      <div className="flex min-h-0 flex-1">
-      <MessagePane
-        container={{ kind: "channel", id: channel.id }}
-        me={me}
-        isAdmin={profile.role === "admin"}
-        canPost={canPost}
-        lastReadAt={membership?.last_read_at ?? null}
-        initialPage={firstPage}
-        placeholder={`Message #${channel.name}`}
-        startTitle={`This is the start of #${channel.name}`}
-        startBody={startBody}
-        readOnlyNotice={
-          channel.is_archived ? (
-            <ReadOnlyNotice
-              icon={<Lock className="size-[16px]" />}
-              title={<>#{channel.name} is archived</>}
-              body="Everything here stays readable and searchable. Reopen it to post again."
-              action={profile.role === "admin" ? <UnarchiveButton channelId={channel.id} channelName={channel.name} /> : undefined}
-            />
-          ) : (
-            <ReadOnlyNotice
-              icon={<Eye className="size-[16px]" />}
-              title={<>You&rsquo;re previewing #{channel.name}</>}
-              body="Read anything you like. Join to post, and it lands in your sidebar."
-              action={<JoinLeaveButton channelId={channel.id} channelName={channel.name} joined={false} />}
-            />
-          )
-        }
-      />
+    /* The panels are siblings of the channel column, not children of it: the
+       header and bookmarks bar stop at the panel's left edge, and the panel
+       runs the full height with its own 56px header on the same hairline. */
+    <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <ChannelHeader
+          channel={channel}
+          members={members}
+          huddle={canPost ? <HuddleButton {...huddleProps} /> : undefined}
+          pins={<PinsButton container={container} initialPins={pins} />}
+        />
+        <ConnectionBanner />
+        <BookmarksBar channelId={channel.id} initialBookmarks={bookmarks} canEdit={(membership !== null || profile.role === "admin") && !channel.is_archived} />
+        {canPost && <HuddleBanner {...huddleProps} />}
+        <MessagePane
+          container={{ kind: "channel", id: channel.id }}
+          me={me}
+          isAdmin={profile.role === "admin"}
+          canPost={canPost}
+          lastReadAt={membership?.last_read_at ?? null}
+          initialPage={firstPage}
+          placeholder={`Message #${channel.name}`}
+          startTitle={`This is the start of #${channel.name}`}
+          startBody={startBody}
+          readOnlyNotice={
+            channel.is_archived ? (
+              <ReadOnlyNotice
+                icon={<Lock className="size-[16px]" />}
+                title={<>#{channel.name} is archived</>}
+                body="Everything here stays readable and searchable. Reopen it to post again."
+                action={profile.role === "admin" ? <UnarchiveButton channelId={channel.id} channelName={channel.name} /> : undefined}
+              />
+            ) : (
+              <ReadOnlyNotice
+                icon={<Eye className="size-[16px]" />}
+                title={<>You&rsquo;re previewing #{channel.name}</>}
+                body="Read anything you like. Join to post, and it lands in your sidebar."
+                action={<JoinLeaveButton channelId={channel.id} channelName={channel.name} joined={false} />}
+              />
+            )
+          }
+        />
+      </div>
       {threadId && (
         <ThreadPanel
           parentId={threadId}
@@ -200,7 +204,6 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
           initialPins={pins}
         />
       )}
-      </div>
-    </>
+    </div>
   );
 }

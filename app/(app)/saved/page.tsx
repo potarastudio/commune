@@ -21,9 +21,9 @@ export default async function SavedPage() {
           {saved.length === 0 ? "For later" : `${saved.length} ${saved.length === 1 ? "item" : "items"}`}
         </span>
       </header>
-      <div className="flex flex-1 flex-col overflow-y-auto">
-        <SavedList meId={profile.id} initialSaved={saved} />
-      </div>
+      {/* The list owns the filter band and the scroll area below it, so the band
+          stays pinned under the header the way the design draws it. */}
+      <SavedList meId={profile.id} initialSaved={saved} />
     </>
   );
 }

@@ -32,6 +32,13 @@ const TIMEZONES = [
   "America/Los_Angeles",
 ];
 
+/** Every card in the Settings design is introduced by this 11.5/700 caps overline. */
+const OVERLINE = "text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground";
+
+/** "One", "Two", … for the five fields this form has; digits past that. */
+const COUNT_WORDS = ["No", "One", "Two", "Three", "Four", "Five"];
+const countLabel = (n: number) => COUNT_WORDS[n] ?? String(n);
+
 /**
  * A settings row: label + note on the left, one 260px control on the right.
  * The note is the field's description — it carries the id the input points at
@@ -105,12 +112,15 @@ export function ProfileForm({ profile, mode }: { profile: Profile; mode: "welcom
   const canSubmit =
     displayName.trim().length > 0 && !handleIssue && (unchangedHandle || handleOk) && !pending && !availability.isFetching;
 
-  const dirty =
-    displayName !== profile.display_name ||
-    handle !== profile.handle ||
-    title !== (profile.title ?? "") ||
-    timezone !== profile.timezone ||
-    avatarUrl !== profile.avatar_url;
+  // The save bar names how much is pending, as the design's "Two unsaved changes." does.
+  const dirtyCount = [
+    displayName !== profile.display_name,
+    handle !== profile.handle,
+    title !== (profile.title ?? ""),
+    timezone !== profile.timezone,
+    avatarUrl !== profile.avatar_url,
+  ].filter(Boolean).length;
+  const dirty = dirtyCount > 0;
 
   const discard = () => {
     setDisplayName(profile.display_name);
@@ -315,132 +325,148 @@ export function ProfileForm({ profile, mode }: { profile: Profile; mode: "welcom
     );
   }
 
-  // ── Settings: the photo card, the details card with its save bar, then Status.
+  // ── Settings: the pane's own scroll region — the photo card, a Details
+  // section and a Status section — over the pane's sticky save footer. The
+  // footer is a sibling of the scroll area, not a band inside the card, so its
+  // hairline runs the full width of the pane and it stays put while you scroll.
   return (
-    <>
-      <form onSubmit={submit} noValidate>
-        <div className="rounded-[12px] border border-border bg-bg-card p-4 shadow-xs">
-          <AvatarPicker
-            userId={profile.id}
-            value={avatarUrl}
-            fallback={fallback}
-            onChange={setAvatarUrl}
-            showPresence
-            heading={displayName.trim() || profile.display_name}
-            meta={
-              <>
-                @{handle}
-                {title.trim() ? ` · ${title.trim()}` : ""}
-                {profile.role === "admin" ? " · Admin" : ""}
-              </>
-            }
-          />
-        </div>
-
-        <div className="mt-3 overflow-hidden rounded-[12px] border border-border bg-bg-card shadow-xs">
-          <div className="divide-y divide-border-subtle">
-            <Row
-              htmlFor="display_name"
-              noteId="display_name_hint"
-              label="Display name"
-              note={fieldError("display_name") ?? "What people see in messages and mentions."}
-              tone={fieldError("display_name") ? "danger" : "muted"}
-            >
-              <Input
-                id="display_name"
-                value={displayName}
-                maxLength={DISPLAY_NAME_MAX}
-                autoComplete="name"
-                onChange={(e) => setDisplayName(e.target.value)}
-                aria-invalid={Boolean(fieldError("display_name"))}
-                aria-describedby="display_name_hint"
+    <form onSubmit={submit} noValidate className="flex min-h-0 flex-1 flex-col">
+      <div className="flex-1 overflow-y-auto px-6 pt-5 pb-2">
+        <div className="max-w-[620px]">
+          <section className="pb-[22px]">
+            <div className="rounded-[12px] border border-border bg-bg-card p-4 shadow-xs">
+              <AvatarPicker
+                userId={profile.id}
+                value={avatarUrl}
+                fallback={fallback}
+                onChange={setAvatarUrl}
+                showPresence
+                heading={displayName.trim() || profile.display_name}
+                meta={
+                  <>
+                    @{handle}
+                    {title.trim() ? ` · ${title.trim()}` : ""}
+                    {profile.role === "admin" ? " · Admin" : ""}
+                  </>
+                }
               />
-            </Row>
+            </div>
+          </section>
 
-            <Row htmlFor="handle" noteId="handle_hint" label="Handle" note={handleNote} tone={handleTone}>
-              {handleField}
-            </Row>
+          <section className="pb-[22px]">
+            <h2 className={OVERLINE}>Details</h2>
+            <div className="mt-[9px] overflow-hidden rounded-[12px] border border-border bg-bg-card shadow-xs">
+              <div className="divide-y divide-border-subtle">
+                <Row
+                  htmlFor="display_name"
+                  noteId="display_name_hint"
+                  label="Display name"
+                  note={fieldError("display_name") ?? "What people see in messages and mentions."}
+                  tone={fieldError("display_name") ? "danger" : "muted"}
+                >
+                  <Input
+                    id="display_name"
+                    value={displayName}
+                    maxLength={DISPLAY_NAME_MAX}
+                    autoComplete="name"
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    aria-invalid={Boolean(fieldError("display_name"))}
+                    aria-describedby="display_name_hint"
+                  />
+                </Row>
 
-            <Row
-              htmlFor="title"
-              label={
-                <>
-                  Job title <span className="font-normal text-fg-600">(optional)</span>
-                </>
-              }
-              note={fieldError("title") ?? "Shown on your profile card."}
-              tone={fieldError("title") ? "danger" : "muted"}
-            >
-              <Input
-                id="title"
-                value={title}
-                maxLength={TITLE_MAX}
-                placeholder="Product Designer"
-                autoComplete="organization-title"
-                onChange={(e) => setTitle(e.target.value)}
-                aria-invalid={Boolean(fieldError("title"))}
-              />
-            </Row>
+                <Row htmlFor="handle" noteId="handle_hint" label="Handle" note={handleNote} tone={handleTone}>
+                  {handleField}
+                </Row>
 
-            <Row htmlFor="timezone" label="Time zone" note="Message times are shown in your timezone.">
-              {timezoneSelect}
-            </Row>
+                <Row
+                  htmlFor="title"
+                  label={
+                    <>
+                      Job title <span className="font-normal text-fg-600">(optional)</span>
+                    </>
+                  }
+                  note={fieldError("title") ?? "Shown on your profile card."}
+                  tone={fieldError("title") ? "danger" : "muted"}
+                >
+                  <Input
+                    id="title"
+                    value={title}
+                    maxLength={TITLE_MAX}
+                    placeholder="Product Designer"
+                    autoComplete="organization-title"
+                    onChange={(e) => setTitle(e.target.value)}
+                    aria-invalid={Boolean(fieldError("title"))}
+                  />
+                </Row>
 
-            {error && !error.ok && !error.field && (
-              <p role="alert" className="bg-danger-surface px-4 py-[10px] text-[13px] leading-[1.5] text-danger">
-                {error.error}
-              </p>
-            )}
-          </div>
+                <Row htmlFor="timezone" label="Time zone" note="Message times are shown in your timezone.">
+                  {timezoneSelect}
+                </Row>
 
-          {/* The design's action bar: a --bg-col band under a full-width hairline. */}
-          <div className="flex flex-wrap items-center gap-3 border-t border-border bg-bg-col px-4 py-3">
-            <p className="min-w-0 flex-1 text-[12.5px] text-muted-foreground">
-              {dirty ? "Unsaved changes." : `Signed in as ${profile.email}.`}
-            </p>
-            <Button type="button" variant="ghost" onClick={discard} disabled={!dirty || pending}>
-              Discard
-            </Button>
-            <Button type="submit" disabled={!canSubmit || !dirty}>
-              {pending ? "Saving…" : "Save changes"}
-            </Button>
-          </div>
-        </div>
-      </form>
-
-      <h3 className="mt-[22px] text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground">Status</h3>
-      <div className="mt-[9px] overflow-hidden rounded-[12px] border border-border bg-bg-card shadow-xs">
-        <div className="flex flex-wrap items-center gap-4 px-4 py-[14px]">
-          <span className="min-w-[180px] flex-1">
-            <span className="block text-[13.5px] font-semibold text-ink">Current status</span>
-            <span className="mt-[3px] block text-[12.5px] leading-[1.5] text-fg-600">
-              {statusActive ? (statusUntil ? `Clears automatically at ${statusUntil}.` : "Stays until you clear it.") : "Shown next to your name across Commune."}
-            </span>
-          </span>
-          {/* Portalled, so the editor's own <form> never nests inside this one. */}
-          <Popover open={statusOpen} onOpenChange={setStatusOpen}>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="flex h-[34px] w-[260px] max-w-full shrink-0 items-center gap-2 rounded-[8px] border border-border-input bg-bg-card px-[10px] text-[13px] text-body shadow-xs transition-colors hover:border-border-hover hover:bg-bg-card-hover"
-              >
-                {statusActive && profile.status_emoji && (
-                  <span role="img" aria-hidden="true" className="shrink-0 text-[14px] leading-none">
-                    {profile.status_emoji}
-                  </span>
+                {error && !error.ok && !error.field && (
+                  <p role="alert" className="bg-danger-surface px-4 py-[10px] text-[13px] leading-[1.5] text-danger">
+                    {error.error}
+                  </p>
                 )}
-                <span className={`min-w-0 flex-1 truncate text-left ${statusActive ? "" : "text-muted-foreground"}`}>
-                  {statusActive ? (profile.status_text ?? "Status set") : "Set a status"}
+              </div>
+            </div>
+          </section>
+
+          <section className="pb-[22px]">
+            <h2 className={OVERLINE}>Status</h2>
+            <div className="mt-[9px] overflow-hidden rounded-[12px] border border-border bg-bg-card shadow-xs">
+              <div className="flex flex-wrap items-center gap-4 px-4 py-[14px]">
+                <span className="min-w-[180px] flex-1">
+                  <span className="block text-[13.5px] font-semibold text-ink">Current status</span>
+                  <span className="mt-[3px] block text-[12.5px] leading-[1.5] text-fg-600">
+                    {statusActive
+                      ? statusUntil
+                        ? `Clears automatically at ${statusUntil}.`
+                        : "Stays until you clear it."
+                      : "Shown next to your name across Commune."}
+                  </span>
                 </span>
-                <ChevronDown className="size-[13px] shrink-0 text-muted-foreground" aria-hidden="true" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-auto p-0">
-              {statusOpen && <StatusEditor profile={profile} onDone={() => setStatusOpen(false)} />}
-            </PopoverContent>
-          </Popover>
+                {/* Portalled, so the editor's own <form> never nests inside this one. */}
+                <Popover open={statusOpen} onOpenChange={setStatusOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-[34px] w-[260px] max-w-full shrink-0 items-center gap-2 rounded-[8px] border border-border-input bg-bg-card px-[10px] text-[13px] text-body shadow-xs transition-colors hover:border-border-hover hover:bg-bg-card-hover"
+                    >
+                      {statusActive && profile.status_emoji && (
+                        <span role="img" aria-hidden="true" className="shrink-0 text-[14px] leading-none">
+                          {profile.status_emoji}
+                        </span>
+                      )}
+                      <span className={`min-w-0 flex-1 truncate text-left ${statusActive ? "" : "text-muted-foreground"}`}>
+                        {statusActive ? (profile.status_text ?? "Status set") : "Set a status"}
+                      </span>
+                      <ChevronDown className="size-[13px] shrink-0 text-muted-foreground" aria-hidden="true" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-auto p-0">
+                    {statusOpen && <StatusEditor profile={profile} onDone={() => setStatusOpen(false)} />}
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
-    </>
+
+      {/* The design's save bar: the pane's footer, 12px/24px on --bg-col under a full-width hairline. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border bg-bg-col px-6 py-3">
+        <p className="min-w-0 flex-1 text-[12.5px] text-muted-foreground" aria-live="polite">
+          {dirty ? `${countLabel(dirtyCount)} unsaved change${dirtyCount === 1 ? "" : "s"}.` : "Everything is saved."}
+        </p>
+        <Button type="button" variant="ghost" onClick={discard} disabled={!dirty || pending}>
+          Discard
+        </Button>
+        <Button type="submit" disabled={!canSubmit || !dirty}>
+          {pending ? "Saving…" : "Save changes"}
+        </Button>
+      </div>
+    </form>
   );
 }

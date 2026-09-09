@@ -53,7 +53,7 @@ export async function sendMagicLink(_prev: MagicLinkState, formData: FormData): 
     admin.from("profiles").select("id").eq("email", email).maybeSingle(),
   ]);
   if (!allowed && !existing) {
-    return { status: "error", message: "That address isn't on the Potara list yet. Ask Hakim to invite it, then try again." };
+    return { status: "error", message: "That address isn’t on the Potara list yet. Ask Hakim to invite it, then try again." };
   }
 
   const supabase = await createSupabaseServerClient();

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { AtSign, Hash, SmilePlus } from "lucide-react";
+import { AtSign, Hash, MessagesSquare, SmilePlus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ActivityItem } from "@/components/activity/activity-item";
+import { ActivityItem, MarkAllReadButton } from "@/components/activity/activity-item";
 import { RemindersList } from "@/components/activity/reminders-list";
 import { fetchUpcomingReminders } from "@/lib/queries/scheduling";
 import {
@@ -19,11 +19,15 @@ import { renderContent } from "@/lib/utils/render";
 
 export const metadata: Metadata = { title: "Activity" };
 
-type Tab = "all" | "mentions" | "reactions";
+type Tab = "all" | "mentions" | "reactions" | "threads";
 const TABS: { id: Tab; label: string }[] = [
   { id: "all", label: "All" },
   { id: "mentions", label: "Mentions" },
   { id: "reactions", label: "Reactions" },
+  // The design's fourth pill. We have no separate thread-reply feed, so it
+  // narrows the same mentions and reactions to the ones that happened inside a
+  // thread — real data, filtered, rather than a new source invented for a tab.
+  { id: "threads", label: "Threads" },
 ];
 
 /** Times and day breaks follow the viewer's timezone (§6), resolved on the server. */
@@ -61,7 +65,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   if (!profile) redirect("/login");
 
   const { tab: rawTab } = await searchParams;
-  const tab: Tab = rawTab === "mentions" || rawTab === "reactions" ? rawTab : "all";
+  const tab: Tab = rawTab === "mentions" || rawTab === "reactions" || rawTab === "threads" ? rawTab : "all";
 
   const [mentions, reactions, reminders] = await Promise.all([
     getMentionsOfMe(supabase, profile.id),
@@ -72,11 +76,12 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const tz = profile.timezone || "Asia/Jakarta";
   const now = new Date();
 
-  type Row = { key: string; at: string; node: React.ReactNode };
+  type Row = { key: string; at: string; thread: boolean; node: React.ReactNode };
 
   const mentionRow = (m: MentionActivity): Row => ({
     key: `m-${m.id}`,
     at: m.message.created_at,
+    thread: m.message.parent_id !== null,
     node: (
       <ActivityItem
         key={`m-${m.id}`}
@@ -103,6 +108,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const reactionRow = (r: ReactionActivity): Row => ({
     key: `r-${r.message.id}-${r.reactor?.id}-${r.emoji}`,
     at: r.created_at,
+    thread: r.message.parent_id !== null,
     node: (
       <ActivityItem
         key={`r-${r.message.id}-${r.reactor?.id}-${r.emoji}`}
@@ -130,7 +136,12 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const rows: Row[] = [
     ...(tab === "reactions" ? [] : mentions.map(mentionRow)),
     ...(tab === "mentions" ? [] : reactions.map(reactionRow)),
-  ].sort((a, b) => b.at.localeCompare(a.at));
+  ]
+    .filter((row) => tab !== "threads" || row.thread)
+    .sort((a, b) => b.at.localeCompare(a.at));
+
+  const threadCount =
+    mentions.filter((m) => m.message.parent_id !== null).length + reactions.filter((r) => r.message.parent_id !== null).length;
 
   // One sticky overline per calendar day, as the design groups the feed.
   const days: { label: string; rows: Row[] }[] = [];
@@ -146,7 +157,9 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
       ? `${mentions.length} ${mentions.length === 1 ? "mention" : "mentions"}`
       : tab === "reactions"
         ? `${reactions.length} ${reactions.length === 1 ? "reaction" : "reactions"}`
-        : `${rows.length} ${rows.length === 1 ? "item" : "items"}`;
+        : tab === "threads"
+          ? `${rows.length} in threads`
+          : `${rows.length} ${rows.length === 1 ? "item" : "items"}`;
 
   const empty =
     tab === "mentions"
@@ -161,23 +174,33 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
             title: "No reactions yet",
             body: "Reactions people leave on your messages collect here. Say something worth a 🔥.",
           }
-        : {
-            icon: <AtSign className="size-[17px]" aria-hidden="true" />,
-            title: "You’re all caught up",
-            body: "Mentions, reactions and thread replies land here. Nothing waiting on you right now.",
-          };
+        : tab === "threads"
+          ? {
+              icon: <MessagesSquare className="size-[17px]" aria-hidden="true" />,
+              title: "Nothing from threads",
+              body: "Mentions and reactions that happened inside a thread collect here, so a long side conversation can't bury them.",
+            }
+          : {
+              icon: <AtSign className="size-[17px]" aria-hidden="true" />,
+              title: "You’re all caught up",
+              body: "Mentions, reactions and thread replies land here. Nothing waiting on you right now.",
+            };
 
   return (
     <>
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
         <h1 className="text-[16px] font-semibold tracking-[-0.02em] text-ink">Activity</h1>
         <span className="text-[12.5px] text-muted-foreground">{count}</span>
+        <div className="ml-auto">
+          <MarkAllReadButton />
+        </div>
       </header>
 
       <nav aria-label="Filter activity" className="flex shrink-0 gap-0.5 border-b border-border px-5 py-[9px]">
         {TABS.map((t) => {
           const active = t.id === tab;
-          const n = t.id === "mentions" ? mentions.length : t.id === "reactions" ? reactions.length : 0;
+          const n =
+            t.id === "mentions" ? mentions.length : t.id === "reactions" ? reactions.length : t.id === "threads" ? threadCount : 0;
           return (
             <Link
               key={t.id}

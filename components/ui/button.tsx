@@ -4,6 +4,41 @@ import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
 /**
+ * The design has exactly one disabled recipe, and it is neutral — it never
+ * fades the accent. Eleven of the twelve `cursor:not-allowed` controls across
+ * the files (Settings save, composer 30px, thread/nav 28px, narrow-width 44px)
+ * are the identical chip:
+ *   `border:1px solid var(--border-strong); background:var(--bg-subtle);
+ *    box-shadow:none; color:var(--muted); cursor:not-allowed`
+ * so it lives here rather than in each variant. It replaces the blanket
+ * `disabled:opacity-50`, which rendered the accent fill at half strength and
+ * measured ~1.9:1 on its own label.
+ *
+ * The label reads `--fg-muted` directly (#6b6b6b light / #9d9d9d dark — the
+ * design's `--muted`) rather than via `text-muted-foreground`, which is broken
+ * in dark: globals.css declares `--muted-foreground: var(--fg-muted)` only on
+ * `:root`, and CSS substitutes a custom property's var() at the element that
+ * declares it, so `.dark` redefining `--fg-muted` never reaches it. The alias
+ * inherits the light #6b6b6b into dark and lands at 3.02:1 on --bg-subtle;
+ * `var(--fg-muted)` re-resolves per element and gives 4.89:1 / 5.94:1. Note
+ * the shadcn `--muted` alias is a *background*, so it is not the one to use.
+ *
+ * Each half of the recipe is emitted at `disabled:` AND `disabled:hover:`: a
+ * variant's `hover:` utility is `.cls:hover` (0,2,0) and ties with a bare
+ * `disabled:` utility, leaving the winner to Tailwind's internal sort order.
+ * Stacking to `.cls:disabled:hover` (0,3,0) wins outright. That also lets us
+ * drop `disabled:pointer-events-none` — it suppressed hover, but a
+ * pointer-events-none element cannot show a cursor, so the design's
+ * `cursor:not-allowed` was unreachable while it was set. Native `disabled`
+ * still swallows clicks and keyboard activation, so only the cursor and
+ * tooltip-on-hover behaviour change.
+ */
+const disabledChip = [
+  "disabled:border-border-strong disabled:hover:border-border-strong",
+  "disabled:bg-bg-subtle disabled:hover:bg-bg-subtle",
+].join(" ")
+
+/**
  * Commune buttons — geometry lifted from the design's inline styles.
  *   filled   h34 · r8 · 1px --accent-border · --accent · 13/600 · px13 · gap7
  *   outline  h34 · r8 · 1px --border-strong · --bg-card · shadow-xs · 13/600
@@ -25,26 +60,28 @@ const buttonVariants = cva(
     "inline-flex shrink-0 items-center justify-center whitespace-nowrap font-semibold",
     "transition-[background-color,border-color,color,box-shadow,opacity,filter]",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-    "disabled:pointer-events-none disabled:opacity-50",
+    // Shared across every variant, chip or not: no shadow, muted label, no
+    // accent left anywhere, and the design's not-allowed cursor.
+    "disabled:cursor-not-allowed",
+    "disabled:text-[var(--fg-muted)] disabled:hover:text-[var(--fg-muted)]",
+    "disabled:shadow-none disabled:inset-shadow-none",
+    "disabled:hover:brightness-100",
     "aria-invalid:border-danger",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[15px]",
   ],
   {
     variants: {
       variant: {
-        default:
-          "border border-accent-border bg-primary text-primary-foreground shadow-[0_1px_2px_0_var(--shadow-tint-md),inset_0_1px_0_rgba(255,255,255,0.2)] hover:border-accent-border-hover hover:bg-primary-hover",
-        destructive:
-          "border border-danger bg-danger text-white shadow-[0_1px_2px_0_var(--shadow-tint-md),inset_0_1px_0_rgba(255,255,255,0.18)] hover:brightness-95",
-        "destructive-outline":
-          "border border-border-strong bg-bg-card text-danger shadow-xs hover:border-danger hover:bg-danger-surface",
-        outline:
-          "border border-border-strong bg-bg-card text-ink shadow-xs hover:border-border-hover hover:bg-bg-card-hover",
-        secondary:
-          "border border-border-strong bg-bg-chip text-ink hover:border-border-chip-hover hover:bg-bg-avatar",
+        default: `border border-accent-border bg-primary text-primary-foreground shadow-[0_1px_2px_0_var(--shadow-tint-md),inset_0_1px_0_rgba(255,255,255,0.2)] hover:border-accent-border-hover hover:bg-primary-hover ${disabledChip}`,
+        destructive: `border border-danger bg-danger text-white shadow-[0_1px_2px_0_var(--shadow-tint-md),inset_0_1px_0_rgba(255,255,255,0.18)] hover:brightness-95 ${disabledChip}`,
+        "destructive-outline": `border border-border-strong bg-bg-card text-danger shadow-xs hover:border-danger hover:bg-danger-surface ${disabledChip}`,
+        outline: `border border-border-strong bg-bg-card text-ink shadow-xs hover:border-border-hover hover:bg-bg-card-hover ${disabledChip}`,
+        secondary: `border border-border-strong bg-bg-chip text-ink hover:border-border-chip-hover hover:bg-bg-avatar ${disabledChip}`,
+        // Ghost and link have no box to neutralise, so they keep their
+        // transparent ground and take only the muted label from the base.
         ghost:
-          "border border-transparent bg-transparent text-fg-600 hover:bg-bg-subtle hover:text-ink",
-        link: "border border-transparent bg-transparent text-ink underline decoration-link-underline underline-offset-[2.5px] hover:text-accent-text hover:decoration-accent-text",
+          "border border-transparent bg-transparent text-fg-600 hover:bg-bg-subtle hover:text-ink disabled:hover:bg-transparent",
+        link: "border border-transparent bg-transparent text-ink underline decoration-link-underline underline-offset-[2.5px] hover:text-accent-text hover:decoration-accent-text disabled:decoration-link-underline disabled:hover:decoration-link-underline",
       },
       size: {
         default: "h-[34px] gap-[7px] rounded-[8px] px-[13px] text-[13px] has-[>svg]:px-[11px]",

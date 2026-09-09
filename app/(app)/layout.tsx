@@ -4,6 +4,7 @@ import { Notifier } from "@/components/notifications/notifier";
 import { PresenceProvider } from "@/components/presence/presence-provider";
 import { CommandPalette } from "@/components/search/command-palette";
 import { KeyboardShortcuts } from "@/components/shortcuts/keyboard-shortcuts";
+import { ChannelColumn } from "@/components/sidebar/channel-column";
 import { Sidebar, WorkspaceRail } from "@/components/sidebar/sidebar";
 import { getJoinedChannels } from "@/lib/queries/channels";
 import { getMyConversations } from "@/lib/queries/conversations";
@@ -34,7 +35,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="h-dvh overflow-auto bg-bg-main">
       <div className="flex h-full min-h-0 min-w-[768px] overflow-hidden">
         <WorkspaceRail profile={profile} channels={channels} initialUnreads={unreads} />
-        <Sidebar profile={profile} channels={channels} conversations={conversations} unreads={unreads} />
+        <ChannelColumn>
+          <Sidebar profile={profile} channels={channels} conversations={conversations} unreads={unreads} />
+        </ChannelColumn>
         <main className="flex min-w-0 flex-1 flex-col bg-bg-main">{children}</main>
         <CommandPalette meId={profile.id} joinedChannelIds={channels.map((c) => c.id)} />
         <KeyboardShortcuts

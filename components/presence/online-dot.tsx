@@ -1,6 +1,6 @@
 "use client";
 
-import { useIsOnline } from "@/lib/store/presence";
+import { useIsOnline, usePresenceStore } from "@/lib/store/presence";
 
 /**
  * The surface a dot sits on, so its 2px ring can punch a clean hole in it.
@@ -20,25 +20,45 @@ const SURFACE = {
 export type PresenceSurface = keyof typeof SURFACE;
 
 /**
- * The presence dot itself: 10px, a 2px ring in the surface behind it, filled
- * green when active and a hollow tertiary ring when away. Callers supply the
- * display utility (`block`, `inline-block`) so nothing fights over it.
+ * The design draws the dot at two sizes: 10px beside a 32px header avatar and
+ * 8px beside a 22px sidebar avatar. Both keep the 2px ring, so the 8px one
+ * reads as a 4px core.
+ */
+const SIZE = { sm: "size-2", md: "size-2.5" } as const;
+
+export type PresenceSize = keyof typeof SIZE;
+
+/**
+ * True once the workspace presence channel has reported at all. Until then
+ * nobody is "away" — they are merely unknown — so callers must not draw the
+ * hollow ring. Header and sidebar share this so they can never disagree.
+ */
+export function usePresenceKnown(): boolean {
+  return usePresenceStore((s) => s.online.size > 0);
+}
+
+/**
+ * The presence dot itself: a 2px ring in the surface behind it, filled green
+ * when active and a hollow tertiary ring when away. Callers supply the display
+ * utility (`block`, `inline-block`) so nothing fights over it.
  */
 export function PresenceDot({
   active,
   ring = "border-bg-main",
+  size = "md",
   className = "",
   label,
 }: {
   active: boolean;
   ring?: PresenceSurface;
+  size?: PresenceSize;
   className?: string;
   label?: string;
 }) {
   const surface = SURFACE[ring];
   return (
     <span
-      className={`size-2.5 shrink-0 rounded-full border-2 ${ring} ${active ? "bg-presence" : surface} ${className}`}
+      className={`${SIZE[size]} shrink-0 rounded-full border-2 ${ring} ${active ? "bg-presence" : surface} ${className}`}
       aria-label={label ?? (active ? "Active" : "Away")}
       role="img"
     >
@@ -61,10 +81,20 @@ export function OnlineDot({ userId, className = "" }: { userId: string; classNam
 /**
  * Avatar-corner variant used on lists and headers. Hidden for people who are
  * simply offline (the design shows no dot for them); pass `away` where an idle
- * signal exists to get the hollow ring instead.
+ * signal exists — `usePresenceKnown()` — to get the hollow ring instead.
  */
-export function AvatarPresence({ userId, ring = "border-bg-main", away = false }: { userId: string; ring?: PresenceSurface; away?: boolean }) {
+export function AvatarPresence({
+  userId,
+  ring = "border-bg-main",
+  size = "md",
+  away = false,
+}: {
+  userId: string;
+  ring?: PresenceSurface;
+  size?: PresenceSize;
+  away?: boolean;
+}) {
   const online = useIsOnline(userId);
   if (!online && !away) return null;
-  return <PresenceDot active={online} ring={ring} className="absolute -right-px -bottom-px block" />;
+  return <PresenceDot active={online} ring={ring} size={size} className="absolute -right-px -bottom-px block" />;
 }

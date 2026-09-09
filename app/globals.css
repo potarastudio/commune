@@ -267,6 +267,13 @@
   }
   html {
     font-size: 14px;
+    /*
+      The design leaves line-height unset and sets it explicitly where it
+      matters (1.55 message body, 1.6 descriptions). Tailwind's preflight
+      forces 1.5 here, which inflated every line box the design left alone —
+      measurably so on the composer, message rows and the login rail.
+    */
+    line-height: normal;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;

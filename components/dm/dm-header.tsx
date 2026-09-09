@@ -1,23 +1,76 @@
 "use client";
 
-import { ChevronDown, Clock } from "lucide-react";
-import { PresenceDot } from "@/components/presence/online-dot";
+import { ChevronDown, Clock, FileText } from "lucide-react";
+import { PresenceDot, usePresenceKnown } from "@/components/presence/online-dot";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { UserStatus } from "@/components/profile/user-status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { conversationLabel, type ConversationMember } from "@/lib/queries/conversations";
+import { useContainerFiles } from "@/lib/queries/files";
+import type { Container } from "@/lib/queries/messages";
 import { useProfileMap } from "@/lib/queries/profiles";
 import { usePresenceStore } from "@/lib/store/presence";
 import { localTimeLabel } from "@/lib/utils/status";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
 
-/** The viewer's own zone, so "15:04 local" only appears when it differs from theirs. */
+/** The viewer's own zone, so the away line only names their clock when it differs. */
 function viewerTimezone(): string {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   } catch {
     return "Asia/Jakarta";
   }
+}
+
+/**
+ * Their wall clock, for the header's "Active now · 15:04 local". The design
+ * carries it in both header variants regardless of the viewer's own zone, so
+ * unlike `localTimeLabel` this does not drop out when the two match. It only
+ * renders once their profile has loaded on the client, so there is nothing for
+ * the server to disagree with.
+ */
+function localClock(timezone: string, now = new Date()): string | null {
+  try {
+    return new Intl.DateTimeFormat("en-GB", { timeZone: timezone, hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Header chip: how many files have been shared in this conversation. The DM
+ * header's one count chip is files where the channel header's is pins (the
+ * design draws #u-file-text in all three DM variants); it opens the details
+ * panel on its Files tab, from which Pins is one tab away.
+ */
+export function DmFilesButton({ container }: { container: Container }) {
+  const { openPanel, panelTab, showPanel, closePanel } = useThreadNav();
+  const { data } = useContainerFiles(container);
+  const count = data?.length ?? 0;
+  const open = openPanel === "details" && panelTab === "files";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={() => (open ? closePanel() : showPanel("details", "files"))}
+          aria-pressed={open}
+          aria-label={count === 1 ? "1 shared file" : `${count} shared files`}
+          className={`flex h-8 items-center gap-1.5 rounded-md border px-[9px] text-[13px] font-medium shadow-xs transition-colors focus-visible:outline-2 focus-visible:outline-ring ${
+            open
+              ? "border-accent-surface-border bg-accent-surface text-accent-foreground hover:border-accent-border"
+              : "border-border-strong bg-bg-card text-fg-400 hover:border-border-hover hover:bg-bg-card-hover"
+          }`}
+        >
+          <FileText className={`size-[15px] ${open ? "" : "text-fg-600"}`} aria-hidden="true" />
+          <span className="tabular-nums">{count}</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{open ? "Hide shared files" : "Shared files"}</TooltipContent>
+    </Tooltip>
+  );
 }
 
 /** "you, Sari and Raka" */
@@ -50,12 +103,12 @@ export function DmHeader({
   members,
   meId,
   huddle,
-  pins,
+  files,
 }: {
   members: ConversationMember[];
   meId: string;
   huddle?: React.ReactNode;
-  pins?: React.ReactNode;
+  files?: React.ReactNode;
 }) {
   const { showPanel } = useThreadNav();
   const profiles = useProfileMap();
@@ -66,13 +119,16 @@ export function DmHeader({
   const single = others.length === 1 ? others[0] : null;
   const shown = others.length === 0 ? members : others;
   // Nobody is "Away" until the workspace presence channel has actually reported.
-  const presenceKnown = online.size > 0;
+  const presenceKnown = usePresenceKnown();
   const isHere = single ? online.has(single.id) : false;
 
   let subline: string;
   if (single) {
     const their = profiles.get(single.id);
-    const local = their ? localTimeLabel(their.timezone ?? "Asia/Jakarta", viewerTimezone()) : null;
+    // The design's sub-line is always two parts — "Active now · 15:04 local",
+    // "Away · likely back after 16:00" — so their clock stays even when the
+    // whole team shares one timezone.
+    const local = their ? localClock(their.timezone ?? "Asia/Jakarta") : null;
     // Presence and time only — @handle and title live on the profile card.
     const parts: string[] = [];
     if (presenceKnown) parts.push(isHere ? "Active now" : "Away");
@@ -141,10 +197,10 @@ export function DmHeader({
         )}
       </h1>
 
-      {/* The design's DM header carries one 32px count chip and the Huddle
-          button — people and files are reached from the details panel. */}
+      {/* The design's DM header carries one 32px count chip — files — and the
+          Huddle button; people and pins are reached from the details panel. */}
       <span className="ml-auto flex shrink-0 items-center gap-2.5">
-        {pins}
+        {files}
         {huddle}
       </span>
     </header>
@@ -154,7 +210,8 @@ export function DmHeader({
 /**
  * Says they are away before you type, not after you send — and what time it is
  * where they are. Only for 1:1s, and only once presence has actually loaded.
- * Drawn as the design's 22px borderless line, on the message column's gutter.
+ * The design puts this in the 22px line directly above the composer, not as a
+ * banner over the log, so it goes through `ComposerNoticeProvider`.
  */
 export function DmAwayNotice({ person }: { person: ConversationMember }) {
   const online = usePresenceStore((s) => s.online);
@@ -165,7 +222,7 @@ export function DmAwayNotice({ person }: { person: ConversationMember }) {
   const local = their ? localTimeLabel(their.timezone ?? "Asia/Jakarta", viewerTimezone()) : null;
 
   return (
-    <div className="shrink-0 px-6 pt-2.5">
+    <div className="shrink-0 px-6">
       <p className="flex h-[22px] items-center gap-[7px] px-0.5 text-[12.5px] text-muted-foreground">
         <Clock className="size-[13px] shrink-0" aria-hidden="true" />
         <span className="min-w-0 truncate">

@@ -1,9 +1,16 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
 import Link from "next/link";
+import { useTransition } from "react";
+import { toast } from "sonner";
+import { MARK_READ_EVENT } from "@/components/shortcuts/keyboard-shortcuts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { MessageAuthor } from "@/lib/queries/messages";
+import { Button } from "@/components/ui/button";
+import { markReadAction } from "@/lib/actions/messages";
+import type { Container, MessageAuthor } from "@/lib/queries/messages";
+import { clearUnread, fetchUnreadMap, unreadKeys, type UnreadMap } from "@/lib/queries/unreads";
 import { cn } from "@/lib/utils";
 
 function when(iso: string) {
@@ -83,5 +90,52 @@ export function ActivityItem({
       </Link>
       {action && <div className="shrink-0 py-[13px] pr-5">{action}</div>}
     </li>
+  );
+}
+
+function containerFromKey(key: string): Container | null {
+  const [kind, id] = key.split(":");
+  return kind === "channel" || kind === "conversation" ? { kind, id } : null;
+}
+
+/**
+ * The Activity header's right-aligned "Mark all read" (32px outline chip, as the
+ * design draws it). There is no per-row read flag on mentions and reactions, so
+ * the honest thing to clear is what the app actually tracks as unread: every
+ * channel and DM carrying an unread count. Same path as Shift+Esc — patch the
+ * unread cache first so the sidebar settles instantly, then persist.
+ */
+export function MarkAllReadButton() {
+  const queryClient = useQueryClient();
+  const [pending, startTransition] = useTransition();
+  const { data: unreads } = useQuery({ queryKey: unreadKeys.all, queryFn: fetchUnreadMap, staleTime: 15_000 });
+
+  const markAllRead = () =>
+    startTransition(async () => {
+      const map = (queryClient.getQueryData<UnreadMap>(unreadKeys.all) ?? unreads ?? {}) as UnreadMap;
+      const targets = Object.entries(map)
+        .filter(([, v]) => v.unread > 0)
+        .map(([key]) => containerFromKey(key))
+        .filter((c): c is Container => c !== null);
+
+      window.dispatchEvent(new CustomEvent(MARK_READ_EVENT));
+      if (targets.length === 0) {
+        toast("Nothing unread", { description: "You're all caught up." });
+        return;
+      }
+      for (const c of targets) clearUnread(queryClient, c);
+      const results = await Promise.all(targets.map((container) => markReadAction({ container })));
+      if (results.some((r) => !r.ok)) {
+        toast.error("Couldn't mark everything as read");
+        void queryClient.invalidateQueries({ queryKey: unreadKeys.all });
+      } else {
+        toast.success(targets.length === 1 ? "Marked 1 conversation as read" : `Marked ${targets.length} conversations as read`);
+      }
+    });
+
+  return (
+    <Button type="button" variant="outline" size="sm" disabled={pending} onClick={markAllRead} className="h-8 px-[11px]">
+      Mark all read
+    </Button>
   );
 }

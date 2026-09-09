@@ -1,5 +1,6 @@
 "use client";
 
+import { Pin } from "lucide-react";
 import Link from "next/link";
 import { MessageItem } from "@/components/message/message-item";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,10 +51,15 @@ export function PinsList({
   }
 
   if (items.length === 0) {
+    // The panel empty state, not the floating pinned-popover one: same tile,
+    // heading and body scale as the Files tab it shares a tab strip with.
     return (
-      <div className="px-5 pt-6 pb-[22px] text-center">
-        <p className="text-[13.5px] font-semibold text-ink">No pins yet</p>
-        <p className="mx-auto mt-[5px] max-w-[230px] text-[12.5px] leading-[1.5] text-fg-600 text-pretty">
+      <div className="px-6 py-12 text-center">
+        <span className="mx-auto grid size-10 place-items-center rounded-[11px] border border-border-subtle bg-bg-chip text-fg-600">
+          <Pin className="size-[17px]" aria-hidden="true" />
+        </span>
+        <h3 className="mt-3 text-[15.5px] font-semibold tracking-[-0.015em] text-ink">No pins yet</h3>
+        <p className="mt-[5px] text-pretty text-[13px] leading-[1.55] text-fg-600">
           Pin a message to keep it findable for everyone in {containerLabel}.
         </p>
       </div>

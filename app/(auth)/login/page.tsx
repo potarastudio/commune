@@ -9,15 +9,15 @@ export const metadata: Metadata = { title: "Sign in" };
 
 const errorCopy: Record<string, { title: string; body: string }> = {
   allowlist: {
-    title: "This Google account isn't on the Potara list yet.",
+    title: "This Google account isn’t on the Potara list yet.",
     body: "Ask Hakim to add your email, then try again with the same account.",
   },
   oauth: {
-    title: "Google sign-in didn't complete.",
+    title: "Google sign-in didn’t complete.",
     body: "Nothing was changed. Try again, and if it keeps happening tell Hakim which account you used.",
   },
   link: {
-    title: "That sign-in link didn't work.",
+    title: "That sign-in link didn’t work.",
     body: "Links work once and expire after an hour. Request a new one below and open it on this device.",
   },
 };

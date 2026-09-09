@@ -22,7 +22,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CreateChannelPopover } from "@/components/channel/create-channel-popover";
-import { AvatarPresence } from "@/components/presence/online-dot";
+import { AvatarPresence, usePresenceKnown } from "@/components/presence/online-dot";
 import { UserStatus } from "@/components/profile/user-status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -173,6 +173,9 @@ export function SidebarNav({
   const unreads = useUnreadCounts(initialUnreads, me.id);
   const collapsed = useUiStore((s) => s.collapsed);
   const toggleSection = useUiStore((s) => s.toggleSection);
+  // Once presence has reported, someone who is not in it is away — the DM row
+  // draws the same hollow ring the DM header draws for that person.
+  const presenceKnown = usePresenceKnown();
 
   const isActive = (href: string) => pathname === href;
 
@@ -300,7 +303,7 @@ export function SidebarNav({
                         {face.display_name.slice(0, 1).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {others.length === 1 && <AvatarPresence userId={face.id} ring="border-bg-col" />}
+                    {others.length === 1 && <AvatarPresence userId={face.id} ring="border-bg-col" size="sm" away={presenceKnown} />}
                   </span>
                 )}
                 <span className="min-w-0 truncate">{conversationLabel(c.members, me.id, { short: true })}</span>

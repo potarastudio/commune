@@ -14,7 +14,7 @@ export function SidebarSearchButton() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="flex h-[34px] w-full items-center gap-[8px] rounded-md border border-border-strong bg-bg-card px-[10px] text-[13.5px] text-muted-foreground shadow-xs transition-colors hover:border-border-hover"
+      className="flex h-[36px] w-full items-center gap-[8px] rounded-md border border-border-strong bg-bg-card px-[10px] text-[13.5px] text-muted-foreground shadow-xs transition-colors hover:border-border-hover"
     >
       <Search className="size-[15px] shrink-0" aria-hidden="true" />
       <span className="flex-1 truncate text-left">Search Commune</span>

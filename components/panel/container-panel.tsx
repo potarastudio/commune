@@ -1,8 +1,8 @@
 "use client";
 
-import { UserPlus, X } from "lucide-react";
+import { Search, UserPlus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ArchiveChannelControl } from "@/components/channel/archive-channel";
 import { AddPeople, InlineField, type Member } from "@/components/channel/channel-fields";
@@ -54,6 +54,7 @@ export function ContainerPanel({
   const tabs: PanelTab[] = channel ? ["about", "members", "files", "pins"] : ["members", "files", "pins"];
   const tab: PanelTab = panelTab && tabs.includes(panelTab) ? panelTab : tabs[0];
   const [adding, setAdding] = useState(false);
+  const [memberQuery, setMemberQuery] = useState("");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -81,6 +82,16 @@ export function ContainerPanel({
     : `${members.length} ${members.length === 1 ? "person" : "people"}`;
   const canAdd = Boolean(channel) && (isMember || isAdmin);
   const canArchive = isAdmin && Boolean(channel) && !channel?.is_archived;
+  const personWord = channel ? "member" : "person";
+  // The design's find-a-member field filters what is already loaded — name,
+  // handle or title, so "design" finds the design lead as readily as @sari.
+  const shownMembers = useMemo(() => {
+    const q = memberQuery.trim().toLowerCase();
+    if (!q) return members;
+    return members.filter((m) =>
+      [m.display_name, m.handle, m.title ?? ""].some((v) => v.toLowerCase().includes(q)),
+    );
+  }, [members, memberQuery]);
 
   return (
     <aside className="flex w-[340px] shrink-0 flex-col border-l border-border bg-bg-main" aria-label={`${containerLabel} details`}>
@@ -164,35 +175,64 @@ export function ContainerPanel({
 
         {tab === "members" && (
           <>
+            <div className="shrink-0 px-4 py-3">
+              <div className="field-focus flex h-[34px] items-center gap-2 rounded-md border border-border-strong bg-bg-chip px-2.5 transition-colors">
+                <Search className="size-[14px] shrink-0 text-muted-foreground" aria-hidden="true" />
+                <input
+                  value={memberQuery}
+                  onChange={(e) => setMemberQuery(e.target.value)}
+                  placeholder={`Find a ${personWord}`}
+                  aria-label={`Find a ${personWord}`}
+                  className="min-w-0 flex-1 bg-transparent text-[13px] text-body outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+            </div>
             <ul className="flex-1 overflow-y-auto pb-2">
-              {members.map((m) => (
-                <li key={m.id}>
-                  <ProfileCard userId={m.id} side="bottom" align="start">
-                    <button type="button" className="flex w-full items-center gap-[11px] px-4 py-[9px] text-left hover:bg-bg-hover">
-                      <span className="relative block size-8 shrink-0">
-                        <Avatar>
-                          <AvatarImage src={m.avatar_url ?? undefined} alt="" className="object-cover" />
-                          <AvatarFallback>{m.display_name.slice(0, 1).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <AvatarPresence userId={m.id} ring="border-bg-main" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1.5">
-                          <span className="truncate text-[13.5px] font-semibold text-ink">{m.display_name}</span>
-                          <UserStatus userId={m.id} />
+              {shownMembers.map((m) => {
+                // Roles only come down for the viewer, so the chip is the one
+                // row we can honestly label — "Admin" when they are one, "You"
+                // otherwise, which is where the handle line used to say it.
+                const isMe = m.id === me.id;
+                const role = isMe ? (isAdmin ? "Admin" : "You") : null;
+                return (
+                  <li key={m.id}>
+                    <ProfileCard userId={m.id} side="bottom" align="start">
+                      <button type="button" className="flex w-full items-center gap-[11px] px-4 py-[9px] text-left hover:bg-bg-hover">
+                        <span className="relative block size-8 shrink-0">
+                          <Avatar>
+                            <AvatarImage src={m.avatar_url ?? undefined} alt="" className="object-cover" />
+                            <AvatarFallback>{m.display_name.slice(0, 1).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <AvatarPresence userId={m.id} ring="border-bg-main" />
                         </span>
-                        <span className="block truncate text-[12px] text-fg-600">
-                          @{m.handle}
-                          {m.id === me.id ? " · You" : m.title ? ` · ${m.title}` : ""}
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-1.5 leading-[1.2]">
+                            <span className="truncate text-[13.5px] font-semibold text-ink">{m.display_name}</span>
+                            <UserStatus userId={m.id} />
+                          </span>
+                          <span className="block truncate text-[12px] leading-[1.2] text-fg-600">
+                            @{m.handle}
+                            {isMe && isAdmin ? " · You" : m.title ? ` · ${m.title}` : ""}
+                          </span>
                         </span>
-                      </span>
-                    </button>
-                  </ProfileCard>
+                        {role && (
+                          <span className="shrink-0 rounded-sm border border-border-strong bg-bg-chip px-1.5 py-px text-[11px] font-semibold text-fg-600">
+                            {role}
+                          </span>
+                        )}
+                      </button>
+                    </ProfileCard>
+                  </li>
+                );
+              })}
+              {shownMembers.length === 0 && (
+                <li className="px-4 py-3 text-[13px] leading-[1.55] text-fg-600">
+                  Nobody here matches “{memberQuery.trim()}”.
                 </li>
-              ))}
+              )}
             </ul>
             {canAdd && channel && (
-              <div className="shrink-0 border-t border-border-subtle p-4">
+              <div className="shrink-0 border-t border-border-subtle px-4 py-3">
                 {adding ? (
                   <div>
                     <AddPeople channel={channel} members={members} onDone={() => setAdding(false)} />

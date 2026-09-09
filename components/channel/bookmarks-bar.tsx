@@ -106,7 +106,7 @@ function BookmarkChip({ bookmark, canEdit }: { bookmark: BookmarkRow; canEdit: b
         <TooltipContent side="bottom">{host(bookmark.url)}</TooltipContent>
       </Tooltip>
       {canEdit && (
-        <span className="flex w-0 items-center overflow-hidden transition-[width] group-focus-within/bm:w-[52px] group-hover/bm:w-[52px]">
+        <span data-menu-anchor="" className="flex w-0 items-center overflow-hidden transition-[width] group-focus-within/bm:w-[52px] group-hover/bm:w-[52px]">
           <Popover open={editing} onOpenChange={setEditing}>
             <PopoverTrigger asChild>
               <button

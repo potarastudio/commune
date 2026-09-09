@@ -74,6 +74,8 @@ export function MessageActions({
 
   return (
     <div
+      /* Stays laid out while one of its menus is open — see data-menu-anchor in globals.css. */
+      data-menu-anchor=""
       className="absolute -top-[15px] right-4 hidden items-center gap-0.5 rounded-lg border border-border bg-bg-card p-[3px] shadow-md group-focus-within:flex group-hover:flex md:right-6"
       role="toolbar"
       aria-label="Message actions"

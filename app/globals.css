@@ -321,6 +321,20 @@
   text-decoration-color: var(--accent-text);
 }
 
+/*
+  Some controls only exist while their row is hovered — the message hover
+  toolbar (display:none) and the bookmark chip's edit/remove pair (width:0).
+  Their menus render in a portal, so reaching one takes the pointer and the
+  focus out of the row: the anchor collapses to a 0x0 rect and the popover
+  jumps to the top-left corner. Mark those wrappers data-menu-anchor and keep
+  them laid out while a menu inside them is open. Unlayered so it beats the
+  `hidden` and `w-0` utilities.
+*/
+[data-menu-anchor]:has([data-state="open"]) {
+  display: flex;
+  width: auto;
+}
+
 /* Fields take a 3px accent halo instead of the offset ring. */
 .field-focus:focus-visible,
 .field-focus:has(:focus-visible),

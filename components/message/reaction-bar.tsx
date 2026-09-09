@@ -4,6 +4,7 @@ import { SmilePlus } from "lucide-react";
 import { useProfileMap } from "@/lib/queries/profiles";
 import type { Reaction } from "@/lib/queries/messages";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Emoji } from "@/components/emoji/emoji";
 import { QuickReactionPicker } from "./quick-reaction-picker";
 
 export function ReactionBar({
@@ -44,12 +45,14 @@ export function ReactionBar({
                     : "border-border bg-background text-foreground/80 hover:border-foreground/30"
                 }`}
               >
-                <span aria-hidden="true">{emoji}</span>
+                <span aria-hidden="true" className="text-[13px] leading-none">
+                  <Emoji value={emoji} />
+                </span>
                 <span className="font-medium">{users.length}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-56 text-center">
-              {who} reacted with {emoji}
+              {who} reacted with <Emoji value={emoji} />
             </TooltipContent>
           </Tooltip>
         );

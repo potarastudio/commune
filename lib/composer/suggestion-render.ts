@@ -12,6 +12,14 @@ export function suggestionRender<Item>(
   return () => {
     let renderer: ReactRenderer<SuggestionListRef, SuggestionProps<Item>> | undefined;
 
+    // The composer's Enter-to-send runs before plugins see the key, so it checks
+    // this flag and stands aside while a list with matches is open.
+    const flag = (props: SuggestionProps<Item>, open: boolean) => {
+      const dom = props.editor.view.dom as HTMLElement;
+      if (open && props.items.length > 0) dom.dataset.suggestionOpen = "true";
+      else delete dom.dataset.suggestionOpen;
+    };
+
     const position = (props: SuggestionProps<Item>) => {
       const rect = props.clientRect?.();
       if (!rect || !renderer) return;
@@ -27,24 +35,28 @@ export function suggestionRender<Item>(
         renderer = new ReactRenderer(Component, { props, editor: props.editor });
         document.body.appendChild(renderer.element);
         position(props);
+        flag(props, true);
       },
       onUpdate(props) {
         renderer?.updateProps(props);
         position(props);
+        flag(props, true);
       },
       onKeyDown(props: SuggestionKeyDownProps) {
         if (props.event.key === "Escape") {
           renderer?.destroy();
           renderer?.element.remove();
           renderer = undefined;
+          delete (props.view.dom as HTMLElement).dataset.suggestionOpen;
           return true;
         }
         return renderer?.ref?.onKeyDown(props) ?? false;
       },
-      onExit() {
+      onExit(props) {
         renderer?.destroy();
         renderer?.element.remove();
         renderer = undefined;
+        flag(props, false);
       },
     };
   };

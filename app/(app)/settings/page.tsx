@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Hash, Lock } from "lucide-react";
 import { NotificationLevelControl } from "@/components/channel/notification-level";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { CustomEmojiSettings } from "@/components/settings/custom-emoji";
 import { InvitePeople } from "@/components/settings/invite-people";
 import { NotificationSettings } from "@/components/settings/notifications";
 import { ThemePicker } from "@/components/settings/theme-picker";
@@ -47,6 +48,17 @@ export default async function SettingsPage() {
             </div>
           </section>
         )}
+
+        <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
+          <h2 className="text-[16px] font-semibold tracking-tight">Custom emoji</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            The studio&apos;s own emoji, for messages and reactions. Type <code className="rounded bg-muted px-1 font-mono text-[12px]">:name:</code> or pick them from the emoji picker.
+            {profile.role === "admin" ? " As an admin you can remove any of them." : " You can remove the ones you added."}
+          </p>
+          <div className="mt-4">
+            <CustomEmojiSettings meId={profile.id} isAdmin={profile.role === "admin"} />
+          </div>
+        </section>
 
         <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
           <h2 className="text-[16px] font-semibold tracking-tight">Appearance</h2>

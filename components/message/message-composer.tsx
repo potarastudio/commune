@@ -103,6 +103,8 @@ export function MessageComposer({
       handleKeyDown(view, event) {
         if (event.key !== "Enter" || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey) return false;
         if (event.isComposing) return false;
+        // An open @mention or :emoji: list owns Enter (it picks the highlighted item).
+        if ((view.dom as HTMLElement).dataset.suggestionOpen === "true") return false;
         const inCode = view.state.selection.$from.parent.type.name === "codeBlock";
         if (inCode) return false;
         event.preventDefault();

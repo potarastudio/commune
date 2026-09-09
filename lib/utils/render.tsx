@@ -1,5 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
+import { EmojiText } from "@/components/emoji/emoji";
 import { MentionChip } from "@/components/profile/mention-chip";
+import { mayContainShortcode } from "@/lib/utils/custom-emoji";
 import { Fragment, type ReactNode } from "react";
 
 /**
@@ -78,8 +80,12 @@ function renderNode(node: JSONContent, key: string): ReactNode {
           {children}
         </p>
       );
-    case "text":
-      return <Fragment key={key}>{applyMarks(node.text ?? "", node.marks, key)}</Fragment>;
+    case "text": {
+      const text = node.text ?? "";
+      const inCode = node.marks?.some((m) => m.type === "code");
+      const body = !inCode && mayContainShortcode(text) ? <EmojiText text={text} /> : text;
+      return <Fragment key={key}>{applyMarks(body, node.marks, key)}</Fragment>;
+    }
     case "hardBreak":
       return <br key={key} />;
     case "bulletList":

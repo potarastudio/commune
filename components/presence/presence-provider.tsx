@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { touchPresenceAction } from "@/lib/actions/profile";
+import { useCustomEmoji } from "@/lib/queries/custom-emoji";
 import { useProfilesRealtime } from "@/lib/queries/profiles";
 import { useSessionStore } from "@/lib/store/session";
 import { useOnlinePresence } from "@/lib/realtime/presence";
@@ -14,6 +15,7 @@ export function PresenceProvider({ meId }: { meId: string }) {
   useEffect(() => setMeId(meId), [meId, setMeId]);
   useOnlinePresence(meId);
   useProfilesRealtime();
+  useCustomEmoji(); // keeps the custom emoji set cached for rendering and the composer
   useLastSeenHeartbeat();
   return null;
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadEmoji } from "@/lib/composer/emoji";
+import { useCustomEmoji } from "@/lib/queries/custom-emoji";
 
 type PickerModule = typeof import("@emoji-mart/react");
 
@@ -28,6 +29,10 @@ export function EmojiPicker({
   const isOpen = open ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
   const { resolvedTheme } = useTheme();
+  const { data: customEmoji } = useCustomEmoji();
+  const custom = customEmoji?.length
+    ? [{ id: "potara", name: "Potara", emojis: customEmoji.map((e) => ({ id: e.name, name: e.name.replace(/_/g, " "), keywords: [e.name], skins: [{ src: e.url }] })) }]
+    : undefined;
   const [mod, setMod] = useState<{ Picker: PickerModule["default"]; data: unknown } | null>(null);
 
   useEffect(() => {
@@ -44,14 +49,16 @@ export function EmojiPicker({
         {mod ? (
           <mod.Picker
             data={mod.data}
+            custom={custom}
             theme={resolvedTheme === "dark" ? "dark" : "light"}
             previewPosition="none"
             skinTonePosition="search"
             maxFrequentRows={2}
             perLine={9}
             autoFocus
-            onEmojiSelect={(e: { native: string; id: string }) => {
-              onPick({ native: e.native, id: e.id });
+            onEmojiSelect={(e: { native?: string; id: string }) => {
+              // Custom emoji have no unicode form; they travel as ":name:" (§4 reactions.emoji).
+              onPick({ native: e.native ?? `:${e.id}:`, id: e.id });
               setOpen(false);
             }}
           />

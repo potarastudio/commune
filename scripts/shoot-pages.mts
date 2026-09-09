@@ -46,6 +46,9 @@ const SHOTS: Shot[] = [
   { name: "search-empty", path: "/search" },
   { name: "search-results", path: "/search?q=hero" },
   { name: "settings", path: "/settings" },
+  { name: "profile", path: "/u/sari" },
+  { name: "profile-me", path: "/u/hakim" },
+  { name: "profile-missing", path: "/u/nobodyatall" },
   { name: "welcome", path: "/welcome" },
   { name: "privacy", path: "/privacy" },
   { name: "palette", path: `/channel/${designId}`, prep: async (p) => {

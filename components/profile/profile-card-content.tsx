@@ -103,18 +103,24 @@ export function ProfileCardContent({ userId, onDone }: { userId: string; onDone:
           </span>
         </p>
 
+        {/* The design left "View profile" with nowhere to go; it goes to /u/<handle> now. */}
         <div className="mt-[13px] flex gap-[7px]">
           {isMe ? (
-            <Button asChild variant="outline" className="w-full">
+            <Button asChild variant="outline" className="flex-1">
               <Link href="/settings" onClick={onDone}>
                 Edit your profile
               </Link>
             </Button>
           ) : (
-            <Button type="button" className="w-full" disabled={pending} onClick={message}>
+            <Button type="button" className="flex-1" disabled={pending} onClick={message}>
               {pending ? "Opening…" : "Message"}
             </Button>
           )}
+          <Button asChild variant="outline" className="flex-1">
+            <Link href={`/u/${p.handle}`} onClick={onDone}>
+              View profile
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

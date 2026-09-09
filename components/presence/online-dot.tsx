@@ -98,3 +98,18 @@ export function AvatarPresence({
   if (!online && !away) return null;
   return <PresenceDot active={online} ring={ring} size={size} className="absolute -right-px -bottom-px block" />;
 }
+
+/**
+ * Dot plus words, for a profile page where a bare dot has nothing to explain
+ * it. Unlike OnlineDot this always renders: on a profile the absence of any
+ * presence line reads as a missing field rather than as "not here".
+ */
+export function PresenceLabel({ userId, ring = "border-bg-card" }: { userId: string; ring?: PresenceSurface }) {
+  const online = useIsOnline(userId);
+  return (
+    <span className="flex items-center gap-1.5">
+      <PresenceDot active={online} ring={ring} size="sm" className="block" />
+      {online ? "Active now" : "Away"}
+    </span>
+  );
+}

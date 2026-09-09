@@ -34,12 +34,12 @@ export function ThemePicker() {
           >
             <span
               className={`flex h-14 w-full items-end gap-1 rounded-md border p-1.5 ${
-                o.value === "dark" ? "border-[#2c2723] bg-[#141210]" : o.value === "light" ? "border-[#e4e4df] bg-white" : "border-border bg-gradient-to-r from-white to-[#141210]"
+                o.value === "dark" ? "border-[#262626] bg-[#0f0f0f]" : o.value === "light" ? "border-[#e4e4df] bg-white" : "border-border bg-gradient-to-r from-white to-[#0f0f0f]"
               }`}
               aria-hidden="true"
             >
-              <span className={`h-full w-1/3 rounded-sm ${o.value === "light" ? "bg-[#1e1a17]" : "bg-[#0f0d0b]"}`} />
-              <span className={`h-2/3 flex-1 rounded-sm ${o.value === "dark" ? "bg-[#1b1815]" : o.value === "light" ? "bg-[#f3f3f0]" : "bg-muted/60"}`} />
+              <span className={`h-full w-1/3 rounded-sm ${o.value === "light" ? "bg-[#161616]" : "bg-[#0a0a0a]"}`} />
+              <span className={`h-2/3 flex-1 rounded-sm ${o.value === "dark" ? "bg-[#161616]" : o.value === "light" ? "bg-[#f3f3f0]" : "bg-muted/60"}`} />
             </span>
             <span className="flex items-center gap-1.5 font-medium">
               <o.icon className="size-3.5" aria-hidden="true" />

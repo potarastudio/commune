@@ -18,30 +18,30 @@
   --popover: #ffffff;
   --popover-foreground: #1b1b1a;
 
-  --primary: #d9591b;
+  --primary: #f05710;
   --primary-foreground: #ffffff;
-  --primary-hover: #bf4a12;
+  --primary-hover: #d64b0c;
 
   --secondary: #f3f3f0;
   --secondary-foreground: #1b1b1a;
   --muted: #f3f3f0;
   --muted-foreground: #6e6e69;
-  --accent: #fdebe0;
-  --accent-foreground: #7a2e0a;
+  --accent: #feeee6;
+  --accent-foreground: #8a3308;
 
   --destructive: #c93b3b;
   --destructive-foreground: #ffffff;
 
   --border: #e4e4df;
   --input: #d9d9d3;
-  --ring: #d9591b;
+  --ring: #f05710;
 
   /* app-specific */
-  --sidebar: #1e1a17;
-  --sidebar-foreground: #ede8e3;
-  --sidebar-muted: #a39a91;
+  --sidebar: #161616;
+  --sidebar-foreground: #ececec;
+  --sidebar-muted: #9c9c9c;
   --sidebar-hover: rgba(255, 255, 255, 0.06);
-  --sidebar-active: #362a20;
+  --sidebar-active: #2a2a2a;
   --sidebar-active-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-unread: #ffffff;
@@ -50,42 +50,42 @@
   --mention-foreground: #1d4f93;
   --mention-self: #cfe0fb;
   --online: #2fb37a;
-  --link: #b8450f;
+  --link: #d64b0c;
   --message-hover: #f7f7f5;
   --divider: #e4e4df;
 }
 
 .dark {
-  --background: #141210;
-  --foreground: #efeae4;
-  --card: #1b1815;
-  --card-foreground: #efeae4;
-  --popover: #201c19;
-  --popover-foreground: #efeae4;
+  --background: #0f0f0f;
+  --foreground: #ededed;
+  --card: #161616;
+  --card-foreground: #ededed;
+  --popover: #1b1b1b;
+  --popover-foreground: #ededed;
 
-  --primary: #f27a3d;
-  --primary-foreground: #2a1206;
-  --primary-hover: #ff8f57;
+  --primary: #f05710;
+  --primary-foreground: #ffffff;
+  --primary-hover: #ff6a24;
 
-  --secondary: #232019;
-  --secondary-foreground: #efeae4;
-  --muted: #232019;
-  --muted-foreground: #a39b93;
-  --accent: #3a2416;
-  --accent-foreground: #ffc39e;
+  --secondary: #1c1c1c;
+  --secondary-foreground: #ededed;
+  --muted: #1c1c1c;
+  --muted-foreground: #9d9d9d;
+  --accent: #2b1a11;
+  --accent-foreground: #ffb48a;
 
   --destructive: #e05656;
   --destructive-foreground: #ffffff;
 
-  --border: #2c2723;
-  --input: #38322d;
-  --ring: #f27a3d;
+  --border: #262626;
+  --input: #333333;
+  --ring: #f05710;
 
-  --sidebar: #0f0d0b;
-  --sidebar-foreground: #e9e3dc;
-  --sidebar-muted: #948b82;
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #e6e6e6;
+  --sidebar-muted: #8f8f8f;
   --sidebar-hover: rgba(255, 255, 255, 0.05);
-  --sidebar-active: #2c231b;
+  --sidebar-active: #232323;
   --sidebar-active-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.07);
   --sidebar-unread: #ffffff;
@@ -94,9 +94,9 @@
   --mention-foreground: #9cc4ff;
   --mention-self: #26426a;
   --online: #3fcb8c;
-  --link: #ff9a63;
-  --message-hover: #1a1714;
-  --divider: #2c2723;
+  --link: #ff7a3a;
+  --message-hover: #151515;
+  --divider: #262626;
 }
 
 @theme inline {
@@ -207,7 +207,7 @@
 
 /* emoji-mart inside our popover */
 .emoji-picker-popover em-emoji-picker {
-  --rgb-accent: 217, 89, 27;
+  --rgb-accent: 240, 87, 16;
   --rgb-background: 255, 255, 255;
   --rgb-input: 243, 243, 240;
   --rgb-color: 27, 27, 26;
@@ -218,10 +218,10 @@
   height: 380px;
 }
 .dark .emoji-picker-popover em-emoji-picker {
-  --rgb-accent: 242, 122, 61;
-  --rgb-background: 32, 28, 25;
-  --rgb-input: 35, 32, 25;
-  --rgb-color: 239, 234, 228;
+  --rgb-accent: 240, 87, 16;
+  --rgb-background: 27, 27, 27;
+  --rgb-input: 28, 28, 28;
+  --rgb-color: 237, 237, 237;
 }
 
 /* Jump-to-message flash */

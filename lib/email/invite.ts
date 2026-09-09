@@ -35,7 +35,7 @@ export async function sendInviteEmail(input: { to: string; inviterName: string }
       <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6e6e69;margin:0 0 8px">Potara Studio</p>
       <h1 style="font-size:22px;margin:0 0 12px">${escapeHtml(input.inviterName)} invited you to Commune</h1>
       <p style="font-size:15px;line-height:1.5;margin:0 0 20px">Commune is where the studio talks: channels, threads, files and huddles.</p>
-      <a href="${link}" style="display:inline-block;background:#d9591b;color:#fff;text-decoration:none;font-weight:600;padding:12px 18px;border-radius:8px">Open Commune</a>
+      <a href="${link}" style="display:inline-block;background:#f05710;color:#fff;text-decoration:none;font-weight:600;padding:12px 18px;border-radius:8px">Open Commune</a>
       <p style="font-size:13px;line-height:1.5;color:#6e6e69;margin:24px 0 0">Sign in with Google using <strong>${escapeHtml(input.to)}</strong>. Only invited addresses can get in, so use exactly this one.</p>
     </div>`;
 

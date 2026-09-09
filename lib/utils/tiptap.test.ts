@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JSONContent } from "@tiptap/core";
-import { docFromText, extractMentions, isEmptyDoc, toContentText, toPlainText } from "./tiptap";
+import { docFromText, extractLinks, extractMentions, isEmptyDoc, toContentText, toPlainText } from "./tiptap";
 
 const HAKIM = "00000000-0000-4000-8000-000000000001";
 const NADIA = "00000000-0000-4000-8000-000000000002";
@@ -111,5 +111,20 @@ describe("isEmptyDoc", () => {
     expect(isEmptyDoc(doc(p(mention("here"))))).toBe(false);
     expect(isEmptyDoc(doc(p({ type: "emoji", attrs: { emoji: "🎉" } })))).toBe(false);
     expect(isEmptyDoc(doc({ type: "image", attrs: { src: "x" } }))).toBe(false);
+  });
+});
+
+describe("extractLinks", () => {
+  it("finds link marks and bare URLs, dedupes, strips hashes and trailing punctuation", () => {
+    const d = doc(
+      p(text("see ", []), text("the site", [{ type: "link", attrs: { href: "https://potara.studio/work#top" } }]), text(" and https://potara.studio/work, plus http://example.com/a).")),
+      { type: "codeBlock", content: [text("https://ignored.example")] },
+    );
+    expect(extractLinks(d)).toEqual(["https://potara.studio/work", "http://example.com/a"]);
+  });
+  it("ignores non-http schemes and caps the count", () => {
+    const d = doc(p(text("mailto:hi@potarastudio.com https://a.com https://b.com https://c.com https://d.com")));
+    expect(extractLinks(d, 2)).toEqual(["https://a.com/", "https://b.com/"]);
+    expect(extractLinks(undefined)).toEqual([]);
   });
 });

@@ -111,3 +111,31 @@ export function docFromText(text: string): JSONContent {
     content: [{ type: "paragraph", content: text ? [{ type: "text", text }] : [] }],
   };
 }
+
+/** Distinct http(s) links in a document, in order of appearance: link marks first, then bare URLs in text. */
+export function extractLinks(doc: JSONContent | null | undefined, max = 3): string[] {
+  const out: string[] = [];
+  const push = (raw: string) => {
+    try {
+      const u = new URL(raw.trim());
+      if (u.protocol !== "http:" && u.protocol !== "https:") return;
+      u.hash = "";
+      const href = u.toString();
+      if (!out.includes(href) && out.length < max) out.push(href);
+    } catch {
+      /* not a URL */
+    }
+  };
+  const walk = (n: JSONContent | null | undefined) => {
+    if (!n || typeof n !== "object") return;
+    if (n.type === "codeBlock") return; // code samples are not links to unfurl
+    const linkMark = n.marks?.find((m) => m.type === "link");
+    if (n.type === "text" && linkMark && typeof linkMark.attrs?.href === "string") push(linkMark.attrs.href);
+    else if (n.type === "text" && !n.marks?.some((m) => m.type === "code") && n.text) {
+      for (const m of n.text.match(/https?:\/\/[^\s<>"')\]]+/g) ?? []) push(m.replace(/[.,;:!?]+$/, ""));
+    }
+    n.content?.forEach(walk);
+  };
+  walk(doc);
+  return out;
+}

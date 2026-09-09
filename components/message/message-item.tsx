@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/queries/messages";
 import { renderContent } from "@/lib/utils/render";
+import { extractLinks } from "@/lib/utils/tiptap";
 import { formatFullTimestamp, formatMessageTime } from "@/lib/utils/time";
 import { AttachmentList } from "./attachment-list";
+import { LinkPreviews } from "./link-previews";
 import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
 import { ReactionBar } from "./reaction-bar";
@@ -121,6 +123,7 @@ export function MessageItem({
         )}
 
         {!deleted && <AttachmentList attachments={message.attachments} />}
+        {!deleted && !message.pending && !editing && <LinkPreviews urls={extractLinks(message.content as JSONContent, 2)} />}
         {!deleted && <ReactionBar reactions={message.reactions} meId={meId} onToggle={onToggleReaction} />}
         {!inThread && replySummary}
       </div>

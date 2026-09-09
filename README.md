@@ -45,6 +45,14 @@ pnpm supabase migration list   # compare local vs remote
 
 The hosted database is not seeded with the fake team; only the allowlist is populated by hand.
 
+## Deployment
+
+Production: https://commune-tan.vercel.app (Vercel project `potara-studio/commune`, linked to this GitHub repo: pushes to `main` deploy production, pull requests get previews). Environment variables live in the Vercel project settings; the non-secret ones were set from the CLI, secrets are added in the dashboard. `NEXT_PUBLIC_APP_URL` must match the production domain, and that domain's `/auth/callback` must be in Supabase's redirect URL list.
+
+```bash
+vercel --prod   # manual production deploy from this folder
+```
+
 ## Checks
 
 ```bash

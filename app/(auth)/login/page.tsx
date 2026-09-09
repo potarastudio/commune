@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { HashError } from "@/components/auth/hash-error";
 import { LoginPreview } from "@/components/auth/login-preview";
+import { MagicLinkForm } from "@/components/auth/magic-link-form";
 import { Button } from "@/components/ui/button";
 import { signInWithGoogle } from "./actions";
 
@@ -15,6 +17,10 @@ const errorCopy: Record<string, { title: string; body: string }> = {
     title: "Google sign-in didn't complete.",
     body: "Nothing was changed. Try again, and if it keeps happening tell Hakim which account you used.",
   },
+  link: {
+    title: "That sign-in link didn't work.",
+    body: "Links work once and expire after an hour. Request a new one below and open it on this device.",
+  },
 };
 
 export default async function LoginPage({
@@ -27,6 +33,7 @@ export default async function LoginPage({
 
   return (
     <main className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      <HashError />
       <section className="flex flex-col justify-between bg-sidebar px-6 py-6 text-sidebar-foreground sm:px-10 lg:px-14 lg:py-10">
         <div className="flex items-center gap-2.5">
           <span className="grid size-7 place-items-center rounded-md bg-primary text-[13px] font-bold text-primary-foreground">
@@ -45,7 +52,7 @@ export default async function LoginPage({
           <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Potara Studio</p>
           <h1 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight">Sign in to Commune</h1>
           <p className="mt-2 text-muted-foreground">
-            Channels, threads and huddles for the studio. Use the Google account you were invited with.
+            Channels, threads and huddles for the studio. Sign in with the Google account you were invited with, or get a one-time link by email.
           </p>
 
           {err && (
@@ -66,8 +73,16 @@ export default async function LoginPage({
             </Button>
           </form>
 
+          <div className="my-6 flex items-center gap-3 text-[12px] uppercase tracking-[0.12em] text-muted-foreground" aria-hidden="true">
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <MagicLinkForm next={next ?? "/"} />
+
           <p className="mt-6 text-[12px] leading-relaxed text-muted-foreground">
-            Only invited Potara accounts can sign in. Not invited yet? Ask Hakim to add your email.
+            Only invited addresses can sign in, whichever way you choose. Not invited yet? Ask Hakim to add your email.
           </p>
         </div>
       </section>

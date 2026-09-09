@@ -71,6 +71,19 @@ Playwright smoke (§8): signs in through the local-only `/auth/dev-login` route,
 pnpm test:e2e
 ```
 
+## Sign-in
+
+Google is the main path. The login page also offers a one-time **magic link by email** for people without a Google account. Both go through the same `allowed_emails` allowlist: the link is only sent to an invited address, and `handle_new_user` still rejects anyone else.
+
+Hosted setup for magic links (Supabase dashboard → Authentication):
+
+1. **Providers → Email**: enabled (it is by default). "Confirm email" can stay on; magic links verify the address anyway.
+2. **SMTP settings**: turn on custom SMTP so links aren't capped by Supabase's built-in sender. With Resend: host `smtp.resend.com`, port `465`, username `resend`, password = a Resend API key, sender `commune@potarastudio.com`, sender name `Commune`.
+3. **URL configuration**: `https://commune-tan.vercel.app/auth/callback` must be in the redirect allowlist (it already is for Google).
+4. Optional, **Email templates → Magic Link**: subject "Your Commune sign-in link". Keep `{{ .ConfirmationURL }}` in the body.
+
+Locally the link lands in Mailpit at http://127.0.0.1:54324. Links work once and expire after an hour; a used link sends people back to `/login?error=link`.
+
 ## Mention digest
 
 When someone has been away from Commune for a while, @mentions they have not read after 15 minutes are emailed to them (Settings → Notifications can turn it off). Postgres decides who is due (`pending_mention_digest()`), the app sends via Resend (`app/api/cron/digest`), and `mention_digest_log` guarantees each mention is emailed once. Quiet hours and muted channels are respected; `@here` never emails.

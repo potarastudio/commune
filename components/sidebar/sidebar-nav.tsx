@@ -11,6 +11,7 @@ import type { Profile } from "@/lib/queries/profile";
 import { useUnreadCounts, type UnreadMap } from "@/lib/queries/unreads";
 import { useUiStore } from "@/lib/store/ui";
 import { AvatarPresence } from "@/components/presence/online-dot";
+import { UserStatus } from "@/components/profile/user-status";
 import { CreateChannelPopover } from "@/components/channel/create-channel-popover";
 
 /** Sidebar lists with unread bold + badges (§5). Sections collapse and remember it. */
@@ -145,6 +146,7 @@ export function SidebarNav({
                   </span>
                 )}
                 <span className="truncate">{conversationLabel(c.members, me.id, { short: true })}</span>
+                {others.length === 1 && <UserStatus userId={face.id} className="shrink-0" />}
               </NavLink>
             </li>
           );

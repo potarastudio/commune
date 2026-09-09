@@ -4,6 +4,8 @@ import { Bookmark, Pin } from "lucide-react";
 import { useState } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileCard } from "@/components/profile/profile-card";
+import { UserStatus } from "@/components/profile/user-status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/queries/messages";
 import { renderContent } from "@/lib/utils/render";
@@ -62,12 +64,16 @@ export function MessageItem({
         {grouped ? (
           <span className="mt-1 hidden text-[11px] tabular-nums text-muted-foreground group-hover:block">{time}</span>
         ) : (
-          <Avatar className="size-9 rounded-md">
-            <AvatarImage src={author?.avatar_url ?? undefined} alt="" />
-            <AvatarFallback className="rounded-md bg-accent text-[13px] font-semibold text-accent-foreground">
-              {name.slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <ProfileCard userId={author?.id ?? ""}>
+            <button type="button" aria-label={`${name}'s profile`} className="block rounded-md focus-visible:outline-2 focus-visible:outline-ring">
+              <Avatar className="size-9 rounded-md">
+                <AvatarImage src={author?.avatar_url ?? undefined} alt="" />
+                <AvatarFallback className="rounded-md bg-accent text-[13px] font-semibold text-accent-foreground">
+                  {name.slice(0, 1).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </ProfileCard>
         )}
       </div>
 
@@ -88,7 +94,12 @@ export function MessageItem({
         )}
         {!grouped && (
           <div className="flex items-baseline gap-2">
-            <span className="text-[14px] font-semibold">{name}</span>
+            <ProfileCard userId={author?.id ?? ""}>
+              <button type="button" className="rounded text-[14px] font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-ring">
+                {name}
+              </button>
+            </ProfileCard>
+            {author && <UserStatus userId={author.id} className="self-center" />}
             <Tooltip>
               <TooltipTrigger asChild>
                 <time dateTime={message.created_at} className="text-[11px] tabular-nums text-muted-foreground">

@@ -1,4 +1,5 @@
 import type { JSONContent } from "@tiptap/core";
+import { MentionChip } from "@/components/profile/mention-chip";
 import { Fragment, type ReactNode } from "react";
 
 /**
@@ -114,16 +115,9 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       const id = typeof node.attrs?.id === "string" ? node.attrs.id : "";
       const label = typeof node.attrs?.label === "string" ? node.attrs.label : id;
       const special = id === "channel" || id === "here";
+      if (!special) return <MentionChip key={key} id={id} label={label} />;
       return (
-        <span
-          key={key}
-          data-mention-id={id}
-          className={
-            special
-              ? "rounded bg-mention px-1 font-medium text-mention-foreground"
-              : "rounded bg-mention px-1 font-medium text-mention-foreground hover:bg-mention-self"
-          }
-        >
+        <span key={key} data-mention-id={id} className="rounded bg-mention px-1 font-medium text-mention-foreground">
           @{label}
         </span>
       );

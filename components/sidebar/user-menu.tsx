@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronsUpDown, Keyboard, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, Keyboard, LogOut, Settings, SmilePlus } from "lucide-react";
 import Link from "next/link";
-import { useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { signOut } from "@/app/(app)/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -13,13 +13,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { StatusEditor } from "@/components/profile/status-editor";
 import type { Profile } from "@/lib/queries/profile";
+import { useProfileMap } from "@/lib/queries/profiles";
+import { isStatusActive } from "@/lib/utils/status";
 import { useUiStore } from "@/lib/store/ui";
 
-export function UserMenu({ profile }: { profile: Profile }) {
+export function UserMenu({ profile: initial }: { profile: Profile }) {
   const [pending, startTransition] = useTransition();
+  const [statusOpen, setStatusOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const profile = useProfileMap().get(initial.id) ?? initial;
+  const status = isStatusActive(profile);
 
   return (
+    <Popover open={statusOpen} onOpenChange={setStatusOpen}>
+    <PopoverAnchor asChild>
+    <div ref={anchorRef}>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
@@ -38,7 +49,20 @@ export function UserMenu({ profile }: { profile: Profile }) {
           </span>
           <span className="min-w-0 flex-1 leading-tight">
             <span className="block truncate text-[13px] font-medium">{profile.display_name}</span>
-            <span className="block truncate text-[12px] text-sidebar-muted">@{profile.handle}</span>
+            <span className="block truncate text-[12px] text-sidebar-muted">
+              {status ? (
+                <>
+                  {profile.status_emoji && (
+                    <span role="img" aria-hidden="true" className="mr-1">
+                      {profile.status_emoji}
+                    </span>
+                  )}
+                  {profile.status_text ?? "Status set"}
+                </>
+              ) : (
+                <>@{profile.handle}</>
+              )}
+            </span>
           </span>
           <ChevronsUpDown className="size-3.5 text-sidebar-muted" aria-hidden="true" />
         </button>
@@ -49,6 +73,17 @@ export function UserMenu({ profile }: { profile: Profile }) {
           <span className="block truncate text-[12px] text-muted-foreground">{profile.email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {/* Open after the menu has closed, so its dismiss events don't count as a click outside the editor. */}
+        <DropdownMenuItem onSelect={() => setTimeout(() => setStatusOpen(true), 60)}>
+          {status && profile.status_emoji ? (
+            <span role="img" aria-hidden="true" className="w-4 text-center text-[14px] leading-none">
+              {profile.status_emoji}
+            </span>
+          ) : (
+            <SmilePlus className="size-4" aria-hidden="true" />
+          )}
+          {status ? "Edit your status" : "Set a status"}
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/settings">
             <Settings className="size-4" aria-hidden="true" />
@@ -66,5 +101,20 @@ export function UserMenu({ profile }: { profile: Profile }) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
+    </PopoverAnchor>
+    <PopoverContent
+      side="top"
+      align="start"
+      sideOffset={8}
+      className="w-auto p-0"
+      // The closing menu shuffles focus around (its own wrapper, then the account button); none of that
+      // should dismiss the editor. Clicking elsewhere, Esc and the X still close it.
+      onFocusOutside={(e) => e.preventDefault()}
+      onInteractOutside={(e) => anchorRef.current?.contains(e.target as Node) && e.preventDefault()}
+    >
+      {statusOpen && <StatusEditor profile={profile} onDone={() => setStatusOpen(false)} />}
+    </PopoverContent>
+    </Popover>
   );
 }

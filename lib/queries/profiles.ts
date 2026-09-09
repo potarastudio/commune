@@ -1,6 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { subscribeWithAuth } from "@/lib/realtime/messages";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Profile } from "./profile";
 
@@ -22,11 +24,31 @@ export function useProfiles() {
   });
 }
 
+/** Mounted once in the app shell: any profile change (status, name, avatar) refreshes the shared profiles query. */
+export function useProfilesRealtime() {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = subscribeWithAuth(
+      getSupabaseBrowserClient(),
+      "profiles",
+      (channel) =>
+        channel.on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => void queryClient.invalidateQueries({ queryKey: profileKeys.all }), 200);
+        }),
+      "profiles",
+    );
+    return () => {
+      clearTimeout(timer);
+      stop();
+    };
+  }, [queryClient]);
+}
+
 export function useProfileMap() {
   const { data } = useProfiles();
-  const map = new Map<string, Profile>();
-  for (const p of data ?? []) map.set(p.id, p);
-  return map;
+  return useMemo(() => new Map((data ?? []).map((p) => [p.id, p])), [data]);
 }
 
 /** True when nobody else uses this handle. Undefined while checking or when the handle is invalid. */

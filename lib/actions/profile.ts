@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DISPLAY_NAME_MAX, HANDLE_RE, TITLE_MAX, handleProblem } from "@/lib/utils/profile";
+import { STATUS_TEXT_MAX } from "@/lib/utils/status";
 
 export type ProfileFormResult = { ok: true } | { ok: false; error: string; field?: "display_name" | "handle" | "title" };
 
@@ -109,6 +110,37 @@ export async function saveEmailDigestAction(input: { enabled: boolean }): Promis
   if (error) {
     console.error("saveEmailDigestAction", { code: error.code, message: error.message });
     return { ok: false, error: "Couldn't save that. Try again." };
+  }
+  return { ok: true };
+}
+
+const statusSchema = z.object({
+  emoji: z.string().trim().max(16).nullable(),
+  text: z.string().trim().max(STATUS_TEXT_MAX, `Keep it under ${STATUS_TEXT_MAX} characters.`).nullable(),
+  expiresAt: z.string().datetime().nullable(),
+});
+
+/** Set (or clear, when both parts are empty) the user's status. */
+export async function setStatusAction(input: { emoji: string | null; text: string | null; expiresAt: string | null }): Promise<ProfileFormResult> {
+  const parsed = statusSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "That status couldn't be saved." };
+  const emoji = parsed.data.emoji || null;
+  const text = parsed.data.text || null;
+  const cleared = !emoji && !text;
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "You're signed out." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ status_emoji: emoji, status_text: text, status_expires_at: cleared ? null : parsed.data.expiresAt })
+    .eq("id", user.id);
+  if (error) {
+    console.error("setStatusAction", { code: error.code, message: error.message });
+    return { ok: false, error: "Couldn't save your status. Try again." };
   }
   return { ok: true };
 }

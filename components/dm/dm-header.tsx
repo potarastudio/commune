@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { OnlineDot } from "@/components/presence/online-dot";
+import { UserStatus } from "@/components/profile/user-status";
 import { conversationLabel, type ConversationMember } from "@/lib/queries/conversations";
 
 export function DmHeader({
@@ -37,9 +38,12 @@ export function DmHeader({
       {single && (
         <>
           <span className="h-4 w-px bg-border" aria-hidden="true" />
-          <p className="min-w-0 truncate text-[13px] text-muted-foreground">
-            @{single.handle}
-            {single.title ? ` · ${single.title}` : ""}
+          <p className="flex min-w-0 items-center gap-2 truncate text-[13px] text-muted-foreground">
+            <span className="truncate">
+              @{single.handle}
+              {single.title ? ` · ${single.title}` : ""}
+            </span>
+            <UserStatus userId={single.id} withText className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[12px] text-foreground" />
           </p>
         </>
       )}

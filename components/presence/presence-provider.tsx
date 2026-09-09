@@ -2,13 +2,18 @@
 
 import { useEffect } from "react";
 import { touchPresenceAction } from "@/lib/actions/profile";
+import { useProfilesRealtime } from "@/lib/queries/profiles";
+import { useSessionStore } from "@/lib/store/session";
 import { useOnlinePresence } from "@/lib/realtime/presence";
 
 const HEARTBEAT_MS = 60_000;
 
 /** Mounted once in the app shell: keeps the online set live for the whole session. */
 export function PresenceProvider({ meId }: { meId: string }) {
+  const setMeId = useSessionStore((s) => s.setMeId);
+  useEffect(() => setMeId(meId), [meId, setMeId]);
   useOnlinePresence(meId);
+  useProfilesRealtime();
   useLastSeenHeartbeat();
   return null;
 }

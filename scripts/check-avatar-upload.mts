@@ -4,7 +4,7 @@ import type { Database } from "@/types/database";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const admin = createClient<Database>(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
-const { data: link, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: "nadia@potara.studio" });
+const { data: link, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: "sari@potara.studio" });
 if (error) throw error;
 const user = createClient<Database>(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
 const { data: session, error: vErr } = await user.auth.verifyOtp({ type: "magiclink", token_hash: link.properties.hashed_token });

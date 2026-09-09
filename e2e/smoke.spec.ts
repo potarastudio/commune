@@ -5,7 +5,7 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
  * a second browser context, react to it, reply in thread.
  */
 const HAKIM = "hi@potarastudio.com";
-const NADIA = "nadia@potara.studio";
+const SARI = "sari@potara.studio";
 
 async function signIn(browser: Browser, email: string): Promise<Page> {
   const context = await browser.newContext();
@@ -27,44 +27,44 @@ async function send(page: Page, text: string) {
 test("send, receive live, react and reply in thread", async ({ browser }) => {
   const stamp = Date.now().toString(36);
   const hakim = await signIn(browser, HAKIM);
-  const nadia = await signIn(browser, NADIA);
+  const sari = await signIn(browser, SARI);
 
-  // Hakim sends; it appears for him immediately (optimistic) and for Nadia via Realtime.
+  // Hakim sends; it appears for him immediately (optimistic) and for Sari via Realtime.
   const text = `Smoke test ${stamp}: hello from Playwright`;
   await send(hakim, text);
   const hakimMessage = hakim.locator("article", { hasText: text }).last();
   await expect(hakimMessage).toBeVisible();
   await expect(hakimMessage).not.toHaveClass(/opacity-60/, { timeout: 15_000 });
 
-  const nadiaMessage = nadia.locator("article", { hasText: text }).last();
-  await expect(nadiaMessage).toBeVisible({ timeout: 15_000 });
+  const sariMessage = sari.locator("article", { hasText: text }).last();
+  await expect(sariMessage).toBeVisible({ timeout: 15_000 });
 
-  // Nadia reacts; both sides show the chip.
-  await nadiaMessage.hover();
-  await nadiaMessage.getByRole("button", { name: "Add reaction" }).first().click();
-  await nadia.getByRole("option", { name: "👍" }).click();
-  await expect(nadiaMessage.getByRole("button", { name: /👍 1/ })).toBeVisible();
+  // Sari reacts; both sides show the chip.
+  await sariMessage.hover();
+  await sariMessage.getByRole("button", { name: "Add reaction" }).first().click();
+  await sari.getByRole("option", { name: "👍" }).click();
+  await expect(sariMessage.getByRole("button", { name: /👍 1/ })).toBeVisible();
   await expect(hakimMessage.getByRole("button", { name: /👍 1/ })).toBeVisible({ timeout: 15_000 });
 
-  // Nadia replies in a thread; Hakim's list shows the reply summary.
-  await nadiaMessage.hover();
-  await nadiaMessage.getByRole("button", { name: "Reply in thread" }).click();
-  const panel = nadia.getByRole("complementary", { name: "Thread" });
+  // Sari replies in a thread; Hakim's list shows the reply summary.
+  await sariMessage.hover();
+  await sariMessage.getByRole("button", { name: "Reply in thread" }).click();
+  const panel = sari.getByRole("complementary", { name: "Thread" });
   await expect(panel).toBeVisible();
-  const reply = `Reply ${stamp} from Nadia`;
+  const reply = `Reply ${stamp} from Sari`;
   const replyBox = panel.getByRole("textbox", { name: /Reply/ });
   await replyBox.click();
-  await nadia.keyboard.type(reply);
-  await nadia.keyboard.press("Enter");
+  await sari.keyboard.type(reply);
+  await sari.keyboard.press("Enter");
   await expect(panel.locator("article", { hasText: reply })).toBeVisible();
   await expect(hakimMessage.getByRole("button", { name: /Open thread, 1 reply/ })).toBeVisible({ timeout: 15_000 });
 
-  // Hakim opens the thread and sees Nadia's reply.
+  // Hakim opens the thread and sees Sari's reply.
   await hakimMessage.getByRole("button", { name: /Open thread/ }).click();
   await expect(hakim.getByRole("complementary", { name: "Thread" }).locator("article", { hasText: reply })).toBeVisible();
 
   await hakim.context().close();
-  await nadia.context().close();
+  await sari.context().close();
 });
 
 test("allowlist rejects unknown accounts", async ({ page }) => {

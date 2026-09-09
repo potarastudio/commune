@@ -4,7 +4,7 @@ import { handleProblem, normaliseHandle } from "./profile";
 describe("normaliseHandle", () => {
   it("lowercases, replaces spaces and strips junk", () => {
     expect(normaliseHandle("Hakim Haiman")).toBe("hakim-haiman");
-    expect(normaliseHandle("__Nadia!!")).toBe("nadia");
+    expect(normaliseHandle("__Sari!!")).toBe("sari");
     expect(normaliseHandle("raka.p")).toBe("raka.p");
   });
   it("caps at 30 characters", () => {

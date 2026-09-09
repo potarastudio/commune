@@ -10,7 +10,7 @@ export type HuddleSession = {
   token: string;
   url: string;
   container: Container;
-  /** "#design" or "Nadia Putri" for the dock and the stage header. */
+  /** "#design" or "Sari Wijaya" for the dock and the stage header. */
   label: string;
   /** Where "back to chat" goes. */
   href: string;

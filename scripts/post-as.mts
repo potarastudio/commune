@@ -1,6 +1,6 @@
 // Dev helper: post a message as a seeded member. Run:
-//   pnpm tsx scripts/post-as.mts nadia@potara.studio design "Hello from Nadia"
-//   pnpm tsx scripts/post-as.mts nadia@potara.studio dm:<conversation uuid> "Hello"
+//   pnpm tsx scripts/post-as.mts sari@potara.studio design "Hello from Sari"
+//   pnpm tsx scripts/post-as.mts sari@potara.studio dm:<conversation uuid> "Hello"
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { insertMessage } from "@/lib/queries/messages";

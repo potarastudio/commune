@@ -14,7 +14,7 @@ import { highlightTerms, isEmptySearch, parseSearchQuery } from "@/lib/utils/sea
 export const metadata: Metadata = { title: "Search" };
 
 const TIPS = [
-  ["from:@nadia", "messages by a person"],
+  ["from:@sari", "messages by a person"],
   ["in:#design", "inside one channel"],
   ["after:2026-09-01", "newer than a date"],
   ["before:2026-09-08", "older than a date"],

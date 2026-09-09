@@ -1,4 +1,4 @@
-// Dev check: signed-URL upload as Nadia, message with attachment, signed read, and RLS on the object. Run: pnpm tsx scripts/check-upload.mts
+// Dev check: signed-URL upload as Sari, message with attachment, signed read, and RLS on the object. Run: pnpm tsx scripts/check-upload.mts
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { fetchMessageById, insertMessage } from "@/lib/queries/messages";
@@ -15,29 +15,29 @@ async function loginAs(email: string) {
   if (vErr) throw vErr;
   return { client: c, uid: data.user!.id };
 }
-const nadia = await loginAs("nadia@potara.studio");
+const sari = await loginAs("sari@potara.studio");
 const mallory = await loginAs("raka@potara.studio");
 
 // Raka is in every seeded channel, so use a fresh private channel Raka is NOT in to test object RLS.
 // Created with the service role: a member's own RETURNING would be evaluated before the auto-join trigger runs.
-const { data: priv, error: chErr } = await admin.from("channels").insert({ name: `upload-rls-${Date.now() % 100000}`, is_private: true, created_by: nadia.uid }).select("id").single();
+const { data: priv, error: chErr } = await admin.from("channels").insert({ name: `upload-rls-${Date.now() % 100000}`, is_private: true, created_by: sari.uid }).select("id").single();
 if (chErr) throw chErr;
 
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
-const path = `${nadia.uid}/${crypto.randomUUID()}/dot.png`;
-const signed = await nadia.client.storage.from("attachments").createSignedUploadUrl(path);
+const path = `${sari.uid}/${crypto.randomUUID()}/dot.png`;
+const signed = await sari.client.storage.from("attachments").createSignedUploadUrl(path);
 if (signed.error) throw signed.error;
-const up = await nadia.client.storage.from("attachments").uploadToSignedUrl(signed.data.path, signed.data.token, png, { contentType: "image/png" });
+const up = await sari.client.storage.from("attachments").uploadToSignedUrl(signed.data.path, signed.data.token, png, { contentType: "image/png" });
 if (up.error) throw up.error;
 
-const row = await insertMessage(nadia.client, {
+const row = await insertMessage(sari.client, {
   container: { kind: "channel", id: priv!.id },
   content: docFromText("with a file") as Record<string, unknown>,
   contentText: "with a file",
   attachments: [{ storage_path: path, file_name: "dot.png", mime_type: "image/png", size_bytes: png.length, width: 1, height: 1 }],
 });
-const full = await fetchMessageById(nadia.client, row.id);
-const read = await nadia.client.storage.from("attachments").createSignedUrl(path, 60);
+const full = await fetchMessageById(sari.client, row.id);
+const read = await sari.client.storage.from("attachments").createSignedUrl(path, 60);
 const fetched = read.data ? (await fetch(read.data.signedUrl)).status : null;
 const foreignRead = await mallory.client.storage.from("attachments").createSignedUrl(path, 60);
 const foreignInsert = await insertMessage(mallory.client, {

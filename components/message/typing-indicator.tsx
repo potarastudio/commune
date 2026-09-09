@@ -1,6 +1,6 @@
 "use client";
 
-/** "Nadia is typing…" under the list; fixed height so the composer never jumps. */
+/** "Sari is typing…" under the list; fixed height so the composer never jumps. */
 export function TypingIndicator({ people }: { people: { id: string; name: string }[] }) {
   const names = people.map((p) => p.name.split(" ")[0]);
   let text = "";

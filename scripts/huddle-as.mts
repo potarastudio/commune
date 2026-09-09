@@ -1,7 +1,7 @@
 // Dev helper: join or leave a huddle as a seeded member (participant rows only; no media).
-//   node --env-file=.env.local --import tsx scripts/huddle-as.mts nadia@potara.studio join <huddleId>
-//   node --env-file=.env.local --import tsx scripts/huddle-as.mts nadia@potara.studio leave <huddleId>
-//   node --env-file=.env.local --import tsx scripts/huddle-as.mts nadia@potara.studio active general
+//   node --env-file=.env.local --import tsx scripts/huddle-as.mts sari@potara.studio join <huddleId>
+//   node --env-file=.env.local --import tsx scripts/huddle-as.mts sari@potara.studio leave <huddleId>
+//   node --env-file=.env.local --import tsx scripts/huddle-as.mts sari@potara.studio active general
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { getActiveHuddle } from "@/lib/queries/huddles";

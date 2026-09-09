@@ -1,4 +1,4 @@
-// Dev check: subscribe as Hakim to #design inserts (RLS-filtered), post as Nadia, expect the event. Run: pnpm tsx scripts/check-realtime.mts
+// Dev check: subscribe as Hakim to #design inserts (RLS-filtered), post as Sari, expect the event. Run: pnpm tsx scripts/check-realtime.mts
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { insertMessage } from "@/lib/queries/messages";
@@ -18,7 +18,7 @@ async function loginAs(email: string) {
 }
 
 const hakim = await loginAs("hi@potarastudio.com");
-const nadia = await loginAs("nadia@potara.studio");
+const sari = await loginAs("sari@potara.studio");
 const { data: ch } = await hakim.from("channels").select("id").eq("name", "design").single();
 
 const { data: { session } } = await hakim.auth.getSession();
@@ -35,7 +35,7 @@ const status = await new Promise<string>((resolve) => {
       console.log("subscribe status:", s, err?.message ?? "");
       if (s === "SUBSCRIBED") {
         setTimeout(() => {
-          void insertMessage(nadia, { container: { kind: "channel", id: ch!.id }, content: docFromText("realtime check") as Record<string, unknown>, contentText: "realtime check" });
+          void insertMessage(sari, { container: { kind: "channel", id: ch!.id }, content: docFromText("realtime check") as Record<string, unknown>, contentText: "realtime check" });
         }, 500);
       }
       if (s === "CHANNEL_ERROR" || s === "TIMED_OUT") resolve(s);

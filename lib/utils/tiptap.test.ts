@@ -3,7 +3,7 @@ import type { JSONContent } from "@tiptap/core";
 import { docFromText, extractLinks, extractMentions, isEmptyDoc, toContentText, toPlainText } from "./tiptap";
 
 const HAKIM = "00000000-0000-4000-8000-000000000001";
-const NADIA = "00000000-0000-4000-8000-000000000002";
+const SARI = "00000000-0000-4000-8000-000000000002";
 
 const mention = (id: string, label = id): JSONContent => ({ type: "mention", attrs: { id, label } });
 const text = (t: string, marks?: JSONContent["marks"]): JSONContent => ({ type: "text", text: t, marks });
@@ -59,10 +59,10 @@ describe("toPlainText / toContentText", () => {
 
 describe("extractMentions", () => {
   it("extracts user mentions by profile uuid", () => {
-    const d = doc(p(mention(HAKIM, "hakim"), text(" and "), mention(NADIA, "nadia")));
+    const d = doc(p(mention(HAKIM, "hakim"), text(" and "), mention(SARI, "sari")));
     expect(extractMentions(d)).toEqual([
       { kind: "user", userId: HAKIM },
-      { kind: "user", userId: NADIA },
+      { kind: "user", userId: SARI },
     ]);
   });
 
@@ -90,9 +90,9 @@ describe("extractMentions", () => {
   it("finds mentions nested inside lists and quotes", () => {
     const d = doc({
       type: "blockquote",
-      content: [{ type: "bulletList", content: [{ type: "listItem", content: [p(mention(NADIA))] }] }],
+      content: [{ type: "bulletList", content: [{ type: "listItem", content: [p(mention(SARI))] }] }],
     });
-    expect(extractMentions(d)).toEqual([{ kind: "user", userId: NADIA }]);
+    expect(extractMentions(d)).toEqual([{ kind: "user", userId: SARI }]);
   });
 
   it("returns nothing for text that merely looks like a mention", () => {

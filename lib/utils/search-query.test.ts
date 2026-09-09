@@ -13,8 +13,8 @@ describe("parseSearchQuery", () => {
   });
 
   it("accepts operators without @ or # and is case-insensitive", () => {
-    const p = parseSearchQuery("FROM:Nadia IN:General retro");
-    expect(p.from).toBe("nadia");
+    const p = parseSearchQuery("FROM:Sari IN:General retro");
+    expect(p.from).toBe("sari");
     expect(p.in).toBe("general");
     expect(p.terms).toBe("retro");
   });

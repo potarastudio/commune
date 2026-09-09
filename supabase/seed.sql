@@ -11,7 +11,7 @@ declare
   v_founder_email text := 'hi@potarastudio.com';
 
   u_hakim uuid := '00000000-0000-4000-8000-000000000001';
-  u_nadia uuid := '00000000-0000-4000-8000-000000000002';
+  u_sari uuid := '00000000-0000-4000-8000-000000000002';
   u_raka  uuid := '00000000-0000-4000-8000-000000000003';
   v_users uuid[] := array['00000000-0000-4000-8000-000000000001',
                           '00000000-0000-4000-8000-000000000002',
@@ -142,7 +142,7 @@ begin
   -- Allowlist first: handle_new_user() rejects anything not on it.
   insert into public.allowed_emails (email) values
     (v_founder_email),
-    ('nadia@potara.studio'),
+    ('sari@potara.studio'),
     ('raka@potara.studio')
   on conflict do nothing;
 
@@ -155,8 +155,8 @@ begin
     ('00000000-0000-0000-0000-000000000000', u_hakim, 'authenticated', 'authenticated', v_founder_email, null, now(),
      '{"provider":"google","providers":["google"]}', jsonb_build_object('full_name', 'Hakim Haiman', 'avatar_url', 'https://api.dicebear.com/9.x/notionists/svg?seed=hakim'),
      now() - interval '30 days', now(), '', '', '', ''),
-    ('00000000-0000-0000-0000-000000000000', u_nadia, 'authenticated', 'authenticated', 'nadia@potara.studio', null, now(),
-     '{"provider":"google","providers":["google"]}', jsonb_build_object('full_name', 'Nadia Putri', 'avatar_url', 'https://api.dicebear.com/9.x/notionists/svg?seed=nadia'),
+    ('00000000-0000-0000-0000-000000000000', u_sari, 'authenticated', 'authenticated', 'sari@potara.studio', null, now(),
+     '{"provider":"google","providers":["google"]}', jsonb_build_object('full_name', 'Sari Wijaya', 'avatar_url', 'https://api.dicebear.com/9.x/notionists/svg?seed=sari'),
      now() - interval '29 days', now(), '', '', '', ''),
     ('00000000-0000-0000-0000-000000000000', u_raka, 'authenticated', 'authenticated', 'raka@potara.studio', null, now(),
      '{"provider":"google","providers":["google"]}', jsonb_build_object('full_name', 'Raka Pratama', 'avatar_url', 'https://api.dicebear.com/9.x/notionists/svg?seed=raka'),
@@ -164,7 +164,7 @@ begin
 
   update public.profiles set onboarded_at = now() where id = any (v_users);
   update public.profiles set handle = 'hakim', title = 'Founder & Design Lead', status_emoji = '🎧', status_text = 'Heads down' where id = u_hakim;
-  update public.profiles set handle = 'nadia', title = 'Product Designer' where id = u_nadia;
+  update public.profiles set handle = 'sari', title = 'Product Designer' where id = u_sari;
   update public.profiles set handle = 'raka',  title = 'Brand Designer', status_emoji = '🌴', status_text = 'On leave Friday' where id = u_raka;
 
   select id into c_general from public.channels where name = 'general';
@@ -280,16 +280,16 @@ begin
   where id = (select id from public.messages where channel_id = c_random and parent_id is null order by created_at desc offset 2 limit 1);
 
   -- ------------------------------------------------------------------------
-  -- DMs: Hakim ↔ Nadia, and a group DM of all three
+  -- DMs: Hakim ↔ Sari, and a group DM of all three
   -- ------------------------------------------------------------------------
   insert into public.conversations (id) values ('00000000-0000-4000-8000-00000000d001') returning id into v_dm;
-  insert into public.conversation_members (conversation_id, user_id) values (v_dm, u_hakim), (v_dm, u_nadia);
+  insert into public.conversation_members (conversation_id, user_id) values (v_dm, u_hakim), (v_dm, u_sari);
 
   insert into public.conversations (id) values ('00000000-0000-4000-8000-00000000d002') returning id into v_group;
-  insert into public.conversation_members (conversation_id, user_id) values (v_group, u_hakim), (v_group, u_nadia), (v_group, u_raka);
+  insert into public.conversation_members (conversation_id, user_id) values (v_group, u_hakim), (v_group, u_sari), (v_group, u_raka);
 
   for v_i in 1..12 loop
-    v_author := case when v_i % 2 = 0 then u_hakim else u_nadia end;
+    v_author := case when v_i % 2 = 0 then u_hakim else u_sari end;
     v_text := (array[
       'Hey, got a minute to look at the Bluebird hero?',
       'Sure, sending the link.',

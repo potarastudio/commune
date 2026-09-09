@@ -4,14 +4,14 @@
  */
 const lines = [
   { name: "Hakim", handle: "hakim", time: "09:12", text: "Welcome to Commune. This is where we talk now. Slack is on notice.", reactions: ["🎉 3", "👀 2"] },
-  { name: "Nadia", handle: "nadia", time: "09:14", text: "Uploaded v3 of the Bluebird homepage. Hero is tighter, CTA moved above the fold.", replies: 4 },
+  { name: "Sari", handle: "sari", time: "09:14", text: "Uploaded v3 of the Bluebird homepage. Hero is tighter, CTA moved above the fold.", replies: 4 },
   { name: "Raka", handle: "raka", time: "09:15", text: "Someone brought martabak. Kitchen. Go now.", reactions: ["🔥 5"] },
 ] as const;
 
-const initials: Record<string, string> = { hakim: "H", nadia: "N", raka: "R" };
+const initials: Record<string, string> = { hakim: "H", sari: "N", raka: "R" };
 const tones: Record<string, string> = {
   hakim: "bg-[#c9a96b] text-[#2a2100]",
-  nadia: "bg-[#8fb8ad] text-[#0f2a24]",
+  sari: "bg-[#8fb8ad] text-[#0f2a24]",
   raka: "bg-[#d9927a] text-[#2f1208]",
 };
 
@@ -57,7 +57,7 @@ export function LoginPreview() {
       </ol>
       <div className="flex items-center gap-2 rounded-md border border-sidebar-border bg-white/[0.04] px-3 py-2.5 text-[13px] text-sidebar-muted">
         <span className="size-2 rounded-full bg-online" />
-        Nadia is typing…
+        Sari is typing…
       </div>
     </div>
   );

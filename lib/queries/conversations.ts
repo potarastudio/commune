@@ -65,7 +65,7 @@ export async function getOrCreateConversation(supabase: Supabase, userIds: strin
   return data;
 }
 
-/** "Nadia Putri" for a DM, "Nadia, Raka" for a group, "You" for notes to self. */
+/** "Sari Wijaya" for a DM, "Sari, Raka" for a group, "You" for notes to self. */
 export function conversationLabel(members: ConversationMember[], meId: string, opts: { short?: boolean } = {}): string {
   const others = members.filter((m) => m.id !== meId);
   if (others.length === 0) return "You";

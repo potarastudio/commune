@@ -8,7 +8,7 @@ const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const admin = createClient<Database>(url, service, { auth: { persistSession: false } });
-const { data: link, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: "nadia@potara.studio" });
+const { data: link, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: "sari@potara.studio" });
 if (error) throw error;
 
 const user = createClient<Database>(url, anon, { auth: { persistSession: false } });

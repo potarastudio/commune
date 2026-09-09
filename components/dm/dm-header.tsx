@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { OnlineDot } from "@/components/presence/online-dot";
 import { conversationLabel, type ConversationMember } from "@/lib/queries/conversations";
 
-export function DmHeader({ members, meId }: { members: ConversationMember[]; meId: string }) {
+export function DmHeader({ members, meId, huddle }: { members: ConversationMember[]; meId: string; huddle?: React.ReactNode }) {
   const others = members.filter((m) => m.id !== meId);
   const label = conversationLabel(members, meId);
   const single = others.length === 1 ? others[0] : null;
@@ -33,11 +33,12 @@ export function DmHeader({ members, meId }: { members: ConversationMember[]; meI
           </p>
         </>
       )}
-      {others.length > 1 && (
-        <span className="ml-auto rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground">
-          {members.length} people
-        </span>
-      )}
+      <span className="ml-auto flex items-center gap-2">
+        {huddle}
+        {others.length > 1 && (
+          <span className="rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground">{members.length} people</span>
+        )}
+      </span>
     </header>
   );
 }

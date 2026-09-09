@@ -5,6 +5,9 @@ import { ChannelHeader } from "@/components/channel/channel-header";
 import { JoinLeaveButton } from "@/components/channel/join-leave-button";
 import { MessagePane } from "@/components/message/message-pane";
 import { ThreadPanel } from "@/components/thread/thread-panel";
+import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
+import { reconcileHuddle } from "@/lib/actions/huddles";
+import { getActiveHuddle } from "@/lib/queries/huddles";
 import { getChannel, getChannelMembers, getMembership } from "@/lib/queries/channel";
 import { fetchMessages } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
@@ -33,11 +36,15 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
   const channel = await getChannel(supabase, channelId);
   if (!channel) notFound();
 
-  const [membership, members, firstPage] = await Promise.all([
+  const container = { kind: "channel" as const, id: channelId };
+  const [membership, members, firstPage, rawHuddle] = await Promise.all([
     getMembership(supabase, channelId, profile.id),
     getChannelMembers(supabase, channelId),
-    fetchMessages(supabase, { kind: "channel", id: channelId }),
+    fetchMessages(supabase, container),
+    getActiveHuddle(supabase, container),
   ]);
+  const huddle = rawHuddle ? await reconcileHuddle(rawHuddle) : null;
+  const huddleProps = { container, label: `#${channel.name}`, href: `/channel/${channel.id}`, initial: huddle, meId: profile.id };
 
   const me = { id: profile.id, display_name: profile.display_name, handle: profile.handle, avatar_url: profile.avatar_url };
   const canPost = membership !== null && !channel.is_archived;
@@ -50,7 +57,9 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
         isMember={membership !== null}
         isAdmin={profile.role === "admin"}
         notificationLevel={(membership?.notification_level as "all" | "mentions" | "muted" | undefined) ?? null}
+        huddle={canPost ? <HuddleButton {...huddleProps} /> : undefined}
       />
+      {canPost && <HuddleBanner {...huddleProps} />}
       <div className="flex min-h-0 flex-1">
       <MessagePane
         container={{ kind: "channel", id: channel.id }}

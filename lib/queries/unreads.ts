@@ -43,9 +43,9 @@ export function useUnreadCounts(initial: UnreadMap, meId: string) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const stop = subscribeWithAuth(
       supabase,
-      () =>
-        supabase
-          .channel("unreads")
+      "unreads",
+      (channel) =>
+        channel
           .on<MessageRow>("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
             const row = payload.new;
             if (row.author_id === meId || row.parent_id) return;

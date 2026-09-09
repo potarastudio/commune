@@ -28,7 +28,12 @@ function pinPatcher(queryClient: QueryClient, key: readonly unknown[]) {
  * client loads the session from cookies asynchronously, so wait for it before
  * subscribing; otherwise the channel would be authorised as `anon` and see nothing.
  */
-export function subscribeWithAuth(supabase: SupabaseClient, build: () => RealtimeChannel, label: string): () => void {
+export function subscribeWithAuth(
+  supabase: SupabaseClient,
+  topic: string,
+  configure: (channel: RealtimeChannel) => RealtimeChannel,
+  label = topic,
+): () => void {
   let channel: RealtimeChannel | undefined;
   let cancelled = false;
   void (async () => {
@@ -38,7 +43,10 @@ export function subscribeWithAuth(supabase: SupabaseClient, build: () => Realtim
     if (cancelled) return;
     if (session?.access_token) await supabase.realtime.setAuth(session.access_token);
     if (cancelled) return;
-    channel = build().subscribe((status, err) => {
+    // Change feeds never need a shared topic name, and supabase-js reuses one
+    // channel object per name, so every subscriber gets its own.
+    const nonce = Math.random().toString(36).slice(2, 8);
+    channel = configure(supabase.channel(`${topic}:${nonce}`)).subscribe((status, err) => {
       if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         console.warn(`realtime ${label}: ${status}`, err?.message);
       }
@@ -99,9 +107,9 @@ export function subscribeToMessages(container: Container, queryClient: QueryClie
 
   return subscribeWithAuth(
     supabase,
-    () =>
-      supabase
-        .channel(`${container.kind}:${container.id}:messages`)
+    `${container.kind}:${container.id}:messages`,
+    (channel) =>
+      channel
         .on<MessageRow>(
           "postgres_changes",
           { event: "*", schema: "public", table: "messages", filter: `${containerColumn(container)}=eq.${container.id}` },
@@ -135,9 +143,9 @@ export function subscribeToThread(parentId: string, queryClient: QueryClient): (
 
   return subscribeWithAuth(
     supabase,
-    () =>
-      supabase
-        .channel(`thread:${parentId}`)
+    `thread:${parentId}`,
+    (channel) =>
+      channel
         .on<MessageRow>(
           "postgres_changes",
           { event: "*", schema: "public", table: "messages", filter: `parent_id=eq.${parentId}` },

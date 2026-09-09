@@ -4,6 +4,9 @@ import { z } from "zod";
 import { DmHeader } from "@/components/dm/dm-header";
 import { MessagePane } from "@/components/message/message-pane";
 import { ThreadPanel } from "@/components/thread/thread-panel";
+import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
+import { reconcileHuddle } from "@/lib/actions/huddles";
+import { getActiveHuddle } from "@/lib/queries/huddles";
 import { conversationLabel, conversationMembership, getConversation } from "@/lib/queries/conversations";
 import { fetchMessages } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
@@ -32,19 +35,24 @@ export default async function ConversationPage({ params, searchParams }: { param
   const conversation = await getConversation(supabase, conversationId);
   if (!conversation) notFound();
 
-  const [{ data: membership }, firstPage] = await Promise.all([
+  const container = { kind: "conversation" as const, id: conversationId };
+  const [{ data: membership }, firstPage, rawHuddle] = await Promise.all([
     conversationMembership(supabase, conversationId, profile.id),
-    fetchMessages(supabase, { kind: "conversation", id: conversationId }),
+    fetchMessages(supabase, container),
+    getActiveHuddle(supabase, container),
   ]);
+  const huddle = rawHuddle ? await reconcileHuddle(rawHuddle) : null;
 
   const label = conversationLabel(conversation.members, profile.id);
   const shortLabel = conversationLabel(conversation.members, profile.id, { short: true });
   const others = conversation.members.filter((m) => m.id !== profile.id);
   const me = { id: profile.id, display_name: profile.display_name, handle: profile.handle, avatar_url: profile.avatar_url };
+  const huddleProps = { container, label: shortLabel, href: `/dm/${conversation.id}`, initial: huddle, meId: profile.id };
 
   return (
     <>
-      <DmHeader members={conversation.members} meId={profile.id} />
+      <DmHeader members={conversation.members} meId={profile.id} huddle={membership ? <HuddleButton {...huddleProps} /> : undefined} />
+      {membership && <HuddleBanner {...huddleProps} />}
       <div className="flex min-h-0 flex-1">
       <MessagePane
         container={{ kind: "conversation", id: conversation.id }}

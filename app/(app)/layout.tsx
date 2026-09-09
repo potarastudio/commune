@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { HuddleProvider } from "@/components/huddle/huddle-provider";
 import { Notifier } from "@/components/notifications/notifier";
 import { PresenceProvider } from "@/components/presence/presence-provider";
 import { CommandPalette } from "@/components/search/command-palette";
@@ -25,6 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ]);
 
   return (
+    <HuddleProvider>
     <div className="flex h-dvh overflow-hidden">
       <Sidebar profile={profile} channels={channels} conversations={conversations} unreads={toUnreadMap(unreadRows)} />
       <main className="flex min-w-0 flex-1 flex-col bg-background">{children}</main>
@@ -32,5 +34,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <PresenceProvider meId={profile.id} />
       <Notifier meId={profile.id} mutedChannelIds={channels.filter((c) => c.notification_level === "muted").map((c) => c.id)} />
     </div>
+    </HuddleProvider>
   );
 }

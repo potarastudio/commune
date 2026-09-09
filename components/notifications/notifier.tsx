@@ -76,9 +76,9 @@ export function Notifier({ meId, mutedChannelIds }: { meId: string; mutedChannel
 
     const stop = subscribeWithAuth(
       supabase,
-      () =>
-        supabase
-          .channel("notifier")
+      "notifier",
+      (channel) =>
+        channel
           .on<MessageRow>("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
             const row = payload.new;
             if (row.conversation_id && row.author_id !== meId) void announce(row.id, "dm");

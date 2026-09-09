@@ -18,85 +18,85 @@
   --popover: #ffffff;
   --popover-foreground: #1b1b1a;
 
-  --primary: #1b6b5c;
+  --primary: #d9591b;
   --primary-foreground: #ffffff;
-  --primary-hover: #155448;
+  --primary-hover: #bf4a12;
 
   --secondary: #f3f3f0;
   --secondary-foreground: #1b1b1a;
   --muted: #f3f3f0;
   --muted-foreground: #6e6e69;
-  --accent: #eaf2ef;
-  --accent-foreground: #14453b;
+  --accent: #fdebe0;
+  --accent-foreground: #7a2e0a;
 
   --destructive: #c93b3b;
   --destructive-foreground: #ffffff;
 
   --border: #e4e4df;
   --input: #d9d9d3;
-  --ring: #1b6b5c;
+  --ring: #d9591b;
 
   /* app-specific */
-  --sidebar: #1e2a28;
-  --sidebar-foreground: #e8ecea;
-  --sidebar-muted: #9aa6a2;
+  --sidebar: #1e1a17;
+  --sidebar-foreground: #ede8e3;
+  --sidebar-muted: #a39a91;
   --sidebar-hover: rgba(255, 255, 255, 0.06);
-  --sidebar-active: #2f3f3b;
+  --sidebar-active: #362a20;
   --sidebar-active-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-unread: #ffffff;
 
-  --mention: #fff1c7;
-  --mention-foreground: #7a4b00;
-  --mention-self: #ffe39a;
+  --mention: #e4eefc;
+  --mention-foreground: #1d4f93;
+  --mention-self: #cfe0fb;
   --online: #2fb37a;
-  --link: #1b6b5c;
+  --link: #b8450f;
   --message-hover: #f7f7f5;
   --divider: #e4e4df;
 }
 
 .dark {
-  --background: #131514;
-  --foreground: #eceeed;
-  --card: #1a1d1c;
-  --card-foreground: #eceeed;
-  --popover: #1f2322;
-  --popover-foreground: #eceeed;
+  --background: #141210;
+  --foreground: #efeae4;
+  --card: #1b1815;
+  --card-foreground: #efeae4;
+  --popover: #201c19;
+  --popover-foreground: #efeae4;
 
-  --primary: #4db89f;
-  --primary-foreground: #0b1f1a;
-  --primary-hover: #63c9b1;
+  --primary: #f27a3d;
+  --primary-foreground: #2a1206;
+  --primary-hover: #ff8f57;
 
-  --secondary: #202423;
-  --secondary-foreground: #eceeed;
-  --muted: #202423;
-  --muted-foreground: #9a9f9c;
-  --accent: #1c2b28;
-  --accent-foreground: #a9e3d3;
+  --secondary: #232019;
+  --secondary-foreground: #efeae4;
+  --muted: #232019;
+  --muted-foreground: #a39b93;
+  --accent: #3a2416;
+  --accent-foreground: #ffc39e;
 
   --destructive: #e05656;
   --destructive-foreground: #ffffff;
 
-  --border: #2a2e2c;
-  --input: #343937;
-  --ring: #4db89f;
+  --border: #2c2723;
+  --input: #38322d;
+  --ring: #f27a3d;
 
-  --sidebar: #0e1514;
-  --sidebar-foreground: #e3e8e6;
-  --sidebar-muted: #8d9895;
+  --sidebar: #0f0d0b;
+  --sidebar-foreground: #e9e3dc;
+  --sidebar-muted: #948b82;
   --sidebar-hover: rgba(255, 255, 255, 0.05);
-  --sidebar-active: #1f2c29;
+  --sidebar-active: #2c231b;
   --sidebar-active-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.07);
   --sidebar-unread: #ffffff;
 
-  --mention: #3d2e0b;
-  --mention-foreground: #ffd27a;
-  --mention-self: #5a4310;
+  --mention: #1c2f4a;
+  --mention-foreground: #9cc4ff;
+  --mention-self: #26426a;
   --online: #3fcb8c;
-  --link: #6fd0b8;
-  --message-hover: #191c1b;
-  --divider: #2a2e2c;
+  --link: #ff9a63;
+  --message-hover: #1a1714;
+  --divider: #2c2723;
 }
 
 @theme inline {
@@ -207,7 +207,7 @@
 
 /* emoji-mart inside our popover */
 .emoji-picker-popover em-emoji-picker {
-  --rgb-accent: 27, 107, 92;
+  --rgb-accent: 217, 89, 27;
   --rgb-background: 255, 255, 255;
   --rgb-input: 243, 243, 240;
   --rgb-color: 27, 27, 26;
@@ -218,10 +218,10 @@
   height: 380px;
 }
 .dark .emoji-picker-popover em-emoji-picker {
-  --rgb-accent: 77, 184, 159;
-  --rgb-background: 31, 35, 34;
-  --rgb-input: 32, 36, 35;
-  --rgb-color: 236, 238, 237;
+  --rgb-accent: 242, 122, 61;
+  --rgb-background: 32, 28, 25;
+  --rgb-input: 35, 32, 25;
+  --rgb-color: 239, 234, 228;
 }
 
 /* Jump-to-message flash */

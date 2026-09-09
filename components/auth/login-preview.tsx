@@ -49,7 +49,7 @@ export function LoginPreview() {
                 </div>
               )}
               {"replies" in m && (
-                <p className="mt-1.5 text-[12px] font-medium text-[#8fd3c0]">{m.replies} replies</p>
+                <p className="mt-1.5 text-[12px] font-medium text-primary">{m.replies} replies</p>
               )}
             </div>
           </li>

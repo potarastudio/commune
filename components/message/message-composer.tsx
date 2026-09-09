@@ -197,7 +197,7 @@ export function MessageComposer({
   );
 
   return (
-    <div className="field-focus rounded-xl border border-border-input bg-bg-card shadow-xs transition-[border-color,box-shadow]">
+    <div className="field-focus @container rounded-xl border border-border-input bg-bg-card shadow-xs transition-[border-color,box-shadow]">
       {uploads && (
         <PendingAttachments
           uploads={uploads.uploads}
@@ -209,7 +209,12 @@ export function MessageComposer({
         />
       )}
       <EditorContent editor={editor} />
-      <div className="flex items-center gap-0.5 border-t border-border-subtle px-2 py-1.5">
+      {/* Wraps rather than spilling out of the rounded box: the nine tools are a
+          fixed 30px each, so a composer squeezed by an open panel cannot fit them
+          on one line. The hint drops out first, keyed to the composer's own width
+          rather than the viewport's — the viewport says nothing about how much
+          room this particular composer has. */}
+      <div className="flex flex-wrap items-center gap-0.5 border-t border-border-subtle px-2 py-1.5">
         {marks.map(renderTool)}
         <ToolDivider />
         {blocks.map(renderTool)}
@@ -269,7 +274,7 @@ export function MessageComposer({
         </Tooltip>
 
         <span className="ml-auto flex items-center gap-2">
-          <span className={`items-center gap-[5px] text-[11.5px] text-muted-foreground ${compact ? "hidden" : "hidden sm:flex"}`}>
+          <span className={`items-center gap-[5px] text-[11.5px] text-muted-foreground ${compact ? "hidden" : "hidden @[430px]:flex"}`}>
             <Kbd>Enter</Kbd> to send
           </span>
           {onSchedule && (

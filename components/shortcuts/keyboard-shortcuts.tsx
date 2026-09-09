@@ -78,7 +78,7 @@ export function KeyboardShortcuts({ items }: { items: NavItem[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [items, markAllRead, open, pathname, queryClient, router, searchParams]);
+  }, [items, markAllRead, open, pathname, queryClient, router, searchParams, setOpen]);
 
   return <ShortcutsDialog open={open} onOpenChange={setOpen} />;
 }

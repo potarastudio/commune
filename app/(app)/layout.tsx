@@ -3,6 +3,7 @@ import { HuddleProvider } from "@/components/huddle/huddle-provider";
 import { Notifier } from "@/components/notifications/notifier";
 import { PresenceProvider } from "@/components/presence/presence-provider";
 import { CommandPalette } from "@/components/search/command-palette";
+import { KeyboardShortcuts } from "@/components/shortcuts/keyboard-shortcuts";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { getJoinedChannels } from "@/lib/queries/channels";
 import { getMyConversations } from "@/lib/queries/conversations";
@@ -31,6 +32,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar profile={profile} channels={channels} conversations={conversations} unreads={toUnreadMap(unreadRows)} />
       <main className="flex min-w-0 flex-1 flex-col bg-background">{children}</main>
       <CommandPalette meId={profile.id} joinedChannelIds={channels.map((c) => c.id)} />
+      <KeyboardShortcuts
+        items={[
+          ...channels.map((c) => ({ href: `/channel/${c.id}`, key: `channel:${c.id}` })),
+          ...conversations.map((c) => ({ href: `/dm/${c.id}`, key: `conversation:${c.id}` })),
+        ]}
+      />
       <PresenceProvider meId={profile.id} />
       <Notifier meId={profile.id} mutedChannelIds={channels.filter((c) => c.notification_level === "muted").map((c) => c.id)} />
     </div>

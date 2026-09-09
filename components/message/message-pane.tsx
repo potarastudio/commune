@@ -2,9 +2,10 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { markReadAction } from "@/lib/actions/messages";
+import { MARK_READ_EVENT } from "@/components/shortcuts/keyboard-shortcuts";
 import { MessageComposer } from "@/components/message/message-composer";
 import { MessageList } from "@/components/message/message-list";
 import { DropZone } from "@/components/message/drop-zone";
@@ -65,6 +66,21 @@ export function MessagePane({
   const threaded = messages.filter((m) => m.reply_count > 0).map((m) => m.id);
   const { data: participants } = useReplyParticipants(container, threaded);
 
+  // Esc (keyboard shortcuts) marks the pane read now and drops the "New messages" line.
+  const [readMarker, setReadMarker] = useState(lastReadAt);
+  useEffect(() => setReadMarker(lastReadAt), [container.kind, container.id, lastReadAt]);
+  useEffect(() => {
+    const onMarkRead = () => {
+      setReadMarker(null);
+      if (!canPost) return;
+      clearUnread(queryClient, container);
+      void markReadAction({ container });
+    };
+    window.addEventListener(MARK_READ_EVENT, onMarkRead);
+    return () => window.removeEventListener(MARK_READ_EVENT, onMarkRead);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [container.kind, container.id, canPost, queryClient]);
+
   // Unread tracking (§5): mark read while the pane is visible and the window is focused.
   const latestAt = messages.length ? messages[messages.length - 1].created_at : null;
   const lastMarked = useRef<string | null>(null);
@@ -101,7 +117,7 @@ export function MessagePane({
         messages={messages}
         me={me}
         isAdmin={isAdmin}
-        lastReadAt={lastReadAt}
+        lastReadAt={readMarker}
         hasMore={Boolean(hasNextPage)}
         isLoadingMore={isFetchingNextPage}
         onLoadMore={() => void fetchNextPage()}

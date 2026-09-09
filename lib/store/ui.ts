@@ -12,6 +12,8 @@ type UiState = {
   toggleSection: (key: string) => void;
   paletteOpen: boolean;
   setPaletteOpen: (open: boolean) => void;
+  shortcutsOpen: boolean;
+  setShortcutsOpen: (open: boolean) => void;
 };
 
 export const useUiStore = create<UiState>()(
@@ -29,6 +31,8 @@ export const useUiStore = create<UiState>()(
       toggleSection: (key) => set((s) => ({ collapsed: { ...s.collapsed, [key]: !s.collapsed[key] } })),
       paletteOpen: false,
       setPaletteOpen: (open) => set({ paletteOpen: open }),
+      shortcutsOpen: false,
+      setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
     }),
     { name: "commune-ui", partialize: (s) => ({ drafts: s.drafts, collapsed: s.collapsed }) },
   ),

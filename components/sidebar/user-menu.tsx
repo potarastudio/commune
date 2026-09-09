@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, Keyboard, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 import { signOut } from "@/app/(app)/actions";
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Profile } from "@/lib/queries/profile";
+import { useUiStore } from "@/lib/store/ui";
 
 export function UserMenu({ profile }: { profile: Profile }) {
   const [pending, startTransition] = useTransition();
@@ -53,6 +54,11 @@ export function UserMenu({ profile }: { profile: Profile }) {
             <Settings className="size-4" aria-hidden="true" />
             Profile settings
           </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => useUiStore.getState().setShortcutsOpen(true)}>
+          <Keyboard className="size-4" aria-hidden="true" />
+          Keyboard shortcuts
+          <span className="ml-auto text-[11px] text-muted-foreground">⌘/</span>
         </DropdownMenuItem>
         <DropdownMenuItem disabled={pending} onSelect={() => startTransition(() => signOut())}>
           <LogOut className="size-4" aria-hidden="true" />

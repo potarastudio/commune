@@ -1,6 +1,6 @@
 "use client";
 
-import { AtSign, ChevronRight, Compass, Hash, Lock, Plus } from "lucide-react";
+import { AtSign, Bookmark, ChevronRight, Compass, Hash, Lock, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -50,6 +50,12 @@ export function SidebarNav({
           <NavLink href="/activity" active={isActive("/activity")} bold={false} count={0} mention={false}>
             <AtSign className="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
             <span className="truncate">Activity</span>
+          </NavLink>
+        </li>
+        <li>
+          <NavLink href="/saved" active={isActive("/saved")} bold={false} count={0} mention={false}>
+            <Bookmark className="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+            <span className="truncate">Saved</span>
           </NavLink>
         </li>
       </ul>

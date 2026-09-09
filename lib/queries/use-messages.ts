@@ -29,6 +29,7 @@ import {
   type Message,
   type MessageAuthor,
   type MessagePage,
+  fetchPins,
 } from "./messages";
 
 export type SendVars = { content: JSONContent; tempId: string; attachments: AttachmentInput[]; previews: PendingUpload[] };
@@ -98,6 +99,16 @@ export function useThread(parentId: string) {
   });
   useEffect(() => subscribeToThread(parentId, queryClient), [parentId, queryClient]);
   return query;
+}
+
+/** Pinned messages for the open container. Realtime pin changes invalidate it via subscribeToMessages. */
+export function usePins(container: Container, initialData?: Message[]) {
+  return useQuery({
+    queryKey: messageKeys.pins(container),
+    queryFn: () => fetchPins(getSupabaseBrowserClient(), container),
+    initialData,
+    staleTime: 60_000,
+  });
 }
 
 /** Reply author ids per parent, for the avatar row under threaded messages. */

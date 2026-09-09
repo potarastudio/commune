@@ -54,10 +54,18 @@ export const MESSAGE_SELECT =
 
 export type Thread = { parent: Message; replies: Message[] };
 
+/** A saved message with where it lives, for the Saved page. */
+export type SavedMessage = {
+  saved_at: string;
+  message: Message & { channel: { id: string; name: string } | null; conversation: { id: string } | null };
+};
+
 export const messageKeys = {
   container: (c: Container) => ["messages", c.kind, c.id] as const,
   thread: (parentId: string) => ["thread", parentId] as const,
   participants: (c: Container) => ["thread-participants", c.kind, c.id] as const,
+  pins: (c: Container) => ["pins", c.kind, c.id] as const,
+  saved: (userId: string) => ["saved", userId] as const,
 };
 
 function normalise(row: unknown): Message {
@@ -202,6 +210,36 @@ export async function editMessage(
   });
   if (error) throw new Error(error.message);
   return data;
+}
+
+/** Everything pinned in a container, newest pin first. Deleted messages drop out. */
+export async function fetchPins(supabase: Supabase, container: Container): Promise<Message[]> {
+  const column = container.kind === "channel" ? "channel_id" : "conversation_id";
+  const { data, error } = await supabase
+    .from("pins")
+    .select(`created_at, message:messages!inner(${MESSAGE_SELECT})`)
+    .eq(`message.${column}`, container.id)
+    .is("message.deleted_at", null)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  // Rooted at pins, so the message's own nested pins embed is not reliable; it is pinned by definition.
+  return (data ?? []).flatMap((r) => (r.message ? [{ ...normalise(r.message), is_pinned: true }] : []));
+}
+
+/** The current user's saved messages, newest save first. RLS returns only their own rows. */
+export async function fetchSaved(supabase: Supabase, userId: string): Promise<SavedMessage[]> {
+  const { data, error } = await supabase
+    .from("saved_messages")
+    .select(`created_at, message:messages!inner(${MESSAGE_SELECT}, channel:channels(id, name), conversation:conversations(id))`)
+    .eq("user_id", userId)
+    .is("message.deleted_at", null)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).flatMap((r) => {
+    if (!r.message) return [];
+    const { channel, conversation, ...rest } = r.message as typeof r.message & SavedMessage["message"];
+    return [{ saved_at: r.created_at, message: { ...normalise(rest), is_saved: true, channel, conversation } }];
+  });
 }
 
 export async function setPinned(supabase: Supabase, messageId: string, userId: string, pinned: boolean) {

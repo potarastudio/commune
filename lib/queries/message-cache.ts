@@ -2,8 +2,9 @@ import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { Message, MessagePage, Thread } from "./messages";
 
 /**
- * Cache patch helpers that work for both shapes we keep messages in:
- * the infinite container list and the { parent, replies } thread.
+ * Cache patch helpers that work for every shape we keep messages in:
+ * the infinite container list, the { parent, replies } thread, and plain
+ * arrays (pinned messages).
  */
 type ListCache = InfiniteData<MessagePage, string | null>;
 
@@ -21,6 +22,7 @@ export function patchMessages(queryClient: QueryClient, key: readonly unknown[],
       const [parent] = fn([old.parent]);
       return { parent: parent ?? old.parent, replies: fn(old.replies) };
     }
+    if (Array.isArray(old)) return fn(old as Message[]);
     return old;
   });
 }

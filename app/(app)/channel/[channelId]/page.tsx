@@ -4,17 +4,19 @@ import { z } from "zod";
 import { ChannelHeader } from "@/components/channel/channel-header";
 import { JoinLeaveButton } from "@/components/channel/join-leave-button";
 import { MessagePane } from "@/components/message/message-pane";
+import { PinsButton } from "@/components/pins/pins-button";
+import { PinsPanel } from "@/components/pins/pins-panel";
 import { ThreadPanel } from "@/components/thread/thread-panel";
 import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
 import { reconcileHuddle } from "@/lib/actions/huddles";
 import { getActiveHuddle } from "@/lib/queries/huddles";
 import { getChannel, getChannelMembers, getMembership } from "@/lib/queries/channel";
-import { fetchMessages } from "@/lib/queries/messages";
+import { fetchMessages, fetchPins } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type Params = Promise<{ channelId: string }>;
-type Search = Promise<{ thread?: string }>;
+type Search = Promise<{ thread?: string; panel?: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { channelId } = await params;
@@ -25,8 +27,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function ChannelPage({ params, searchParams }: { params: Params; searchParams: Search }) {
-  const [{ channelId }, { thread }] = await Promise.all([params, searchParams]);
+  const [{ channelId }, { thread, panel }] = await Promise.all([params, searchParams]);
   const threadId = thread && z.string().uuid().safeParse(thread).success ? thread : null;
+  const pinsOpen = !threadId && panel === "pins";
   if (!z.string().uuid().safeParse(channelId).success) notFound();
 
   const supabase = await createSupabaseServerClient();
@@ -37,11 +40,12 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
   if (!channel) notFound();
 
   const container = { kind: "channel" as const, id: channelId };
-  const [membership, members, firstPage, rawHuddle] = await Promise.all([
+  const [membership, members, firstPage, rawHuddle, pins] = await Promise.all([
     getMembership(supabase, channelId, profile.id),
     getChannelMembers(supabase, channelId),
     fetchMessages(supabase, container),
     getActiveHuddle(supabase, container),
+    fetchPins(supabase, container),
   ]);
   const huddle = rawHuddle ? await reconcileHuddle(rawHuddle) : null;
   const huddleProps = { container, label: `#${channel.name}`, href: `/channel/${channel.id}`, initial: huddle, meId: profile.id };
@@ -58,6 +62,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
         isAdmin={profile.role === "admin"}
         notificationLevel={(membership?.notification_level as "all" | "mentions" | "muted" | undefined) ?? null}
         huddle={canPost ? <HuddleButton {...huddleProps} /> : undefined}
+        pins={<PinsButton container={container} initialPins={pins} />}
       />
       {canPost && <HuddleBanner {...huddleProps} />}
       <div className="flex min-h-0 flex-1">
@@ -96,6 +101,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
           canPost={canPost}
         />
       )}
+      {pinsOpen && <PinsPanel container={container} containerLabel={`#${channel.name}`} me={me} isAdmin={profile.role === "admin"} initialPins={pins} />}
       </div>
     </>
   );

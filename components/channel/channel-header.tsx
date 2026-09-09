@@ -10,6 +10,7 @@ export function ChannelHeader({
   isAdmin,
   notificationLevel,
   huddle,
+  pins,
 }: {
   channel: ChannelRow;
   members: ChannelMember[];
@@ -17,6 +18,7 @@ export function ChannelHeader({
   isAdmin: boolean;
   notificationLevel: NotificationLevel | null;
   huddle?: React.ReactNode;
+  pins?: React.ReactNode;
 }) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-3.5">
@@ -29,6 +31,7 @@ export function ChannelHeader({
       )}
       <span className="ml-auto flex items-center gap-2">
         {huddle}
+        {pins}
         <span className="mr-1.5 flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground">
           <Users className="size-3.5" aria-hidden="true" />
           {members.length}

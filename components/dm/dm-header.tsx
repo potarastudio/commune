@@ -2,7 +2,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { OnlineDot } from "@/components/presence/online-dot";
 import { conversationLabel, type ConversationMember } from "@/lib/queries/conversations";
 
-export function DmHeader({ members, meId, huddle }: { members: ConversationMember[]; meId: string; huddle?: React.ReactNode }) {
+export function DmHeader({
+  members,
+  meId,
+  huddle,
+  pins,
+}: {
+  members: ConversationMember[];
+  meId: string;
+  huddle?: React.ReactNode;
+  pins?: React.ReactNode;
+}) {
   const others = members.filter((m) => m.id !== meId);
   const label = conversationLabel(members, meId);
   const single = others.length === 1 ? others[0] : null;
@@ -35,6 +45,7 @@ export function DmHeader({ members, meId, huddle }: { members: ConversationMembe
       )}
       <span className="ml-auto flex items-center gap-2">
         {huddle}
+        {pins}
         {others.length > 1 && (
           <span className="rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground">{members.length} people</span>
         )}

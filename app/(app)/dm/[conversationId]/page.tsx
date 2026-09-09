@@ -3,17 +3,19 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { DmHeader } from "@/components/dm/dm-header";
 import { MessagePane } from "@/components/message/message-pane";
+import { PinsButton } from "@/components/pins/pins-button";
+import { PinsPanel } from "@/components/pins/pins-panel";
 import { ThreadPanel } from "@/components/thread/thread-panel";
 import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
 import { reconcileHuddle } from "@/lib/actions/huddles";
 import { getActiveHuddle } from "@/lib/queries/huddles";
 import { conversationLabel, conversationMembership, getConversation } from "@/lib/queries/conversations";
-import { fetchMessages } from "@/lib/queries/messages";
+import { fetchMessages, fetchPins } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type Params = Promise<{ conversationId: string }>;
-type Search = Promise<{ thread?: string }>;
+type Search = Promise<{ thread?: string; panel?: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { conversationId } = await params;
@@ -24,8 +26,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function ConversationPage({ params, searchParams }: { params: Params; searchParams: Search }) {
-  const [{ conversationId }, { thread }] = await Promise.all([params, searchParams]);
+  const [{ conversationId }, { thread, panel }] = await Promise.all([params, searchParams]);
   const threadId = thread && z.string().uuid().safeParse(thread).success ? thread : null;
+  const pinsOpen = !threadId && panel === "pins";
   if (!z.string().uuid().safeParse(conversationId).success) notFound();
 
   const supabase = await createSupabaseServerClient();
@@ -36,10 +39,11 @@ export default async function ConversationPage({ params, searchParams }: { param
   if (!conversation) notFound();
 
   const container = { kind: "conversation" as const, id: conversationId };
-  const [{ data: membership }, firstPage, rawHuddle] = await Promise.all([
+  const [{ data: membership }, firstPage, rawHuddle, pins] = await Promise.all([
     conversationMembership(supabase, conversationId, profile.id),
     fetchMessages(supabase, container),
     getActiveHuddle(supabase, container),
+    fetchPins(supabase, container),
   ]);
   const huddle = rawHuddle ? await reconcileHuddle(rawHuddle) : null;
 
@@ -51,7 +55,12 @@ export default async function ConversationPage({ params, searchParams }: { param
 
   return (
     <>
-      <DmHeader members={conversation.members} meId={profile.id} huddle={membership ? <HuddleButton {...huddleProps} /> : undefined} />
+      <DmHeader
+        members={conversation.members}
+        meId={profile.id}
+        huddle={membership ? <HuddleButton {...huddleProps} /> : undefined}
+        pins={membership ? <PinsButton container={container} initialPins={pins} /> : undefined}
+      />
       {membership && <HuddleBanner {...huddleProps} />}
       <div className="flex min-h-0 flex-1">
       <MessagePane
@@ -82,6 +91,7 @@ export default async function ConversationPage({ params, searchParams }: { param
           canPost={membership !== null}
         />
       )}
+      {pinsOpen && membership && <PinsPanel container={container} containerLabel={shortLabel} me={me} isAdmin={profile.role === "admin"} initialPins={pins} />}
       </div>
     </>
   );

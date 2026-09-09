@@ -116,7 +116,15 @@ export function subscribeToMessages(container: Container, queryClient: QueryClie
           onMessage,
         )
         .on<ReactionRow>("postgres_changes", { event: "*", schema: "public", table: "reactions" }, reactionPatcher(queryClient, key))
-        .on<PinRow>("postgres_changes", { event: "*", schema: "public", table: "pins" }, pinPatcher(queryClient, key)),
+        .on<PinRow>("postgres_changes", { event: "*", schema: "public", table: "pins" }, (payload) => {
+          pinPatcher(queryClient, key)(payload);
+          pinPatcher(queryClient, messageKeys.pins(container))(payload);
+          if (payload.eventType === "INSERT") void queryClient.invalidateQueries({ queryKey: messageKeys.pins(container) });
+          else {
+            const id = (payload.old as Partial<PinRow>).message_id;
+            if (id) patchMessages(queryClient, messageKeys.pins(container), (ms) => ms.filter((m) => m.id !== id));
+          }
+        }),
     `${container.kind}:${container.id}`,
   );
 }

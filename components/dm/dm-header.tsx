@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { OnlineDot } from "@/components/presence/online-dot";
 import { UserStatus } from "@/components/profile/user-status";
+import { DetailsButton, MembersButton } from "@/components/channel/panel-buttons";
 import { conversationLabel, type ConversationMember } from "@/lib/queries/conversations";
 
 export function DmHeader({
@@ -50,9 +51,7 @@ export function DmHeader({
       <span className="ml-auto flex items-center gap-2">
         {huddle}
         {pins}
-        {others.length > 1 && (
-          <span className="rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground">{members.length} people</span>
-        )}
+        {others.length > 1 ? <MembersButton count={members.length} /> : <DetailsButton />}
       </span>
     </header>
   );

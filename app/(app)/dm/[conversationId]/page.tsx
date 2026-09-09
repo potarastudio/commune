@@ -4,7 +4,7 @@ import { z } from "zod";
 import { DmHeader } from "@/components/dm/dm-header";
 import { MessagePane } from "@/components/message/message-pane";
 import { PinsButton } from "@/components/pins/pins-button";
-import { PinsPanel } from "@/components/pins/pins-panel";
+import { ContainerPanel } from "@/components/panel/container-panel";
 import { ThreadPanel } from "@/components/thread/thread-panel";
 import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
 import { reconcileHuddle } from "@/lib/actions/huddles";
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function ConversationPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const [{ conversationId }, { thread, panel }] = await Promise.all([params, searchParams]);
   const threadId = thread && z.string().uuid().safeParse(thread).success ? thread : null;
-  const pinsOpen = !threadId && panel === "pins";
+  const panelOpen = !threadId && (panel === "pins" || panel === "details");
   if (!z.string().uuid().safeParse(conversationId).success) notFound();
 
   const supabase = await createSupabaseServerClient();
@@ -91,7 +91,18 @@ export default async function ConversationPage({ params, searchParams }: { param
           canPost={membership !== null}
         />
       )}
-      {pinsOpen && membership && <PinsPanel container={container} containerLabel={shortLabel} me={me} isAdmin={profile.role === "admin"} initialPins={pins} />}
+      {panelOpen && membership && (
+        <ContainerPanel
+          container={container}
+          containerLabel={shortLabel}
+          members={conversation.members}
+          isMember
+          isAdmin={profile.role === "admin"}
+          notificationLevel={null}
+          me={me}
+          initialPins={pins}
+        />
+      )}
       </div>
     </>
   );

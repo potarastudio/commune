@@ -21,7 +21,7 @@ const ICONS: Record<Exclude<FileKind, "image">, typeof File> = {
   file: File,
 };
 
-function DownloadButton({ attachment, className }: { attachment: AttachmentView; className?: string }) {
+export function DownloadButton({ attachment, className }: { attachment: AttachmentView; className?: string }) {
   const [busy, setBusy] = useState(false);
   const download = async () => {
     setBusy(true);

@@ -10,6 +10,7 @@ import {
   type Reaction,
 } from "@/lib/queries/messages";
 import { appendMessage, patchMessages } from "@/lib/queries/message-cache";
+import { invalidateFiles } from "@/lib/queries/files";
 
 type ReactionRow = Reaction & { message_id: string };
 type PinRow = { message_id: string; pinned_by: string | null };
@@ -102,7 +103,10 @@ export function subscribeToMessages(container: Container, queryClient: QueryClie
       return;
     }
     const full = await fetchMessageById(supabase, row.id);
-    if (full) appendMessage(queryClient, key, full);
+    if (full) {
+      appendMessage(queryClient, key, full);
+      if (full.attachments.length) invalidateFiles(queryClient, container);
+    }
   };
 
   return subscribeWithAuth(

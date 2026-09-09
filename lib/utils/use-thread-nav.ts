@@ -3,11 +3,15 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
-export type SidePanel = "pins";
+export type SidePanel = "pins" | "details";
+export type PanelTab = "about" | "members" | "files" | "pins";
+
+const TABS: PanelTab[] = ["about", "members", "files", "pins"];
 
 /**
  * The right-hand panel lives in the URL so links and refreshes keep it:
- * ?thread=<messageId> for a thread, ?panel=pins for pinned messages.
+ * ?thread=<messageId> for a thread, ?panel=details&tab=<tab> for the
+ * container details, ?panel=pins as a shortcut to its Pins tab.
  * Only one is open at a time.
  */
 export function useThreadNav() {
@@ -15,7 +19,10 @@ export function useThreadNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const openThreadId = searchParams.get("thread");
-  const openPanel = (searchParams.get("panel") as SidePanel | null) ?? null;
+  const rawPanel = searchParams.get("panel");
+  const openPanel: SidePanel | null = rawPanel === "pins" || rawPanel === "details" ? rawPanel : null;
+  const rawTab = searchParams.get("tab");
+  const panelTab: PanelTab | null = openPanel === "pins" ? "pins" : openPanel === "details" ? (TABS.includes(rawTab as PanelTab) ? (rawTab as PanelTab) : null) : null;
 
   const push = useCallback(
     (params: URLSearchParams) => {
@@ -29,6 +36,7 @@ export function useThreadNav() {
     (messageId: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("panel");
+      params.delete("tab");
       params.set("thread", messageId);
       push(params);
     },
@@ -42,10 +50,12 @@ export function useThreadNav() {
   }, [push, searchParams]);
 
   const showPanel = useCallback(
-    (panel: SidePanel) => {
+    (panel: SidePanel, tab?: PanelTab) => {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("thread");
       params.set("panel", panel);
+      if (tab && panel === "details") params.set("tab", tab);
+      else params.delete("tab");
       push(params);
     },
     [push, searchParams],
@@ -54,8 +64,9 @@ export function useThreadNav() {
   const closePanel = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("panel");
+    params.delete("tab");
     push(params);
   }, [push, searchParams]);
 
-  return { openThreadId, openThread, closeThread, openPanel, showPanel, closePanel };
+  return { openThreadId, openThread, closeThread, openPanel, panelTab, showPanel, closePanel };
 }

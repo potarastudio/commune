@@ -6,7 +6,7 @@ import { UnarchiveButton } from "@/components/channel/archive-channel";
 import { JoinLeaveButton } from "@/components/channel/join-leave-button";
 import { MessagePane } from "@/components/message/message-pane";
 import { PinsButton } from "@/components/pins/pins-button";
-import { PinsPanel } from "@/components/pins/pins-panel";
+import { ContainerPanel } from "@/components/panel/container-panel";
 import { ThreadPanel } from "@/components/thread/thread-panel";
 import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
 import { reconcileHuddle } from "@/lib/actions/huddles";
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function ChannelPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const [{ channelId }, { thread, panel }] = await Promise.all([params, searchParams]);
   const threadId = thread && z.string().uuid().safeParse(thread).success ? thread : null;
-  const pinsOpen = !threadId && panel === "pins";
+  const panelOpen = !threadId && (panel === "pins" || panel === "details");
   if (!z.string().uuid().safeParse(channelId).success) notFound();
 
   const supabase = await createSupabaseServerClient();
@@ -59,9 +59,6 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
       <ChannelHeader
         channel={channel}
         members={members}
-        isMember={membership !== null}
-        isAdmin={profile.role === "admin"}
-        notificationLevel={(membership?.notification_level as "all" | "mentions" | "muted" | undefined) ?? null}
         huddle={canPost ? <HuddleButton {...huddleProps} /> : undefined}
         pins={<PinsButton container={container} initialPins={pins} />}
       />
@@ -105,7 +102,19 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
           canPost={canPost}
         />
       )}
-      {pinsOpen && <PinsPanel container={container} containerLabel={`#${channel.name}`} me={me} isAdmin={profile.role === "admin"} initialPins={pins} />}
+      {panelOpen && (
+        <ContainerPanel
+          container={container}
+          containerLabel={`#${channel.name}`}
+          channel={channel}
+          members={members}
+          isMember={membership !== null}
+          isAdmin={profile.role === "admin"}
+          notificationLevel={(membership?.notification_level as "all" | "mentions" | "muted" | undefined) ?? null}
+          me={me}
+          initialPins={pins}
+        />
+      )}
       </div>
     </>
   );

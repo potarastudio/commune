@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hash, Lock } from "lucide-react";
+import { Archive, Hash, Lock } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CreateChannelPopover } from "@/components/channel/create-channel-popover";
@@ -17,14 +17,16 @@ export default async function BrowseChannelsPage() {
   if (!profile) redirect("/login");
 
   const channels = await getChannelsForBrowse(supabase, profile.id);
-  const joined = channels.filter((c) => c.joined);
-  const others = channels.filter((c) => !c.joined);
+  const live = channels.filter((c) => !c.is_archived);
+  const joined = live.filter((c) => c.joined);
+  const others = live.filter((c) => !c.joined);
+  const archived = channels.filter((c) => c.is_archived);
 
   const Row = ({ c }: { c: (typeof channels)[number] }) => {
-    const Icon = c.is_private ? Lock : Hash;
+    const Icon = c.is_archived ? Archive : c.is_private ? Lock : Hash;
     return (
       <li className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-message-hover">
-        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground">
+        <span className={`grid size-9 shrink-0 place-items-center rounded-md ${c.is_archived ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"}`}>
           <Icon className="size-4" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
@@ -36,7 +38,11 @@ export default async function BrowseChannelsPage() {
             {c.description ? ` · ${c.description}` : c.topic ? ` · ${c.topic}` : ""}
           </p>
         </div>
-        <JoinLeaveButton channelId={c.id} channelName={c.name} joined={c.joined} />
+        {c.is_archived ? (
+          <span className="text-[12px] text-muted-foreground">Read only</span>
+        ) : (
+          <JoinLeaveButton channelId={c.id} channelName={c.name} joined={c.joined} />
+        )}
       </li>
     );
   };
@@ -46,7 +52,7 @@ export default async function BrowseChannelsPage() {
       <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-5">
         <h1 className="text-[15px] font-semibold tracking-tight">Channels</h1>
         <span className="text-[13px] text-muted-foreground">
-          {channels.length} you can see
+          {live.length} you can see
         </span>
         <div className="ml-auto">
           <CreateChannelPopover />
@@ -76,6 +82,17 @@ export default async function BrowseChannelsPage() {
             <p className="mt-8 px-3 text-center text-[13px] text-muted-foreground">
               You&apos;re in every channel there is. Start a new one for a project or a client.
             </p>
+          )}
+          {archived.length > 0 && (
+            <section className="mt-8">
+              <h2 className="px-3 text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Archived</h2>
+              <p className="mt-1 px-3 text-[12px] text-muted-foreground">Still readable and searchable. Admins can bring one back from inside the channel.</p>
+              <ul className="mt-2 space-y-0.5">
+                {archived.map((c) => (
+                  <Row key={c.id} c={c} />
+                ))}
+              </ul>
+            </section>
           )}
         </div>
       </div>

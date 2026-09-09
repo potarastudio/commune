@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import { Archive, Users } from "lucide-react";
 import type { ChannelMember, ChannelRow } from "@/lib/queries/channel";
 import type { NotificationLevel } from "@/lib/queries/channels";
 import { ChannelDetails } from "./channel-details";
@@ -23,6 +23,11 @@ export function ChannelHeader({
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-3.5">
       <ChannelDetails channel={channel} members={members} isMember={isMember} isAdmin={isAdmin} notificationLevel={notificationLevel} />
+      {channel.is_archived && (
+        <span className="flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+          <Archive className="size-3" aria-hidden="true" /> Archived
+        </span>
+      )}
       {channel.topic && (
         <>
           <span className="h-4 w-px bg-border" aria-hidden="true" />

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { ChannelHeader } from "@/components/channel/channel-header";
+import { UnarchiveButton } from "@/components/channel/archive-channel";
 import { JoinLeaveButton } from "@/components/channel/join-leave-button";
 import { MessagePane } from "@/components/message/message-pane";
 import { PinsButton } from "@/components/pins/pins-button";
@@ -78,8 +79,11 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
         startBody="Everything the channel has ever said is below."
         readOnlyNotice={
           channel.is_archived ? (
-            <span>
-              <strong>#{channel.name}</strong> is archived. You can read it, but nobody can post.
+            <span className="flex items-center justify-between gap-3">
+              <span>
+                <strong>#{channel.name}</strong> is archived. You can read it, but nobody can post.
+              </span>
+              {profile.role === "admin" && <UnarchiveButton channelId={channel.id} channelName={channel.name} />}
             </span>
           ) : (
             <span className="flex items-center justify-between gap-3">

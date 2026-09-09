@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { inviteAction, revokeInviteAction, type InviteResult } from "@/lib/actions/invites";
 import type { InviteRow } from "@/lib/queries/invites";
+import { MemberRole } from "./member-role";
 
 /** Admin-only: allowlist an address and send the invitation email. */
-export function InvitePeople({ invites }: { invites: InviteRow[] }) {
+export function InvitePeople({ invites, meId }: { invites: InviteRow[]; meId: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [last, setLast] = useState<InviteResult | null>(null);
@@ -135,7 +136,7 @@ export function InvitePeople({ invites }: { invites: InviteRow[] }) {
                 {i.profile?.display_name}
                 <span className="ml-1.5 text-muted-foreground">@{i.profile?.handle}</span>
               </span>
-              <span className="text-[12px] text-muted-foreground">{i.profile?.role === "admin" ? "Admin" : "Member"}</span>
+              {i.profile && <MemberRole userId={i.profile.id} role={i.profile.role} name={i.profile.display_name} isMe={i.profile.id === meId} />}
             </li>
           ))}
         </ul>

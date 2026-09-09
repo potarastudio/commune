@@ -10,7 +10,7 @@ do $$ begin
 end $$;
 set local search_path = public, extensions;
 
-select plan(54);
+select plan(57);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as superuser)
@@ -267,6 +267,25 @@ reset role;
 select pg_temp.login('10000000-0000-4000-8000-000000000003');
 select is((select count(*) from public.pins where message_id = '30000000-0000-4000-8000-000000000001'), 0::bigint,
   'non-member cannot see pins in a private channel');
+
+-- Archiving is admin-only, and an archived channel takes no posts.
+-- (bob was promoted above, so mallory, already a member of the public channel, plays the member here.)
+reset role;
+select pg_temp.login('10000000-0000-4000-8000-000000000003');
+select throws_ok(
+  $$ update public.channels set is_archived = true where id = '20000000-0000-4000-8000-000000000002' $$, '42501',
+  null, 'member cannot archive a channel');
+reset role;
+select pg_temp.login('10000000-0000-4000-8000-000000000001');
+select lives_ok(
+  $$ update public.channels set is_archived = true where id = '20000000-0000-4000-8000-000000000002' $$,
+  'admin can archive a channel');
+reset role;
+select pg_temp.login('10000000-0000-4000-8000-000000000003');
+select throws_ok(
+  $$ select public.insert_message(p_channel_id := '20000000-0000-4000-8000-000000000002',
+       p_content := '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"late"}]}]}'::jsonb) $$,
+  null, null, 'nobody can post in an archived channel');
 
 -- Mention digest internals are service-role only.
 select throws_ok(

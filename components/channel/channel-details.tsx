@@ -12,6 +12,7 @@ import type { ChannelRow } from "@/lib/queries/channel";
 import type { Profile } from "@/lib/queries/profile";
 import { useProfiles } from "@/lib/queries/profiles";
 import type { NotificationLevel } from "@/lib/queries/channels";
+import { ArchiveChannelControl } from "./archive-channel";
 import { JoinLeaveButton } from "./join-leave-button";
 import { NotificationLevelControl } from "./notification-level";
 
@@ -282,6 +283,11 @@ export function ChannelDetails({
               </button>
               <JoinLeaveButton channelId={channel.id} channelName={channel.name} joined={isMember} afterLeaveHref={channel.is_private ? "/" : undefined} />
             </div>
+            {isAdmin && !channel.is_archived && (
+              <div className="border-t border-border pt-3">
+                <ArchiveChannelControl channelId={channel.id} channelName={channel.name} />
+              </div>
+            )}
           </div>
         ) : (
           <div className="p-4">

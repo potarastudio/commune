@@ -45,7 +45,7 @@ export type BrowseChannel = ChannelRow & { member_count: number; joined: boolean
 /** Channels visible to the user (RLS: public + private they belong to), with counts and joined state. */
 export async function getChannelsForBrowse(supabase: SupabaseServerClient, userId: string): Promise<BrowseChannel[]> {
   const [{ data: channels, error }, { data: mine, error: mErr }] = await Promise.all([
-    supabase.from("channels").select("*, channel_members(count)").eq("is_archived", false).order("name"),
+    supabase.from("channels").select("*, channel_members(count)").order("name"),
     supabase.from("channel_members").select("channel_id").eq("user_id", userId),
   ]);
   if (error) throw new Error(error.message);

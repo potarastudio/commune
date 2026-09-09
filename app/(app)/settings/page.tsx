@@ -40,10 +40,10 @@ export default async function SettingsPage() {
           <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
             <h2 className="text-[16px] font-semibold tracking-tight">Invite people</h2>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Anyone you add can sign in with Google using that exact address. They get an email with a link.
+              Anyone you add can sign in with Google using that exact address. They get an email with a link. Admins can also change roles here.
             </p>
             <div className="mt-4">
-              <InvitePeople invites={invites} />
+              <InvitePeople invites={invites} meId={profile.id} />
             </div>
           </section>
         )}

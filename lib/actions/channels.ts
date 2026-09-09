@@ -132,3 +132,28 @@ export async function setNotificationLevelAction(input: { channelId: string; lev
   revalidatePath("/", "layout");
   return { ok: true, data: undefined };
 }
+
+/** Admin: archive (read-only, hidden from sidebars) or bring back a channel. #general is protected in SQL. */
+export async function setChannelArchivedAction(input: { channelId: string; archived: boolean }): Promise<Result> {
+  const parsed = z.object({ channelId: uuid, archived: z.boolean() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Couldn't read that." };
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "You're signed out." };
+  const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (me?.role !== "admin") return { ok: false, error: "Only admins can archive channels." };
+
+  const { error, count } = await supabase
+    .from("channels")
+    .update({ is_archived: parsed.data.archived }, { count: "exact" })
+    .eq("id", parsed.data.channelId);
+  if (error) {
+    if (error.code === "42501") return { ok: false, error: "#general can't be archived." };
+    return fail("setChannelArchivedAction", error, "Couldn't change the channel.");
+  }
+  if (count === 0) return { ok: false, error: "That channel doesn't exist." };
+  revalidatePath("/", "layout");
+  return { ok: true, data: undefined };
+}

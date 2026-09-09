@@ -1,12 +1,15 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
+import { deliverDueReminders } from "@/lib/cron/reminders";
+import { sendDueScheduledMessages } from "@/lib/cron/scheduled";
 import { runMentionDigest } from "@/lib/email/digest";
 import { serverEnv } from "@/lib/env";
 
 /**
- * Trigger for the missed-mentions digest. pg_cron calls this every 5 minutes
- * with the shared CRON_SECRET (README → Mention digest). `?dry=1` reports who
- * would be emailed without sending anything.
+ * The app's minute tick. pg_cron calls this with the shared CRON_SECRET
+ * (README → Mention digest) and it runs everything time-based: scheduled
+ * messages, reminders, and the missed-mentions digest. `?dry=1` previews the
+ * digest without sending anything (scheduled and reminders still run).
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,8 +28,14 @@ async function handle(request: NextRequest) {
   if (!serverEnv().CRON_SECRET) return NextResponse.json({ error: "Digest isn't configured." }, { status: 503 });
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   try {
-    const result = await runMentionDigest({ dryRun: request.nextUrl.searchParams.get("dry") === "1" });
-    return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
+    const settled = await Promise.allSettled([
+      sendDueScheduledMessages(),
+      deliverDueReminders(),
+      runMentionDigest({ dryRun: request.nextUrl.searchParams.get("dry") === "1" }),
+    ]);
+    const [scheduled, reminders, digest] = settled.map((s) => (s.status === "fulfilled" ? s.value : { error: s.reason instanceof Error ? s.reason.message : String(s.reason) }));
+    for (const s of settled) if (s.status === "rejected") console.error("cron/digest job", { message: s.reason instanceof Error ? s.reason.message : String(s.reason) });
+    return NextResponse.json({ scheduled, reminders, digest }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error("cron/digest", { message: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: "Digest failed." }, { status: 500 });

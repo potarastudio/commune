@@ -14,6 +14,7 @@ import type { useAttachmentUploads } from "@/lib/queries/use-uploads";
 import { isEmptyDoc } from "@/lib/utils/tiptap";
 import { EmojiPicker } from "./emoji-picker";
 import { PendingAttachments } from "./pending-attachments";
+import { SendLaterMenu } from "./send-later";
 
 /**
  * Tiptap composer (§5): bold/italic/strike/code/code block/links/bulleted
@@ -25,6 +26,7 @@ export function MessageComposer({
   draftKey,
   placeholder,
   onSend,
+  onSchedule,
   compact = false,
   allowBroadcast = true,
   uploads,
@@ -35,6 +37,8 @@ export function MessageComposer({
   placeholder: string;
   /** Called with the document; attachments (if any) are read from `uploads` by the caller. */
   onSend: (content: JSONContent) => void;
+  /** When set, the toolbar offers "Send later"; called with the draft and the chosen time. */
+  onSchedule?: (content: JSONContent, at: Date) => void;
   /** From useAttachmentUploads(); enables the attach button, paste and the pending list. */
   uploads?: ReturnType<typeof useAttachmentUploads>;
   /** Presence typing hooks (§7). */
@@ -242,6 +246,17 @@ export function MessageComposer({
         <span className={`ml-auto mr-1 text-[11px] text-muted-foreground ${compact ? "hidden" : "hidden sm:block"}`}>
           <kbd className="font-sans">Enter</kbd> to send · <kbd className="font-sans">Shift+Enter</kbd> for a new line
         </span>
+        {onSchedule && (
+          <SendLaterMenu
+            disabled={!canSend || Boolean(uploads?.uploads.length)}
+            onPick={(at) => {
+              const doc = editor?.getJSON();
+              if (!doc || !editor) return;
+              onSchedule(JSON.parse(JSON.stringify(doc)) as JSONContent, at);
+              editor.commands.clearContent(true);
+            }}
+          />
+        )}
         <Tooltip>
           <TooltipTrigger asChild>
             <button

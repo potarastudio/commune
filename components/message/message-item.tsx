@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileCard } from "@/components/profile/profile-card";
+import { EditHistory } from "./edit-history";
 import { UserStatus } from "@/components/profile/user-status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/queries/messages";
@@ -126,9 +127,7 @@ export function MessageItem({
         ) : (
           <div className="text-[14px] [&>p+p]:mt-1 [&>p:last-of-type]:inline [&>p:last-of-type]:after:content-['']">
             {renderContent(message.content as Parameters<typeof renderContent>[0])}
-            {message.is_edited && (
-              <span className="ml-1 align-baseline text-[11px] text-muted-foreground">(edited)</span>
-            )}
+            {message.is_edited && <EditHistory messageId={message.id} editedAt={message.edited_at} />}
             {message.failed && <span className="ml-1 align-baseline text-[11px] text-destructive">Not sent</span>}
           </div>
         )}

@@ -5,6 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { markReadAction } from "@/lib/actions/messages";
+import { scheduleMessageAction } from "@/lib/actions/scheduling";
+import { ScheduledNotice } from "@/components/message/send-later";
+import { schedulingKeys } from "@/lib/queries/scheduling";
+import { describeWhen } from "@/lib/utils/schedule";
+import { toast } from "sonner";
 import { MARK_READ_EVENT } from "@/components/shortcuts/keyboard-shortcuts";
 import { MessageComposer } from "@/components/message/message-composer";
 import { MessageList } from "@/components/message/message-list";
@@ -111,6 +116,21 @@ export function MessagePane({
     [send, uploads],
   );
 
+  const handleSchedule = useCallback(
+    (content: JSONContent, at: Date) => {
+      void scheduleMessageAction({ container, content, sendAt: at.toISOString() }).then((result) => {
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
+        toast.success(`Scheduled for ${describeWhen(at)}`, { description: "It'll be posted as you. Cancel it above the composer any time." });
+        void queryClient.invalidateQueries({ queryKey: schedulingKeys.scheduled(container) });
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [container.kind, container.id, queryClient],
+  );
+
   return (
     <DropZone label={placeholder.replace(/^Message /, "")} onFiles={uploads.addFiles}>
       <MessageList
@@ -136,11 +156,13 @@ export function MessagePane({
       />
       <div className="shrink-0 px-5 pb-4 pt-0">
         <TypingIndicator people={typing.others} />
+        {canPost && <ScheduledNotice container={container} />}
         {canPost ? (
           <MessageComposer
             draftKey={`${container.kind}:${container.id}`}
             placeholder={placeholder}
             onSend={handleSend}
+            onSchedule={handleSchedule}
             allowBroadcast={container.kind === "channel"}
             uploads={uploads}
             onTyping={typing.onKeystroke}

@@ -4,6 +4,7 @@ import { Bookmark, BookmarkCheck, Link2, MessageSquareText, Pencil, Pin, PinOff,
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { QuickReactionPicker } from "./quick-reaction-picker";
+import { RemindMenu } from "./remind-menu";
 
 function ActionButton({ label, onClick, children }: { label: string; onClick?: () => void; children: React.ReactNode }) {
   return (
@@ -81,6 +82,7 @@ export function MessageActions({
       <ActionButton label={isPinned ? "Unpin" : "Pin"} onClick={onTogglePin}>
         {isPinned ? <PinOff className="size-4" aria-hidden="true" /> : <Pin className="size-4" aria-hidden="true" />}
       </ActionButton>
+      <RemindMenu messageId={messageId} />
       <ActionButton label="Copy link" onClick={() => void copyLink()}>
         <Link2 className="size-4" aria-hidden="true" />
       </ActionButton>

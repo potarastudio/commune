@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { AtSign, SmilePlus } from "lucide-react";
+import { AlarmClock, AtSign, SmilePlus } from "lucide-react";
 import { redirect } from "next/navigation";
 import { ActivityItem } from "@/components/activity/activity-item";
+import { RemindersList } from "@/components/activity/reminders-list";
+import { fetchUpcomingReminders } from "@/lib/queries/scheduling";
 import { getMentionsOfMe, getReactionsOnMyMessages, messageHref } from "@/lib/queries/activity";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -15,7 +17,11 @@ export default async function ActivityPage() {
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
 
-  const [mentions, reactions] = await Promise.all([getMentionsOfMe(supabase, profile.id), getReactionsOnMyMessages(supabase, profile.id)]);
+  const [mentions, reactions, reminders] = await Promise.all([
+    getMentionsOfMe(supabase, profile.id),
+    getReactionsOnMyMessages(supabase, profile.id),
+    fetchUpcomingReminders(supabase),
+  ]);
 
   const where = (m: { channel: { name: string } | null; conversation: unknown }) =>
     m.channel ? `#${m.channel.name}` : m.conversation ? "a direct message" : "";
@@ -28,6 +34,14 @@ export default async function ActivityPage() {
       </header>
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-2xl px-3 py-6">
+          {reminders.length > 0 && (
+            <section className="mb-10">
+              <h2 className="flex items-center gap-2 px-3 text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                <AlarmClock className="size-3.5" aria-hidden="true" /> Reminders
+              </h2>
+              <RemindersList initial={reminders} timezone={profile.timezone} />
+            </section>
+          )}
           <section>
             <h2 className="flex items-center gap-2 px-3 text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
               <AtSign className="size-3.5" aria-hidden="true" /> Mentions

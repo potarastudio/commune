@@ -47,6 +47,15 @@ async function deliver(userIds: string[], payload: Payload) {
   if (dead.length) await admin.from("push_subscriptions").delete().in("id", dead);
 }
 
+/** Push to specific people regardless of DND: used for things they asked for themselves (reminders). */
+export async function pushToUsers(userIds: string[], payload: Payload): Promise<void> {
+  try {
+    await deliver(userIds, payload);
+  } catch (err) {
+    console.error("pushToUsers", { message: err instanceof Error ? err.message : String(err) });
+  }
+}
+
 function excerpt(text: string, max = 140): string {
   const clean = text.replace(/\s+/g, " ").trim();
   return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean || "Sent a file";

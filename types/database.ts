@@ -79,6 +79,54 @@ export type Database = {
           },
         ]
       }
+      channel_bookmarks: {
+        Row: {
+          channel_id: string
+          created_at: string
+          created_by: string | null
+          emoji: string | null
+          id: string
+          position: number
+          title: string
+          url: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          created_by?: string | null
+          emoji?: string | null
+          id?: string
+          position?: number
+          title: string
+          url: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          created_by?: string | null
+          emoji?: string | null
+          id?: string
+          position?: number
+          title?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_bookmarks_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_bookmarks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_members: {
         Row: {
           channel_id: string
@@ -426,6 +474,48 @@ export type Database = {
           },
         ]
       }
+      message_edits: {
+        Row: {
+          content: Json
+          content_text: string
+          edited_at: string
+          edited_by: string | null
+          id: string
+          message_id: string
+        }
+        Insert: {
+          content: Json
+          content_text: string
+          edited_at?: string
+          edited_by?: string | null
+          id?: string
+          message_id: string
+        }
+        Update: {
+          content?: Json
+          content_text?: string
+          edited_at?: string
+          edited_by?: string | null
+          id?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_edits_edited_by_fkey"
+            columns: ["edited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_edits_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           author_id: string
@@ -670,6 +760,48 @@ export type Database = {
           },
         ]
       }
+      reminders: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          id: string
+          message_id: string
+          remind_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          message_id: string
+          remind_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          message_id?: string
+          remind_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_messages: {
         Row: {
           created_at: string
@@ -699,6 +831,74 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_messages: {
+        Row: {
+          author_id: string
+          channel_id: string | null
+          content: Json
+          content_text: string
+          conversation_id: string | null
+          created_at: string
+          failed: string | null
+          id: string
+          send_at: string
+          sent_message_id: string | null
+        }
+        Insert: {
+          author_id: string
+          channel_id?: string | null
+          content: Json
+          content_text: string
+          conversation_id?: string | null
+          created_at?: string
+          failed?: string | null
+          id?: string
+          send_at: string
+          sent_message_id?: string | null
+        }
+        Update: {
+          author_id?: string
+          channel_id?: string | null
+          content?: Json
+          content_text?: string
+          conversation_id?: string | null
+          created_at?: string
+          failed?: string | null
+          id?: string
+          send_at?: string
+          sent_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_messages_sent_message_id_fkey"
+            columns: ["sent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]

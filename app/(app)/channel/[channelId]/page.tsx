@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
+import { BookmarksBar } from "@/components/channel/bookmarks-bar";
 import { ChannelHeader } from "@/components/channel/channel-header";
 import { UnarchiveButton } from "@/components/channel/archive-channel";
 import { JoinLeaveButton } from "@/components/channel/join-leave-button";
@@ -12,6 +13,7 @@ import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
 import { reconcileHuddle } from "@/lib/actions/huddles";
 import { getActiveHuddle } from "@/lib/queries/huddles";
 import { getChannel, getChannelMembers, getMembership } from "@/lib/queries/channel";
+import { fetchBookmarks } from "@/lib/queries/bookmarks";
 import { fetchMessages, fetchPins } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -41,12 +43,13 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
   if (!channel) notFound();
 
   const container = { kind: "channel" as const, id: channelId };
-  const [membership, members, firstPage, rawHuddle, pins] = await Promise.all([
+  const [membership, members, firstPage, rawHuddle, pins, bookmarks] = await Promise.all([
     getMembership(supabase, channelId, profile.id),
     getChannelMembers(supabase, channelId),
     fetchMessages(supabase, container),
     getActiveHuddle(supabase, container),
     fetchPins(supabase, container),
+    fetchBookmarks(supabase, channelId),
   ]);
   const huddle = rawHuddle ? await reconcileHuddle(rawHuddle) : null;
   const huddleProps = { container, label: `#${channel.name}`, href: `/channel/${channel.id}`, initial: huddle, meId: profile.id };
@@ -62,6 +65,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
         huddle={canPost ? <HuddleButton {...huddleProps} /> : undefined}
         pins={<PinsButton container={container} initialPins={pins} />}
       />
+      <BookmarksBar channelId={channel.id} initialBookmarks={bookmarks} canEdit={(membership !== null || profile.role === "admin") && !channel.is_archived} />
       {canPost && <HuddleBanner {...huddleProps} />}
       <div className="flex min-h-0 flex-1">
       <MessagePane

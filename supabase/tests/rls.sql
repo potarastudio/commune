@@ -10,7 +10,7 @@ do $$ begin
 end $$;
 set local search_path = public, extensions;
 
-select plan(57);
+select plan(60);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as superuser)
@@ -262,11 +262,21 @@ select is((select count(*) from public.mentions where message_id = '30000000-000
   and user_id = '10000000-0000-4000-8000-000000000002'), 1::bigint,
   'update_message re-syncs mentions');
 
--- Mallory still sees none of it.
+-- Mallory still sees none of it, including the edit history and bookmarks.
 reset role;
 select pg_temp.login('10000000-0000-4000-8000-000000000003');
 select is((select count(*) from public.pins where message_id = '30000000-0000-4000-8000-000000000001'), 0::bigint,
   'non-member cannot see pins in a private channel');
+select is((select count(*) from public.message_edits where message_id = '30000000-0000-4000-8000-000000000001'), 0::bigint,
+  'non-member cannot see edit history in a private channel');
+select throws_ok(
+  $$ insert into public.channel_bookmarks (channel_id, title, url, created_by)
+     values ('20000000-0000-4000-8000-000000000001', 'Leak', 'https://example.com', '10000000-0000-4000-8000-000000000003') $$,
+  '42501', null, 'non-member cannot add bookmarks to a private channel');
+reset role;
+select pg_temp.login('10000000-0000-4000-8000-000000000001');
+select is((select count(*) from public.message_edits where message_id = '30000000-0000-4000-8000-000000000001'), 1::bigint,
+  'update_message recorded the previous version for a member');
 
 -- Archiving is admin-only, and an archived channel takes no posts.
 -- (bob was promoted above, so mallory, already a member of the public channel, plays the member here.)

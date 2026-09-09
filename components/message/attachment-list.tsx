@@ -55,7 +55,7 @@ export function DownloadButton({ attachment, className }: { attachment: Attachme
   );
 }
 
-/** Images inline, everything else as a card, both with a download action (§5). */
+/** Images inline as 10px tiles, everything else as a card, both with a download action (§5). */
 export function AttachmentList({ attachments }: { attachments: AttachmentView[] }) {
   const needsUrl = attachments.filter((a) => !a.preview_url).map((a) => a.storage_path);
   const { data: urls } = useSignedUrls(needsUrl);
@@ -65,9 +65,9 @@ export function AttachmentList({ attachments }: { attachments: AttachmentView[] 
   const files = attachments.filter((a) => fileKind(a.mime_type, a.file_name) !== "image");
 
   return (
-    <div className="mt-1.5 space-y-1.5">
+    <div className="mt-2 space-y-2">
       {images.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {images.map((a) => {
             const src = a.preview_url ?? urls?.[a.storage_path];
             const ratio = a.width && a.height ? a.width / a.height : 4 / 3;
@@ -75,7 +75,7 @@ export function AttachmentList({ attachments }: { attachments: AttachmentView[] 
             return (
               <figure
                 key={a.id}
-                className="group/img relative overflow-hidden rounded-lg border border-border bg-muted"
+                className="group/img relative overflow-hidden rounded-lg border border-border bg-bg-avatar"
                 style={{ width, aspectRatio: `${ratio}` }}
               >
                 {src ? (
@@ -86,10 +86,13 @@ export function AttachmentList({ attachments }: { attachments: AttachmentView[] 
                 ) : (
                   <Skeleton className="size-full rounded-none" />
                 )}
-                <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/60 to-transparent px-2 pb-1.5 pt-6 text-[11px] text-white opacity-0 transition-opacity group-hover/img:opacity-100 group-focus-within/img:opacity-100">
+                <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/65 to-transparent px-2.5 pb-2 pt-7 text-[12px] font-medium text-white opacity-0 transition-opacity group-focus-within/img:opacity-100 group-hover/img:opacity-100">
                   <span className="min-w-0 truncate">{a.file_name}</span>
                   <span className="pointer-events-auto ml-auto">
-                    <DownloadButton attachment={a} className="grid size-6 place-items-center rounded bg-black/40 hover:bg-black/60" />
+                    <DownloadButton
+                      attachment={a}
+                      className="grid size-7 place-items-center rounded-sm bg-black/40 text-white hover:bg-black/60"
+                    />
                   </span>
                 </figcaption>
               </figure>
@@ -102,21 +105,21 @@ export function AttachmentList({ attachments }: { attachments: AttachmentView[] 
         return (
           <div
             key={a.id}
-            className="flex w-fit max-w-full items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 pr-2"
+            className="flex w-fit max-w-full items-center gap-3 rounded-lg border border-border bg-bg-card py-[9px] pl-[11px] pr-[9px] shadow-xs"
           >
-            <span className="grid size-9 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground">
+            <span className="grid size-9 shrink-0 place-items-center rounded-md border border-border-subtle bg-bg-chip text-fg-600">
               <Icon className="size-4" aria-hidden="true" />
             </span>
-            <span className="min-w-0 leading-tight">
-              <span className="block truncate text-[13px] font-medium">{a.file_name}</span>
-              <span className="block text-[12px] text-muted-foreground">
+            <span className="min-w-0">
+              <span className="block truncate text-[13.5px] font-semibold text-ink">{a.file_name}</span>
+              <span className="mt-px block text-[12px] text-muted-foreground">
                 {formatBytes(a.size_bytes)}
                 {a.mime_type ? ` · ${a.mime_type.split("/")[1]?.toUpperCase().slice(0, 8)}` : ""}
               </span>
             </span>
             <DownloadButton
               attachment={a}
-              className="ml-2 grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              className="ml-2 grid size-8 shrink-0 place-items-center rounded-md text-fg-600 hover:bg-bg-subtle hover:text-ink"
             />
           </div>
         );

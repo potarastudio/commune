@@ -1,11 +1,12 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { SmilePlus, X } from "lucide-react";
+import { ChevronDown, SmilePlus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { EmojiPicker } from "@/components/message/emoji-picker";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { setStatusAction } from "@/lib/actions/profile";
 import type { Profile } from "@/lib/queries/profile";
@@ -59,102 +60,141 @@ export function StatusEditor({ profile, onDone }: { profile: Profile; onDone: ()
 
   return (
     <form
-      className="w-80 p-3"
+      className="w-[320px] overflow-hidden rounded-[14px]"
       onSubmit={(e) => {
         e.preventDefault();
         save();
       }}
     >
-      <div className="flex items-center justify-between px-1">
-        <h2 className="text-[13px] font-semibold">{active ? "Edit your status" : "Set a status"}</h2>
+      <div className="flex items-center gap-[11px] border-b border-border-subtle px-[14px] py-[13px]">
+        <span className="relative block shrink-0">
+          <Avatar size="lg">
+            <AvatarImage src={profile.avatar_url ?? undefined} alt="" />
+            <AvatarFallback className="bg-accent-surface text-[13px] font-semibold text-accent-foreground">
+              {profile.display_name.slice(0, 1).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span aria-hidden="true" className="absolute right-0 bottom-0 size-[10px] rounded-full border-2 border-bg-card bg-presence" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13.5px] font-semibold text-ink">{profile.display_name}</span>
+          <span className="block truncate text-[12px] text-muted-foreground">
+            {active ? "Edit your status" : "Set a status"}
+          </span>
+        </span>
         <button
           type="button"
           onClick={onDone}
           aria-label="Close"
-          className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          className="grid size-[26px] shrink-0 place-items-center rounded-[6px] text-fg-600 transition-colors hover:bg-bg-subtle hover:text-ink"
         >
-          <X className="size-3.5" aria-hidden="true" />
+          <X className="size-[13px]" aria-hidden="true" />
         </button>
       </div>
 
-      <div className="mt-2 flex h-9 items-center rounded-md border border-input bg-background focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/25">
-        <EmojiPicker open={pickerOpen} onOpenChange={setPickerOpen} onPick={(e) => setEmoji(e.native)} side="bottom">
-          <button
-            type="button"
-            aria-label={emoji ? "Change emoji" : "Pick an emoji"}
-            className="grid size-9 shrink-0 place-items-center rounded-l-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            {emoji ? (
-              <span role="img" aria-hidden="true" className="text-[17px] leading-none">
-                {emoji}
-              </span>
-            ) : (
-              <SmilePlus className="size-4" aria-hidden="true" />
-            )}
-          </button>
-        </EmojiPicker>
-        <input
-          autoFocus
-          value={text}
-          maxLength={STATUS_TEXT_MAX}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="What's your status?"
-          aria-label="Status text"
-          className="h-full min-w-0 flex-1 bg-transparent pr-2 text-[13px] outline-none placeholder:text-muted-foreground"
-        />
-        {(emoji || text) && (
-          <button
-            type="button"
-            onClick={() => {
-              setEmoji(null);
-              setText("");
-            }}
-            aria-label="Clear fields"
-            className="mr-1 grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="size-3.5" aria-hidden="true" />
-          </button>
-        )}
-      </div>
-
-      <ul className="mt-2 space-y-0.5" aria-label="Suggestions">
-        {PRESETS.map((s) => (
-          <li key={s.text}>
+      <div className="px-[14px] pb-1 pt-3">
+        <div className="field-focus flex h-[38px] items-center gap-[9px] rounded-[10px] border border-border-input bg-bg-card pl-[6px] pr-[8px] shadow-xs">
+          <EmojiPicker open={pickerOpen} onOpenChange={setPickerOpen} onPick={(e) => setEmoji(e.native)} side="bottom">
+            <button
+              type="button"
+              aria-label={emoji ? "Change emoji" : "Pick an emoji"}
+              className="grid size-[28px] shrink-0 place-items-center rounded-[6px] text-fg-600 transition-colors hover:bg-bg-subtle hover:text-ink"
+            >
+              {emoji ? (
+                <span role="img" aria-hidden="true" className="text-[15px] leading-none">
+                  {emoji}
+                </span>
+              ) : (
+                <SmilePlus className="size-[15px]" aria-hidden="true" />
+              )}
+            </button>
+          </EmojiPicker>
+          <input
+            autoFocus
+            value={text}
+            maxLength={STATUS_TEXT_MAX}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="What's your status?"
+            aria-label="Status text"
+            className="h-full min-w-0 flex-1 bg-transparent text-[13.5px] text-body outline-none placeholder:text-muted-foreground"
+          />
+          {(emoji || text) && (
             <button
               type="button"
               onClick={() => {
-                setEmoji(s.emoji);
-                setText(s.text);
-                setExpiry(s.expiry);
+                setEmoji(null);
+                setText("");
               }}
-              className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[13px] hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+              aria-label="Clear fields"
+              className="grid size-[24px] shrink-0 place-items-center rounded-[6px] text-muted-foreground transition-colors hover:bg-bg-subtle hover:text-ink"
             >
-              <span role="img" aria-hidden="true" className="text-[15px] leading-none">
-                {s.emoji}
-              </span>
-              <span className="flex-1">{s.text}</span>
-              <span className="text-[12px] text-muted-foreground">{STATUS_EXPIRY_OPTIONS.find((o) => o.value === s.expiry)?.label}</span>
+              <X className="size-[13px]" aria-hidden="true" />
             </button>
-          </li>
-        ))}
-      </ul>
+          )}
+        </div>
+      </div>
 
-      <label className="mt-3 flex items-center justify-between gap-3 px-1 text-[12px] text-muted-foreground">
-        Clear after
-        <select
-          value={expiry}
-          onChange={(e) => setExpiry(e.target.value as StatusExpiry)}
-          className="h-7 rounded-md border border-input bg-background px-2 text-[12px] text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25"
-        >
-          {STATUS_EXPIRY_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="px-2 pb-1 pt-2">
+        <p className="mb-[2px] px-[6px] text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">Suggestions</p>
+        <ul aria-label="Suggestions">
+          {PRESETS.map((s) => {
+            const chosen = emoji === s.emoji && text === s.text;
+            return (
+              <li key={s.text}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmoji(s.emoji);
+                    setText(s.text);
+                    setExpiry(s.expiry);
+                  }}
+                  className={`flex w-full items-center gap-[10px] rounded-[8px] px-[9px] py-2 text-left transition-colors ${
+                    chosen ? "bg-accent-surface" : "hover:bg-bg-subtle"
+                  }`}
+                >
+                  <span role="img" aria-hidden="true" className="shrink-0 text-[15px] leading-none">
+                    {s.emoji}
+                  </span>
+                  <span className={`min-w-0 flex-1 truncate text-[13px] ${chosen ? "font-semibold text-accent-foreground" : "font-medium text-ink"}`}>
+                    {s.text}
+                  </span>
+                  <span className={`shrink-0 text-[11.5px] ${chosen ? "text-accent-foreground" : "text-muted-foreground"}`}>
+                    {STATUS_EXPIRY_OPTIONS.find((o) => o.value === s.expiry)?.label}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="flex items-center gap-2 px-[14px] pb-3 pt-2">
+        <label htmlFor="status-expiry" className="shrink-0 text-[12px] text-fg-600">
+          Clear after
+        </label>
+        <div className="field-focus relative flex h-[30px] min-w-0 flex-1 items-center rounded-[8px] border border-border-input bg-bg-card shadow-xs">
+          <select
+            id="status-expiry"
+            value={expiry}
+            onChange={(e) => setExpiry(e.target.value as StatusExpiry)}
+            className="h-full w-full appearance-none rounded-[8px] bg-transparent pl-[9px] pr-[26px] text-[12.5px] font-medium text-ink outline-none"
+          >
+            {STATUS_EXPIRY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-[8px] size-[13px] text-muted-foreground" aria-hidden="true" />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 border-t border-border-subtle bg-bg-col px-[14px] py-[10px]">
+        {active ? (
+          <span className="flex-1" aria-hidden="true" />
+        ) : (
+          <p className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">Shown next to your name.</p>
+        )}
         {active && (
           <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={clear}>
             Clear status

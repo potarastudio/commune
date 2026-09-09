@@ -41,7 +41,11 @@ export function NotificationLevelControl({
   };
 
   return (
-    <div role="radiogroup" aria-label="Notifications" className={`grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 ${pending ? "opacity-70" : ""}`}>
+    <div
+      role="radiogroup"
+      aria-label="Notifications"
+      className={`grid grid-cols-3 gap-[3px] rounded-[9px] border border-border-strong bg-bg-chip p-[3px] ${pending ? "opacity-70" : ""}`}
+    >
       {OPTIONS.map((o) => {
         const active = optimistic === o.value;
         return (
@@ -52,11 +56,11 @@ export function NotificationLevelControl({
             aria-checked={active}
             title={o.hint}
             onClick={() => choose(o.value)}
-            className={`flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring ${
-              active ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+            className={`flex h-7 items-center justify-center gap-1.5 rounded-[7px] border px-[11px] text-[12.5px] font-semibold transition-colors ${
+              active ? "border-border-strong bg-bg-card text-ink shadow-xs" : "border-transparent text-fg-600 hover:text-ink"
             }`}
           >
-            <o.icon className="size-3.5" aria-hidden="true" />
+            <o.icon className="size-[13px]" aria-hidden="true" />
             {!compact && o.label}
             {compact && <span className="sr-only">{o.label}</span>}
           </button>

@@ -3,31 +3,61 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
+/**
+ * Commune buttons — geometry lifted from the design's inline styles.
+ *   filled   h34 · r8 · 1px --accent-border · --accent · 13/600 · px13 · gap7
+ *   outline  h34 · r8 · 1px --border-strong · --bg-card · shadow-xs · 13/600
+ *   ghost    h34 · r8 · transparent · --fg-600, hovering to --bg-subtle/--ink
+ *   danger   h34 · r8 · 1px --danger · --danger · white
+ * Every transparent-background button in the design is --fg-600 (227 at h30,
+ * 156 at h28, 15 at h32, 13 at h44 — none at --fg-400), and all of them hover
+ * to `background:var(--bg-subtle); color:var(--ink)`, the single most repeated
+ * interaction in the files. Ghost therefore sets --fg-600 on the base so the
+ * `hover:` utility, which carries an extra `:hover` in its selector, always
+ * wins — an `[&[data-size^=icon]]` override ties on specificity and kills it.
+ * Sizes are the handoff's button scale (28 · 30 · 32 · 34 · 40 · 44) and the
+ * square icon scale the design actually draws (26 · 28 · 30 · 32 · 34, with
+ * 30/r7 by far the most common at 239 uses). Focus is the global 2px accent
+ * ring, so the base must not set `outline-none`.
+ */
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  [
+    "inline-flex shrink-0 items-center justify-center whitespace-nowrap font-semibold",
+    "transition-[background-color,border-color,color,box-shadow,opacity,filter]",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    "disabled:pointer-events-none disabled:opacity-50",
+    "aria-invalid:border-danger",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[15px]",
+  ],
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default:
+          "border border-accent-border bg-primary text-primary-foreground shadow-[0_1px_2px_0_var(--shadow-tint-md),inset_0_1px_0_rgba(255,255,255,0.2)] hover:border-accent-border-hover hover:bg-primary-hover",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
+          "border border-danger bg-danger text-white shadow-[0_1px_2px_0_var(--shadow-tint-md),inset_0_1px_0_rgba(255,255,255,0.18)] hover:brightness-95",
+        "destructive-outline":
+          "border border-border-strong bg-bg-card text-danger shadow-xs hover:border-danger hover:bg-danger-surface",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border border-border-strong bg-bg-card text-ink shadow-xs hover:border-border-hover hover:bg-bg-card-hover",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border border-border-strong bg-bg-chip text-ink hover:border-border-chip-hover hover:bg-bg-avatar",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-transparent bg-transparent text-fg-600 hover:bg-bg-subtle hover:text-ink",
+        link: "border border-transparent bg-transparent text-ink underline decoration-link-underline underline-offset-[2.5px] hover:text-accent-text hover:decoration-accent-text",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        default: "h-[34px] gap-[7px] rounded-[8px] px-[13px] text-[13px] has-[>svg]:px-[11px]",
+        xs: "h-[28px] gap-[6px] rounded-[8px] px-[9px] text-[12.5px] has-[>svg]:px-[8px] [&_svg:not([class*='size-'])]:size-[13px]",
+        sm: "h-[30px] gap-[6px] rounded-[8px] px-[10px] text-[12.5px] has-[>svg]:px-[9px]",
+        md: "h-[32px] gap-[7px] rounded-[8px] px-[12px] text-[13px] has-[>svg]:px-[10px]",
+        lg: "h-[40px] gap-[9px] rounded-[10px] px-[15px] text-[13.5px] has-[>svg]:px-[13px]",
+        xl: "h-[44px] gap-[11px] rounded-[10px] px-[16px] text-[14px] has-[>svg]:px-[14px] [&_svg:not([class*='size-'])]:size-[17px]",
+        icon: "size-[30px] rounded-[7px]",
+        "icon-xs": "size-[26px] rounded-[6px] [&_svg:not([class*='size-'])]:size-[13px]",
+        "icon-sm": "size-[28px] rounded-[6px]",
+        "icon-md": "size-[32px] rounded-[8px] [&_svg:not([class*='size-'])]:size-[16px]",
+        "icon-lg": "size-[34px] rounded-[8px] [&_svg:not([class*='size-'])]:size-[17px]",
       },
     },
     defaultVariants: {

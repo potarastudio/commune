@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Search } from "lucide-react";
+import { CircleAlert, Search } from "lucide-react";
 import { redirect } from "next/navigation";
-import { ActivityItem } from "@/components/activity/activity-item";
 import { SearchForm } from "@/components/search/search-form";
+import { SearchResults, type SearchResultRow } from "@/components/search/search-results";
 import { messageHref } from "@/lib/queries/activity";
 import { conversationLabel, getMyConversations } from "@/lib/queries/conversations";
 import { getCurrentProfile } from "@/lib/queries/profile";
@@ -36,76 +36,101 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     const c = conversations.find((x) => x.id === id);
     return c ? conversationLabel(c.members, profile.id, { short: true }) : "a direct message";
   };
+  const found = outcome?.ok ? outcome.results.length : 0;
+  const rows: SearchResultRow[] = outcome?.ok
+    ? outcome.results.map((r) => ({
+        id: r.id,
+        href: messageHref(r),
+        author: r.author,
+        createdAt: r.created_at,
+        where: r.channel
+          ? ({ kind: "channel", label: r.channel.name } as const)
+          : ({ kind: "dm", label: r.conversation ? dmLabel(r.conversation.id) : "a direct message" } as const),
+        inThread: Boolean(r.parent_id),
+        snippet: highlightText(snippetAround(r.content_text, terms), terms),
+      }))
+    : [];
 
   return (
     <>
-      <header className="flex h-12 shrink-0 items-center border-b border-border px-5">
-        <h1 className="text-[15px] font-semibold tracking-tight">Search</h1>
+      {/* The design puts the field itself in the view header — no title beside it. */}
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
+        <h1 className="sr-only">Search</h1>
+        <SearchForm initialQuery={q} />
+        <kbd
+          aria-hidden="true"
+          className="inline-grid h-5 min-w-5 shrink-0 place-items-center rounded-sm border border-border-strong bg-bg-subtle px-[5px] font-sans text-[11px] font-semibold text-fg-400"
+        >
+          ⌘K
+        </kbd>
       </header>
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-2xl px-3 py-6">
-          <SearchForm initialQuery={q} />
 
-          {empty && (
-            <div className="mt-10 text-center">
-              <span className="mx-auto grid size-12 place-items-center rounded-xl bg-accent text-accent-foreground">
-                <Search className="size-5" aria-hidden="true" />
-              </span>
-              <h2 className="mt-4 text-[18px] font-semibold tracking-tight">Search everything the studio has said</h2>
-              <p className="mt-1 text-muted-foreground">Type a few words, or narrow it down:</p>
-              <dl className="mx-auto mt-5 grid w-fit grid-cols-[auto_auto] gap-x-6 gap-y-2 text-left text-[13px]">
-                {TIPS.map(([code, hint]) => (
-                  <div key={code} className="contents">
-                    <dt>
-                      <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[12px]">{code}</code>
-                    </dt>
-                    <dd className="text-muted-foreground">{hint}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
+      {/* The design's facet row: 30px chips at 12.5/600 on --bg-card, hairlined and
+          shadowed. Phase 1 searches messages only, so these carry the operators
+          rather than result counts. */}
+      <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border px-5 py-[10px]">
+        {TIPS.map(([code, hint]) => (
+          <span
+            key={code}
+            className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-md border border-border-strong bg-bg-card px-[11px] text-[12.5px] font-semibold text-fg-400 shadow-xs"
+          >
+            <code>{code}</code>
+            <span className="font-normal text-muted-foreground">{hint}</span>
+          </span>
+        ))}
+      </div>
 
-          {outcome && !outcome.ok && (
-            <p className="mt-6 rounded-lg border border-border bg-muted px-4 py-3 text-[13px]">{outcome.unresolved}</p>
-          )}
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        {empty && (
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 pt-[18px] pb-[22px] text-center">
+            <span className="grid size-10 place-items-center rounded-[11px] border border-border-subtle bg-bg-chip text-fg-600">
+              <Search className="size-[17px]" aria-hidden="true" />
+            </span>
+            <h2 className="mt-3 text-[15.5px] font-semibold tracking-[-0.015em] text-ink">
+              Search everything the studio has said
+            </h2>
+            <p className="mt-[5px] max-w-[400px] text-[13px] leading-[1.55] text-fg-600 [text-wrap:pretty]">
+              Type a few words, or narrow it down with the operators above. Search covers the channels and
+              conversations you are in.
+            </p>
+          </div>
+        )}
 
-          {outcome?.ok && outcome.results.length === 0 && (
-            <div className="mt-10 text-center">
-              <h2 className="text-[16px] font-semibold tracking-tight">No messages match</h2>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                Try fewer words, check the spelling, or drop a filter. Search only covers channels and conversations you are in.
-              </p>
-            </div>
-          )}
+        {/* The only failure surface on this view, so it carries the tone the way the
+            design's error toast does: --danger in the border and the glyph, never a fill. */}
+        {outcome && !outcome.ok && (
+          <div className="px-5 pt-4">
+            <p className="flex items-start gap-2.5 rounded-lg border border-danger bg-bg-card px-[14px] py-3 text-[13px] leading-[1.55] text-body">
+              <CircleAlert className="mt-px size-[15px] shrink-0 text-danger" aria-hidden="true" />
+              <span>{outcome.unresolved}</span>
+            </p>
+          </div>
+        )}
 
-          {outcome?.ok && outcome.results.length > 0 && (
-            <>
-              <p className="mt-6 px-3 text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                {outcome.results.length === 50 ? "First 50 results" : `${outcome.results.length} result${outcome.results.length === 1 ? "" : "s"}`}
-              </p>
-              <ul className="mt-2 space-y-0.5">
-                {outcome.results.map((r) => (
-                  <ActivityItem
-                    key={r.id}
-                    href={messageHref(r)}
-                    person={r.author}
-                    createdAt={r.created_at}
-                    eyebrow={
-                      <>
-                        <span className="font-medium text-foreground">{r.author?.display_name ?? "Someone"}</span> in{" "}
-                        {r.channel ? `#${r.channel.name}` : r.conversation ? dmLabel(r.conversation.id) : ""}
-                        {r.parent_id ? " · in a thread" : ""}
-                      </>
-                    }
-                  >
-                    <p>{highlightText(snippetAround(r.content_text, terms), terms)}</p>
-                  </ActivityItem>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
+        {outcome?.ok && found === 0 && (
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 pt-[18px] pb-[22px] text-center">
+            <span className="grid size-10 place-items-center rounded-[11px] border border-border-subtle bg-bg-chip text-fg-600">
+              <Search className="size-[17px]" aria-hidden="true" />
+            </span>
+            <h2 className="mt-3 text-[15.5px] font-semibold tracking-[-0.015em] text-ink">No messages match</h2>
+            <p className="mt-[5px] max-w-[400px] text-[13px] leading-[1.55] text-fg-600 [text-wrap:pretty]">
+              Try fewer words, check the spelling, or drop a filter. Search only covers channels and conversations
+              you are in.
+            </p>
+          </div>
+        )}
+
+        {outcome?.ok && found > 0 && (
+          <div className="px-[14px] pt-[10px] pb-4">
+            <p className="px-3 pt-1 pb-2 text-[12.5px] text-fg-600">
+              <span className="font-semibold text-ink">
+                {found === 50 ? "First 50 results" : `${found} result${found === 1 ? "" : "s"}`}
+              </span>{" "}
+              for &ldquo;{q}&rdquo;
+            </p>
+            <SearchResults rows={rows} />
+          </div>
+        )}
       </div>
     </>
   );

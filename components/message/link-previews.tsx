@@ -8,7 +8,7 @@ function PreviewCard({ url }: { url: string }) {
 
   if (isPending) {
     return (
-      <div className="flex w-full max-w-[480px] gap-3 rounded-lg border border-border border-l-4 border-l-border p-3">
+      <div className="flex w-full max-w-[480px] gap-3 rounded-lg border border-border border-l-2 border-l-accent-rule bg-bg-card p-3 shadow-xs">
         <div className="flex-1 space-y-2">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-4 w-3/4" />
@@ -31,12 +31,14 @@ function PreviewCard({ url }: { url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group/card flex w-full max-w-[480px] gap-3 rounded-lg border border-border border-l-4 border-l-primary/60 bg-background p-3 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+      className="group/card flex w-full max-w-[480px] gap-3 rounded-lg border border-border border-l-2 border-l-accent-rule bg-bg-card p-3 shadow-xs transition-colors hover:bg-bg-card-hover"
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-[12px] text-muted-foreground">{host}</p>
-        <p className="mt-0.5 line-clamp-2 text-[14px] font-semibold leading-snug text-link group-hover/card:underline">{data.title}</p>
-        {data.description && <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-muted-foreground">{data.description}</p>}
+        <p className="mt-0.5 line-clamp-2 text-[13.5px] font-semibold leading-snug text-ink group-hover/card:text-accent-text">
+          {data.title}
+        </p>
+        {data.description && <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-fg-600">{data.description}</p>}
       </div>
       {data.image_url && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -44,7 +46,7 @@ function PreviewCard({ url }: { url: string }) {
           src={data.image_url}
           alt=""
           loading="lazy"
-          className="size-20 shrink-0 rounded-md object-cover"
+          className="size-20 shrink-0 rounded-md border border-border-subtle object-cover"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = "none";
           }}
@@ -58,7 +60,7 @@ function PreviewCard({ url }: { url: string }) {
 export function LinkPreviews({ urls }: { urls: string[] }) {
   if (urls.length === 0) return null;
   return (
-    <div className="mt-1.5 space-y-1.5">
+    <div className="mt-2 space-y-2">
       {urls.map((u) => (
         <PreviewCard key={u} url={u} />
       ))}

@@ -20,13 +20,23 @@ export function suggestionRender<Item>(
       else delete dom.dataset.suggestionOpen;
     };
 
+    /** Widest popover the composer mounts (the mention list); the emoji list is 332px. */
+    const FALLBACK_WIDTH = 340;
+    /** Breathing room kept between the popover and the viewport edge. */
+    const GUTTER = 8;
+
     const position = (props: SuggestionProps<Item>) => {
       const rect = props.clientRect?.();
       if (!rect || !renderer) return;
       const el = renderer.element as HTMLElement;
       el.style.position = "fixed";
       el.style.zIndex = "60";
-      el.style.left = `${Math.min(rect.left, window.innerWidth - 300)}px`;
+      // Clamp against the popover's *real* width. A fixed 300px constant cut the
+      // last 40px off the 340px mention list whenever the caret sat near the
+      // right edge (routine in the 380px thread panel).
+      const width = el.offsetWidth || FALLBACK_WIDTH;
+      const maxLeft = Math.max(GUTTER, window.innerWidth - width - GUTTER);
+      el.style.left = `${Math.max(GUTTER, Math.min(rect.left, maxLeft))}px`;
       el.style.bottom = `${window.innerHeight - rect.top + 6}px`;
     };
 

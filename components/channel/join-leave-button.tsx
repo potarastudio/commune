@@ -12,6 +12,7 @@ export function JoinLeaveButton({
   joined,
   size = "sm",
   afterLeaveHref,
+  className = "",
 }: {
   channelId: string;
   channelName: string;
@@ -19,6 +20,7 @@ export function JoinLeaveButton({
   size?: "sm" | "default";
   /** Where to go after leaving (e.g. away from the channel you just left). */
   afterLeaveHref?: string;
+  className?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -46,7 +48,16 @@ export function JoinLeaveButton({
   }
 
   return (
-    <Button type="button" size={size} variant={joined ? "outline" : "default"} disabled={pending} onClick={act}>
+    <Button
+      type="button"
+      size={size}
+      /* Leaving is destructive: red as text on the card surface, never as a
+         fill — the design's "Leave channel" button (§ design decision 4). */
+      variant={joined ? "destructive-outline" : "default"}
+      disabled={pending}
+      onClick={act}
+      className={className}
+    >
       {pending ? (joined ? "Leaving…" : "Joining…") : joined ? "Leave" : "Join"}
     </Button>
   );

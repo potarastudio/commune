@@ -37,7 +37,10 @@ function applyMarks(text: ReactNode, marks: Mark[] | undefined, key: string): Re
         return <s key={k}>{node}</s>;
       case "code":
         return (
-          <code key={k} className="rounded bg-muted px-1 py-0.5 font-mono text-[0.92em] text-foreground/90">
+          <code
+            key={k}
+            className="rounded-[5px] border border-border-subtle bg-bg-chip px-[5px] py-px font-mono text-[12.5px] text-body"
+          >
             {node}
           </code>
         );
@@ -50,7 +53,7 @@ function applyMarks(text: ReactNode, marks: Mark[] | undefined, key: string): Re
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-link underline decoration-link/40 underline-offset-2 hover:decoration-link"
+            className="link-ink"
           >
             {node}
           </a>
@@ -104,7 +107,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       return <li key={key}>{children}</li>;
     case "blockquote":
       return (
-        <blockquote key={key} className="my-1 border-l-4 border-border pl-3 text-muted-foreground">
+        <blockquote key={key} className="my-1.5 border-l-2 border-accent-rule pl-3 text-fg-600">
           {children}
         </blockquote>
       );
@@ -112,7 +115,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       return (
         <pre
           key={key}
-          className="my-1.5 overflow-x-auto rounded-md border border-border bg-muted p-3 font-mono text-[12.5px] leading-relaxed"
+          className="my-2 overflow-x-auto rounded-lg border border-border bg-bg-code px-[13px] py-[11px] font-mono text-[12.5px] leading-[1.6] text-body"
         >
           <code>{children}</code>
         </pre>
@@ -123,7 +126,11 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       const special = id === "channel" || id === "here";
       if (!special) return <MentionChip key={key} id={id} label={label} />;
       return (
-        <span key={key} data-mention-id={id} className="rounded bg-mention px-1 font-medium text-mention-foreground">
+        <span
+          key={key}
+          data-mention-id={id}
+          className="rounded-[5px] border border-accent-surface-border bg-accent-surface px-1 py-px font-semibold text-accent-foreground"
+        >
           @{label}
         </span>
       );

@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowUpRight, Pin } from "lucide-react";
 import Link from "next/link";
 import { MessageItem } from "@/components/message/message-item";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +7,7 @@ import { messageKeys, type Container, type Message, type MessageAuthor } from "@
 import { useDeleteMessage, useEditMessage, usePins, useTogglePin, useToggleReaction, useToggleSave } from "@/lib/queries/use-messages";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
 
-/** Everything pinned in a container, as full message items with a jump link. Lives in the details panel's Pins tab. */
+/** Everything pinned in a container, as the design's pinned rows. Lives in the details panel's Pins tab. */
 export function PinsList({
   container,
   containerLabel,
@@ -35,13 +34,14 @@ export function PinsList({
 
   if (isPending) {
     return (
-      <div className="space-y-3 px-5 py-3">
+      <div aria-label="Loading pinned messages">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="flex gap-3">
-            <Skeleton className="size-9 rounded-md" />
-            <div className="flex-1 space-y-2 pt-1">
-              <Skeleton className="h-3 w-32" />
-              <Skeleton className="h-3 w-4/5" />
+          <div key={i} className="flex gap-3 border-b border-border-subtle px-4 py-3">
+            <Skeleton className="size-9 shrink-0 rounded-[10px] bg-bg-avatar" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Skeleton className="h-[11px] w-[88px] rounded bg-bg-avatar" />
+              <Skeleton className="h-[11px] w-[104px] rounded bg-bg-avatar" />
+              <Skeleton className={`h-3 rounded bg-bg-avatar ${["w-[88%]", "w-[64%]", "w-[76%]"][i]}`} />
             </div>
           </div>
         ))}
@@ -51,22 +51,24 @@ export function PinsList({
 
   if (items.length === 0) {
     return (
-      <div className="px-6 py-12 text-center">
-        <span className="mx-auto grid size-11 place-items-center rounded-xl bg-accent text-accent-foreground">
-          <Pin className="size-5" aria-hidden="true" />
-        </span>
-        <h3 className="mt-4 text-[15px] font-semibold tracking-tight">Nothing pinned yet</h3>
-        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-          Hover a message and choose <strong className="font-medium text-foreground">Pin</strong> to keep it here for everyone in {containerLabel}.
+      <div className="px-5 pt-6 pb-[22px] text-center">
+        <p className="text-[13.5px] font-semibold text-ink">No pins yet</p>
+        <p className="mx-auto mt-[5px] max-w-[230px] text-[12.5px] leading-[1.5] text-fg-600 text-pretty">
+          Pin a message to keep it findable for everyone in {containerLabel}.
         </p>
       </div>
     );
   }
 
+  // One hover surface per row: the nested MessageItem drops its pinned tint (the panel is
+  // already all pins) and takes the panel's 16px gutter instead of the main pane's 24px.
   return (
-    <div className="py-2">
+    <div>
       {items.map((m) => (
-        <div key={m.id} className="group/pin border-b border-divider pb-2 last:border-b-0">
+        <article
+          key={m.id}
+          className="border-b border-border-subtle pt-1.5 last:border-b-0 hover:bg-bg-hover [&_article]:bg-transparent [&_article]:px-4"
+        >
           <MessageItem
             message={m}
             grouped={false}
@@ -81,15 +83,23 @@ export function PinsList({
             allowBroadcast={container.kind === "channel"}
             inThread
           />
-          <Link
-            href={m.parent_id ? `${base}?thread=${m.parent_id}` : `${base}?message=${m.id}`}
-            scroll={false}
-            className="ml-5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-medium text-link hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            {m.parent_id ? "Open thread" : "Jump to message"}
-            <ArrowUpRight className="size-3.5" aria-hidden="true" />
-          </Link>
-        </div>
+          <div className="flex gap-1.5 pt-2 pr-4 pb-3 pl-16">
+            <Link
+              href={m.parent_id ? `${base}?thread=${m.parent_id}` : `${base}?message=${m.id}`}
+              scroll={false}
+              className="flex h-[26px] items-center rounded-[7px] border border-border-strong bg-bg-card px-[9px] text-[12px] font-semibold text-ink hover:bg-bg-card-hover focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {m.parent_id ? "Open thread" : "Jump"}
+            </Link>
+            <button
+              type="button"
+              onClick={() => pin.mutate({ messageId: m.id, on: false })}
+              className="flex h-[26px] items-center rounded-[7px] px-2 text-[12px] font-semibold text-muted-foreground hover:bg-bg-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              Unpin
+            </button>
+          </div>
+        </article>
       ))}
     </div>
   );

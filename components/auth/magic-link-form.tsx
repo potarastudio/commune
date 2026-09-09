@@ -1,62 +1,228 @@
 "use client";
 
-import { Mail } from "lucide-react";
-import { useActionState } from "react";
-import { sendMagicLink, type MagicLinkState } from "@/app/(auth)/login/actions";
+import { CircleAlert, Mail } from "lucide-react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
+import { sendMagicLink, signInWithGoogle, type MagicLinkState } from "@/app/(auth)/login/actions";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { GoogleIcon } from "./google-icon";
 
-/** Email sign-in for people without a Google account (§5). Same allowlist, one-time link. */
-export function MagicLinkForm({ next }: { next: string }) {
-  const [state, action, pending] = useActionState<MagicLinkState, FormData>(sendMagicLink, { status: "idle" });
+/**
+ * The address the last link was sent to, remembered on this device only so the
+ * expired-link retry does not ask for it again — the design draws that field
+ * pre-filled and focused. Never leaves the browser.
+ */
+const LAST_EMAIL_KEY = "commune-last-email";
 
-  if (state.status === "sent") {
-    return (
-      <div className="rounded-lg border border-border bg-muted/50 px-4 py-3 text-[13px]" role="status" aria-live="polite">
-        <p className="flex items-center gap-2 font-medium">
-          <Mail className="size-4 text-primary" aria-hidden="true" />
-          Check your inbox
-        </p>
-        <p className="mt-1 text-muted-foreground">
-          We sent a sign-in link to <strong className="text-foreground">{state.email}</strong>. Open it on this device. It works once and expires in an hour.
-        </p>
-        <form action={action} className="mt-2">
-          <input type="hidden" name="email" value={state.email} />
-          <input type="hidden" name="next" value={next} />
-          <button type="submit" disabled={pending} className="text-[12px] text-link hover:underline disabled:opacity-50">
-            {pending ? "Sending…" : "Send it again"}
-          </button>
-        </form>
-      </div>
-    );
+function rememberEmail(email: string) {
+  try {
+    window.localStorage.setItem(LAST_EMAIL_KEY, email);
+  } catch {
+    // Private mode or a blocked store: the prefill is a convenience, not a feature.
   }
+}
+
+function recallEmail(): string {
+  try {
+    return window.localStorage.getItem(LAST_EMAIL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/** The design's 13px spinner: a hairline ring with an accent cap. */
+function Spinner() {
+  return (
+    <span
+      aria-hidden="true"
+      className="commune-spin block size-[13px] shrink-0 rounded-full border-[1.5px] border-border-hover border-t-primary"
+    />
+  );
+}
+
+/**
+ * Google is the primary path, so it is the ink button. It goes disabled while a
+ * magic link is being sent — two sign-ins at once is never what you meant —
+ * which is why it lives in this client component rather than in the page.
+ */
+function GoogleButton({ blocked }: { blocked: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type="submit"
+      variant="outline"
+      size="xl"
+      disabled={blocked || pending}
+      // px16 per the design; the xl size drops to 14 when a button holds an svg.
+      className="w-full border-ink bg-ink text-bg-main shadow-sm has-[>svg]:px-[16px] hover:border-ink hover:bg-ink hover:opacity-[0.88]"
+    >
+      <GoogleIcon className="size-[17px]" />
+      Continue with Google
+    </Button>
+  );
+}
+
+/**
+ * Both ways in: Google OAuth and the one-time email link (§5). The allowlist is
+ * checked before the link is sent, so a rejected address fails on the field
+ * instead of in silence.
+ *
+ * `expired` marks the return trip from a dead link (?error=link): the design's
+ * linkExpired artboard has the field pre-filled and focused, ready for Enter.
+ */
+export function SignInForm({ next, expired = false }: { next: string; expired?: boolean }) {
+  const [state, action, pending] = useActionState<MagicLinkState, FormData>(sendMagicLink, { status: "idle" });
+  const [email, setEmail] = useState("");
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // A fresh send always returns to the status card, even after "use a different address".
+  useEffect(() => {
+    if (state.status === "sent") {
+      setEditing(false);
+      rememberEmail(state.email);
+    }
+  }, [state]);
+
+  // The link the user just followed is dead: hand the field back with the
+  // address already in it, cursor waiting, so retrying is one keystroke.
+  useEffect(() => {
+    if (!expired) return;
+    const remembered = recallEmail();
+    if (remembered) setEmail(remembered);
+    inputRef.current?.focus();
+  }, [expired]);
+
+  const sentTo = state.status === "sent" && !editing ? state.email : null;
+  const invalid = state.status === "error";
+
+  const useDifferentAddress = () => {
+    setEditing(true);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
 
   return (
-    <form action={action} className="space-y-2">
-      <input type="hidden" name="next" value={next} />
-      <label htmlFor="magic-email" className="block text-[12px] font-medium text-muted-foreground">
-        Email address
-      </label>
-      <div className="flex gap-2">
-        <input
-          id="magic-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          placeholder="you@potarastudio.com"
-          aria-invalid={state.status === "error" || undefined}
-          aria-describedby={state.status === "error" ? "magic-error" : undefined}
-          className="h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-[14px] outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25"
-        />
-        <Button type="submit" size="lg" variant="outline" className="h-11 shrink-0" disabled={pending}>
-          {pending ? "Sending…" : "Email me a link"}
-        </Button>
+    <>
+      <form action={signInWithGoogle} className="mt-[26px]">
+        <input type="hidden" name="next" value={next} />
+        <GoogleButton blocked={pending} />
+      </form>
+
+      <div aria-hidden="true" className="my-[22px] flex items-center gap-[12px]">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-muted-foreground">or</span>
+        <span className="h-px flex-1 bg-border" />
       </div>
-      {state.status === "error" && (
-        <p id="magic-error" role="alert" className="text-[13px] text-destructive">
-          {state.message}
-        </p>
+
+      {sentTo !== null ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-[11px] border border-accent-surface-border bg-accent-surface px-[15px] py-[14px]"
+        >
+          <p className="flex items-center gap-[8px] text-[13.5px] font-semibold text-accent-foreground">
+            <Mail className="size-[15px] shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            Check your inbox
+          </p>
+          <p className="mt-[6px] text-[12.5px] leading-[1.6] text-accent-foreground text-pretty">
+            We sent a sign-in link to <span className="font-semibold">{sentTo}</span>. Open it on this device — it works
+            once and expires in an hour.
+          </p>
+          <div className="mt-[11px] flex flex-wrap items-center gap-[8px]">
+            <form action={action}>
+              <input type="hidden" name="email" value={sentTo} />
+              <input type="hidden" name="next" value={next} />
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+                disabled={pending}
+                // No shadow here, and hover keeps the accent-tinted border.
+                className="h-[32px] gap-[7px] rounded-[8px] border-accent-surface-border px-[11px] text-[12.5px] shadow-none hover:border-accent-surface-border disabled:opacity-100 disabled:text-muted-foreground"
+              >
+                {pending ? (
+                  <>
+                    <Spinner />
+                    Sending…
+                  </>
+                ) : (
+                  "Send it again"
+                )}
+              </Button>
+            </form>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={useDifferentAddress}
+              className="h-[32px] rounded-[8px] px-[9px] text-[12.5px] text-accent-foreground hover:bg-bg-card hover:text-accent-foreground"
+            >
+              Use a different address
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form action={action}>
+          <input type="hidden" name="next" value={next} />
+          <label htmlFor="magic-email" className="mb-[7px] block text-[12.5px] font-semibold text-fg-400">
+            Email address
+          </label>
+          <div className="flex flex-wrap gap-[8px]">
+            {/*
+              `field-focus` carries the design's 3px halo — accent normally,
+              danger while the field is reporting an error. It is unlayered in
+              globals.css, so it beats `shadow-xs` and the resting border; the
+              danger variant keys off `data-invalid`, which is the only hook
+              that rule offers an input (its sibling matches wrappers).
+            */}
+            <input
+              ref={inputRef}
+              id="magic-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@potarastudio.com"
+              aria-invalid={invalid || undefined}
+              aria-describedby={invalid ? "magic-error" : undefined}
+              data-invalid={invalid ? "true" : undefined}
+              className={cn(
+                "field-focus h-[44px] min-w-[180px] flex-1 rounded-[10px] border border-border-input bg-bg-card px-[13px] text-[14px] text-body shadow-xs placeholder:text-muted-foreground",
+                "transition-[color,border-color,box-shadow]",
+              )}
+            />
+            <Button
+              type="submit"
+              variant="outline"
+              size="xl"
+              disabled={pending}
+              className="gap-[8px] px-[15px] text-[13.5px] disabled:opacity-100 disabled:text-muted-foreground"
+            >
+              {pending ? (
+                <>
+                  <Spinner />
+                  Sending…
+                </>
+              ) : (
+                "Email me a link"
+              )}
+            </Button>
+          </div>
+          {invalid && (
+            <p
+              id="magic-error"
+              role="alert"
+              className="mt-[9px] flex gap-[7px] text-[12.5px] leading-[1.55] text-danger text-pretty"
+            >
+              <CircleAlert className="mt-px size-[14px] shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              {state.message}
+            </p>
+          )}
+        </form>
       )}
-    </form>
+    </>
   );
 }

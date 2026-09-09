@@ -6,7 +6,23 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { QuickReactionPicker } from "./quick-reaction-picker";
 import { RemindMenu } from "./remind-menu";
 
-function ActionButton({ label, onClick, children }: { label: string; onClick?: () => void; children: React.ReactNode }) {
+/** 28px icon button with a 15px glyph — the toolbar's only size. */
+const ACTION_BUTTON_BASE = "grid size-7 place-items-center rounded-sm text-fg-600 hover:bg-bg-subtle";
+export const ACTION_BUTTON_CLASS = `${ACTION_BUTTON_BASE} hover:text-ink`;
+/** Delete keeps the neutral hover fill of its siblings; only the glyph turns red (design decision 4). */
+const ACTION_BUTTON_DANGER = `${ACTION_BUTTON_BASE} hover:text-danger`;
+
+function ActionButton({
+  label,
+  onClick,
+  danger = false,
+  children,
+}: {
+  label: string;
+  onClick?: () => void;
+  danger?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -14,7 +30,7 @@ function ActionButton({ label, onClick, children }: { label: string; onClick?: (
           type="button"
           onClick={onClick}
           aria-label={label}
-          className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          className={danger ? ACTION_BUTTON_DANGER : ACTION_BUTTON_CLASS}
         >
           {children}
         </button>
@@ -24,7 +40,7 @@ function ActionButton({ label, onClick, children }: { label: string; onClick?: (
   );
 }
 
-/** Hover action bar (§5). Reply, edit, pin and save arrive with their features. */
+/** Hover action bar (§5) — floats above the row's top-right corner. */
 export function MessageActions({
   messageId,
   canDelete,
@@ -58,42 +74,43 @@ export function MessageActions({
 
   return (
     <div
-      className="absolute -top-3 right-5 hidden items-center gap-0.5 rounded-lg border border-border bg-popover p-0.5 shadow-sm group-hover:flex group-focus-within:flex"
+      className="absolute -top-[15px] right-4 hidden items-center gap-0.5 rounded-lg border border-border bg-bg-card p-[3px] shadow-md group-focus-within:flex group-hover:flex md:right-6"
       role="toolbar"
       aria-label="Message actions"
     >
       <QuickReactionPicker onPick={onReact}>
-        <button
-          type="button"
-          aria-label="Add reaction"
-          className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          <SmilePlus className="size-4" aria-hidden="true" />
+        <button type="button" aria-label="Add reaction" className={ACTION_BUTTON_CLASS}>
+          <SmilePlus className="size-[15px]" aria-hidden="true" />
         </button>
       </QuickReactionPicker>
       {onReply && (
         <ActionButton label="Reply in thread" onClick={onReply}>
-          <MessageSquareText className="size-4" aria-hidden="true" />
+          <MessageSquareText className="size-[15px]" aria-hidden="true" />
         </ActionButton>
       )}
       <ActionButton label={isSaved ? "Remove from saved" : "Save for later"} onClick={onToggleSave}>
-        {isSaved ? <BookmarkCheck className="size-4 text-primary" aria-hidden="true" /> : <Bookmark className="size-4" aria-hidden="true" />}
+        {isSaved ? (
+          <BookmarkCheck className="size-[15px] text-accent-foreground" aria-hidden="true" />
+        ) : (
+          <Bookmark className="size-[15px]" aria-hidden="true" />
+        )}
       </ActionButton>
       <ActionButton label={isPinned ? "Unpin" : "Pin"} onClick={onTogglePin}>
-        {isPinned ? <PinOff className="size-4" aria-hidden="true" /> : <Pin className="size-4" aria-hidden="true" />}
+        {isPinned ? <PinOff className="size-[15px]" aria-hidden="true" /> : <Pin className="size-[15px]" aria-hidden="true" />}
       </ActionButton>
       <RemindMenu messageId={messageId} />
       <ActionButton label="Copy link" onClick={() => void copyLink()}>
-        <Link2 className="size-4" aria-hidden="true" />
+        <Link2 className="size-[15px]" aria-hidden="true" />
       </ActionButton>
+      {(canEdit || canDelete) && <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border" />}
       {canEdit && (
         <ActionButton label="Edit message" onClick={onEdit}>
-          <Pencil className="size-4" aria-hidden="true" />
+          <Pencil className="size-[15px]" aria-hidden="true" />
         </ActionButton>
       )}
       {canDelete && (
-        <ActionButton label="Delete message" onClick={onDelete}>
-          <Trash2 className="size-4" aria-hidden="true" />
+        <ActionButton label="Delete message" onClick={onDelete} danger>
+          <Trash2 className="size-[15px]" aria-hidden="true" />
         </ActionButton>
       )}
     </div>

@@ -1,10 +1,9 @@
+import { CircleAlert } from "lucide-react";
 import type { Metadata } from "next";
-import { GoogleIcon } from "@/components/auth/google-icon";
+import Image from "next/image";
 import { HashError } from "@/components/auth/hash-error";
 import { LoginPreview } from "@/components/auth/login-preview";
-import { MagicLinkForm } from "@/components/auth/magic-link-form";
-import { Button } from "@/components/ui/button";
-import { signInWithGoogle } from "./actions";
+import { SignInForm } from "@/components/auth/magic-link-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -32,56 +31,63 @@ export default async function LoginPage({
   const err = error ? errorCopy[error] : undefined;
 
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+    /*
+      The design's two panes are `min-width:300px; flex:5` and
+      `min-width:320px; flex:6`, wrapping when they no longer fit. The grid
+      reproduces both: the 5:6 ratio and the per-pane floors, so the rail is
+      never squeezed below 300px — it stacks instead, preview and all.
+    */
+    <main className="grid min-h-dvh grid-rows-[auto_1fr] min-[660px]:grid-cols-[minmax(300px,5fr)_minmax(320px,6fr)] min-[660px]:grid-rows-1">
       <HashError />
-      <section className="flex flex-col justify-between bg-sidebar px-6 py-6 text-sidebar-foreground sm:px-10 lg:px-14 lg:py-10">
-        <div className="flex items-center gap-2.5">
-          <span className="grid size-7 place-items-center rounded-md bg-primary text-[13px] font-bold text-primary-foreground">
-            C
+
+      {/* The rail: near-black in both themes, so its palette is fixed white. */}
+      <section className="flex flex-col justify-between gap-[36px] bg-rail px-[28px] pt-[26px] pb-[24px]">
+        <div className="flex items-center gap-[9px]">
+          <span className="block size-[32px] shrink-0 overflow-hidden rounded-[9px] bg-primary">
+            <Image
+              src="/commune-logo.png"
+              alt=""
+              width={32}
+              height={32}
+              priority
+              className="block size-[32px] scale-[1.12] object-cover"
+            />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight">Commune</span>
+          <span className="text-[14.5px] font-semibold tracking-[-0.015em] text-white">Commune</span>
         </div>
-        <div className="mt-10 hidden max-w-md lg:block">
-          <LoginPreview />
-        </div>
-        <p className="mt-10 text-[12px] text-sidebar-muted">Potara Studio · Jakarta</p>
+        <LoginPreview />
+        <p className="text-[12px] text-white/40">Potara Studio · Jakarta</p>
       </section>
 
-      <section className="flex items-center justify-center px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm">
-          <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Potara Studio</p>
-          <h1 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight">Sign in to Commune</h1>
-          <p className="mt-2 text-muted-foreground">
-            Channels, threads and huddles for the studio. Sign in with the Google account you were invited with, or get a one-time link by email.
+      <section className="flex items-center justify-center bg-bg-main px-[28px] py-[40px]">
+        <div className="w-full max-w-[400px]">
+          <p className="text-[11.5px] font-bold tracking-[0.12em] uppercase text-muted-foreground">Potara Studio</p>
+          <h1 className="mt-[9px] text-[28px] leading-[1.18] font-semibold tracking-[-0.03em] text-ink text-pretty">
+            Sign in to Commune
+          </h1>
+          <p className="mt-[9px] text-[14px] leading-[1.6] text-fg-600 text-pretty">
+            Channels, threads and huddles for the studio. Use the Google account you were invited with, or get a
+            one-time link by email.
           </p>
 
           {err && (
             <div
               role="alert"
-              className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-[13px]"
+              className="mt-[22px] flex gap-[11px] rounded-[11px] border border-danger bg-danger-surface px-[13px] py-[12px]"
             >
-              <p className="font-medium">{err.title}</p>
-              <p className="mt-0.5 text-muted-foreground">{err.body}</p>
+              <span className="mt-px grid size-[22px] shrink-0 place-items-center rounded-[7px] bg-danger text-white">
+                <CircleAlert className="size-[13px]" strokeWidth={1.75} aria-hidden="true" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-semibold text-ink">{err.title}</span>
+                <span className="mt-[3px] block text-[12.5px] leading-[1.55] text-fg-600 text-pretty">{err.body}</span>
+              </span>
             </div>
           )}
 
-          <form action={signInWithGoogle} className="mt-8">
-            <input type="hidden" name="next" value={next ?? "/"} />
-            <Button type="submit" size="lg" className="h-11 w-full gap-3 text-[14px]">
-              <GoogleIcon className="size-4" />
-              Continue with Google
-            </Button>
-          </form>
+          <SignInForm next={next ?? "/"} expired={error === "link"} />
 
-          <div className="my-6 flex items-center gap-3 text-[12px] uppercase tracking-[0.12em] text-muted-foreground" aria-hidden="true">
-            <span className="h-px flex-1 bg-border" />
-            or
-            <span className="h-px flex-1 bg-border" />
-          </div>
-
-          <MagicLinkForm next={next ?? "/"} />
-
-          <p className="mt-6 text-[12px] leading-relaxed text-muted-foreground">
+          <p className="mt-[24px] text-[12px] leading-[1.6] text-muted-foreground text-pretty">
             Only invited addresses can sign in, whichever way you choose. Not invited yet? Ask Hakim to add your email.
           </p>
         </div>

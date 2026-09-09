@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { markReadAction } from "@/lib/actions/messages";
 import type { Container } from "@/lib/queries/messages";
 import { clearUnread, unreadKeys, type UnreadMap } from "@/lib/queries/unreads";
@@ -83,9 +83,10 @@ export function KeyboardShortcuts({ items }: { items: NavItem[] }) {
   return <ShortcutsDialog open={open} onOpenChange={setOpen} />;
 }
 
+/** The design's kbd chip: 20px square-ish, r5, --bg-subtle behind --border-strong, 11/600 --fg-400. */
 function Key({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-border bg-muted px-1.5 font-sans text-[12px] font-medium text-foreground shadow-[inset_0_-1px_0_var(--border)]">
+    <kbd className="inline-grid h-[20px] min-w-[20px] place-items-center rounded-[5px] border border-border-strong bg-bg-subtle px-[5px] font-sans text-[11px] font-semibold text-fg-400">
       {children}
     </kbd>
   );
@@ -93,77 +94,111 @@ function Key({ children }: { children: React.ReactNode }) {
 
 function Combo({ keys }: { keys: string[] }) {
   return (
-    <span className="flex items-center gap-1">
+    <span className="flex items-center gap-[3px]">
       {keys.map((k, i) => (
-        <span key={i} className="flex items-center gap-1">
-          {i > 0 && <span className="text-[11px] text-muted-foreground">+</span>}
-          <Key>{k}</Key>
-        </span>
+        <Key key={i}>{k}</Key>
       ))}
     </span>
   );
 }
 
+/**
+ * Cmd+/ overlay, from the design's shortcuts sheet: a 620px r14 dialog whose
+ * body is four uppercase groups stacked down two columns, each row a 13px
+ * --body label with its kbd chips right-aligned, and a footer that says how to
+ * reopen it. One binding per row and one key per chip, as the design draws it.
+ */
 export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const mod = isMac() ? "⌘" : "Ctrl";
   const alt = isMac() ? "⌥" : "Alt";
-  const sections: { title: string; rows: { keys: string[][]; label: string }[] }[] = [
-    {
-      title: "Navigate",
-      rows: [
-        { keys: [[mod, "K"]], label: "Jump to a channel or person" },
-        { keys: [[alt, "↑ ↓"]], label: "Previous / next channel" },
-        { keys: [[alt, "⇧", "↑ ↓"]], label: "Previous / next unread" },
-        { keys: [["Esc"]], label: "Mark as read, or close the side panel" },
-        { keys: [["⇧", "Esc"]], label: "Mark everything as read" },
-        { keys: [[mod, "/"]], label: "Show this list" },
-      ],
-    },
-    {
-      title: "Write",
-      rows: [
-        { keys: [["Enter"]], label: "Send" },
-        { keys: [["⇧", "Enter"]], label: "New line" },
-        { keys: [[mod, "B"]], label: "Bold" },
-        { keys: [[mod, "I"]], label: "Italic" },
-        { keys: [[mod, "⇧", "X"]], label: "Strikethrough" },
-        { keys: [[mod, "E"]], label: "Inline code" },
-        { keys: [[mod, alt, "C"]], label: "Code block" },
-        { keys: [["@"]], label: "Mention someone" },
-        { keys: [[":"]], label: "Insert an emoji" },
-      ],
-    },
+  type Section = { title: string; rows: { keys: string[][]; label: string }[] };
+  // Split by column rather than by grid row, so the short "Reading" group leaves
+  // no hole under itself: the two columns come out 8 and 9 rows, near enough the
+  // design's even 2x2 while every binding stays one the app actually implements.
+  const columns: Section[][] = [
+    [
+      {
+        title: "Navigation",
+        rows: [
+          { keys: [[mod, "K"]], label: "Jump to a channel or person" },
+          { keys: [[alt, "↓"]], label: "Next channel" },
+          { keys: [[alt, "↑"]], label: "Previous channel" },
+          { keys: [[alt, "⇧", "↓"]], label: "Next unread" },
+          { keys: [[alt, "⇧", "↑"]], label: "Previous unread" },
+          { keys: [[mod, "/"]], label: "Show this list" },
+        ],
+      },
+      {
+        title: "Reading",
+        rows: [
+          { keys: [["esc"]], label: "Mark as read, or close the side panel" },
+          { keys: [["⇧", "esc"]], label: "Mark everything as read" },
+        ],
+      },
+    ],
+    [
+      {
+        title: "Composer",
+        rows: [
+          { keys: [["↵"]], label: "Send" },
+          { keys: [["⇧", "↵"]], label: "New line" },
+          { keys: [["@"]], label: "Mention someone" },
+          { keys: [[":"]], label: "Insert an emoji" },
+        ],
+      },
+      {
+        title: "Formatting",
+        rows: [
+          { keys: [[mod, "B"]], label: "Bold" },
+          { keys: [[mod, "I"]], label: "Italic" },
+          { keys: [[mod, "⇧", "X"]], label: "Strikethrough" },
+          { keys: [[mod, "E"]], label: "Inline code" },
+          { keys: [[mod, alt, "C"]], label: "Code block" },
+        ],
+      },
+    ],
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 p-0 sm:max-w-2xl" aria-describedby={undefined}>
-        <div className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-[15px] font-semibold tracking-tight">Keyboard shortcuts</DialogTitle>
-          <DialogDescription className="mt-0.5 text-[13px] text-muted-foreground">Press {mod}+/ any time to open this.</DialogDescription>
-        </div>
-        <div className="grid gap-8 px-5 py-4 sm:grid-cols-2">
-          {sections.map((s) => (
-            <section key={s.title}>
-              <h3 className="text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{s.title}</h3>
-              <ul className="mt-2 space-y-2.5">
-                {s.rows.map((r) => (
-                  <li key={r.label} className="flex items-center justify-between gap-3 text-[13px]">
-                    <span className="min-w-0 text-foreground">{r.label}</span>
-                    <span className="flex shrink-0 items-center gap-1.5">
-                      {r.keys.map((combo, i) => (
-                        <span key={i} className="flex items-center gap-1.5">
-                          {i > 0 && <span className="text-[11px] text-muted-foreground">/</span>}
-                          <Combo keys={combo} />
-                        </span>
+      <DialogContent className="rounded-[14px] sm:max-w-[620px]">
+        <DialogHeader>
+          <DialogTitle>Keyboard shortcuts</DialogTitle>
+          <DialogDescription>Everything here is reachable without the mouse.</DialogDescription>
+        </DialogHeader>
+        <DialogBody>
+          <div className="grid grid-cols-1 items-start gap-x-[28px] gap-y-[18px] pt-[2px] sm:grid-cols-2">
+            {columns.map((column, ci) => (
+              <div key={ci} className="flex flex-col gap-[18px]">
+                {column.map((s) => (
+                  <section key={s.title}>
+                    <h3 className="mb-[4px] text-[11.5px] font-bold tracking-[0.05em] uppercase text-muted-foreground">{s.title}</h3>
+                    <ul>
+                      {s.rows.map((r) => (
+                        <li key={r.label} className="flex items-center gap-[10px] py-[6px]">
+                          <span className="min-w-0 flex-1 text-[13px] text-body">{r.label}</span>
+                          <span className="flex shrink-0 items-center gap-[6px]">
+                            {r.keys.map((combo, i) => (
+                              <span key={i} className="flex items-center gap-[6px]">
+                                {i > 0 && <span className="text-[11px] text-muted-foreground">/</span>}
+                                <Combo keys={combo} />
+                              </span>
+                            ))}
+                          </span>
+                        </li>
                       ))}
-                    </span>
-                  </li>
+                    </ul>
+                  </section>
                 ))}
-              </ul>
-            </section>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        </DialogBody>
+        <DialogFooter showCloseButton className="sm:justify-between">
+          <p className="min-w-0 flex-1 text-[12px] text-muted-foreground">
+            Press <Key>{mod}</Key> <Key>/</Key> any time to reopen this.
+          </p>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

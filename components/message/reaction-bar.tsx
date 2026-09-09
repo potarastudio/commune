@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Emoji } from "@/components/emoji/emoji";
 import { QuickReactionPicker } from "./quick-reaction-picker";
 
+/** Grouped reaction chips: 28px tall, 8px radius. Mine take the accent surface. */
 export function ReactionBar({
   reactions,
   meId,
@@ -25,7 +26,7 @@ export function ReactionBar({
   const nameOf = (id: string) => (id === meId ? "You" : (profiles.get(id)?.display_name ?? "Someone"));
 
   return (
-    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+    <div className="mt-2 flex flex-wrap items-center gap-1.5">
       {[...groups.entries()].map(([emoji, users]) => {
         const active = users.includes(meId);
         const names = users.map(nameOf);
@@ -39,16 +40,16 @@ export function ReactionBar({
                 onClick={() => onToggle(emoji, active)}
                 aria-pressed={active}
                 aria-label={`${emoji} ${users.length}, ${who} reacted`}
-                className={`flex h-6 items-center gap-1 rounded-full border px-2 text-[12px] tabular-nums transition-colors ${
+                className={`flex h-7 items-center gap-1.5 rounded-md border px-[9px] text-[12.5px] tabular-nums transition-colors ${
                   active
-                    ? "border-primary/50 bg-accent text-accent-foreground"
-                    : "border-border bg-background text-foreground/80 hover:border-foreground/30"
+                    ? "border-accent-surface-border bg-accent-surface font-semibold text-accent-foreground"
+                    : "border-border-strong bg-bg-card font-medium text-fg-400 hover:border-border-hover hover:bg-bg-card-hover"
                 }`}
               >
                 <span aria-hidden="true" className="text-[13px] leading-none">
                   <Emoji value={emoji} />
                 </span>
-                <span className="font-medium">{users.length}</span>
+                {users.length}
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-56 text-center">
@@ -61,7 +62,7 @@ export function ReactionBar({
         <button
           type="button"
           aria-label="Add reaction"
-          className="grid h-6 w-7 place-items-center rounded-full border border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+          className="grid h-7 w-8 place-items-center rounded-md border border-border-strong bg-bg-card text-muted-foreground hover:bg-bg-card-hover hover:text-fg-400"
         >
           <SmilePlus className="size-3.5" aria-hidden="true" />
         </button>

@@ -1,18 +1,17 @@
+/**
+ * Day markers in the message list. The "New messages" line uses the accent
+ * (never red) so it reads as a place-marker, not an error.
+ */
 export function DateDivider({ label, tone = "default" }: { label: string; tone?: "default" | "new" }) {
   const isNew = tone === "new";
   return (
-    <div className="relative my-3 flex items-center px-5" role="separator" aria-label={label}>
-      <span className={`h-px flex-1 ${isNew ? "bg-destructive/50" : "bg-divider"}`} />
-      <span
-        className={
-          isNew
-            ? "px-3 text-[12px] font-medium text-destructive"
-            : "rounded-full border border-border bg-background px-3 py-0.5 text-[12px] font-medium text-foreground/80 shadow-xs"
-        }
-      >
-        {label}
-      </span>
-      <span className={`h-px flex-1 ${isNew ? "bg-destructive/50" : "bg-divider"}`} />
+    <div
+      className={`flex items-center px-4 pb-1 pt-3.5 md:px-6 ${isNew ? "gap-[9px]" : "gap-3"}`}
+      role="separator"
+      aria-label={label}
+    >
+      <span className={`text-[12px] font-semibold ${isNew ? "text-accent-text" : "text-fg-600"}`}>{label}</span>
+      <span aria-hidden="true" className={`h-px flex-1 ${isNew ? "bg-accent-rule" : "bg-bg-avatar"}`} />
     </div>
   );
 }

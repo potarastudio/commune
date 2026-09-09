@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { DmHeader } from "@/components/dm/dm-header";
+import { DmAwayNotice, DmHeader } from "@/components/dm/dm-header";
 import { MessagePane } from "@/components/message/message-pane";
 import { PinsButton } from "@/components/pins/pins-button";
 import { ContainerPanel } from "@/components/panel/container-panel";
@@ -62,6 +62,7 @@ export default async function ConversationPage({ params, searchParams }: { param
         pins={membership ? <PinsButton container={container} initialPins={pins} /> : undefined}
       />
       {membership && <HuddleBanner {...huddleProps} />}
+      {membership && others.length === 1 && <DmAwayNotice person={others[0]} />}
       <div className="flex min-h-0 flex-1">
       <MessagePane
         container={{ kind: "conversation", id: conversation.id }}
@@ -75,10 +76,16 @@ export default async function ConversationPage({ params, searchParams }: { param
           others.length === 0
             ? "This is your space."
             : others.length === 1
-              ? `This is the start of your conversation with ${label}.`
+              ? `This is the start of your direct messages with ${label}.`
               : `This is the start of your group with ${label}.`
         }
-        startBody={others.length === 0 ? "Notes to yourself. Nobody else can see this." : "Everything you have said to each other is below."}
+        startBody={
+          others.length === 0
+            ? "Notes to yourself. Nobody else can see this."
+            : others.length === 1
+              ? "Nobody else can read them."
+              : `Only the ${conversation.members.length} of you can read this.`
+        }
         readOnlyNotice={<span>You&apos;re not part of this conversation.</span>}
       />
       {threadId && (

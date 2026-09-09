@@ -21,11 +21,13 @@ export function PinsButton({ container, initialPins }: { container: Container; i
           onClick={() => (open ? closePanel() : showPanel("pins"))}
           aria-pressed={open}
           aria-label={count === 1 ? "1 pinned message" : `${count} pinned messages`}
-          className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[12px] focus-visible:outline-2 focus-visible:outline-ring ${
-            open ? "border-primary/40 bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+          className={`flex h-8 items-center gap-1.5 rounded-md border px-[9px] text-[13px] font-medium shadow-xs transition-colors focus-visible:outline-2 focus-visible:outline-ring ${
+            open
+              ? "border-accent-surface-border bg-accent-surface text-accent-foreground hover:border-accent-border"
+              : "border-border-strong bg-bg-card text-fg-400 hover:border-border-hover hover:bg-bg-card-hover"
           }`}
         >
-          <Pin className="size-3.5" aria-hidden="true" />
+          <Pin className={`size-[15px] ${open ? "" : "text-fg-600"}`} aria-hidden="true" />
           <span className="tabular-nums">{count}</span>
         </button>
       </TooltipTrigger>

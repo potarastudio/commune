@@ -1,14 +1,36 @@
 "use client";
 
-import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Bold, Code, Italic, SquareCode, Strikethrough } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EmojiSuggestion } from "@/lib/composer/emoji";
 import { BROADCAST_ITEMS, createMentionExtension, type MentionItem } from "@/lib/composer/mentions";
 import { useProfiles } from "@/lib/queries/profiles";
 import { isEmptyDoc } from "@/lib/utils/tiptap";
+
+const KBD = "rounded-[4px] border border-border-strong bg-bg-subtle px-[5px] py-px font-sans text-[11px] font-medium text-fg-600";
+
+function MarkButton({ label, icon: Icon, onClick }: { label: string; icon: typeof Bold; onClick: () => void }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onClick}
+          className="grid size-7 place-items-center rounded-sm text-fg-600 hover:bg-bg-subtle hover:text-ink"
+        >
+          <Icon className="size-[15px]" aria-hidden="true" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 /** Inline edit for an existing message (§6: inline edit over a modal). Enter saves, Esc cancels. */
 export function MessageEditor({
@@ -54,7 +76,7 @@ export function MessageEditor({
     content,
     editorProps: {
       attributes: {
-        class: "tiptap min-h-[36px] max-h-64 overflow-y-auto px-3 py-2 text-[14px] leading-[1.5] outline-none",
+        class: "tiptap min-h-[36px] max-h-64 overflow-y-auto px-3 py-2.5 text-[14px] leading-[1.55] outline-none",
         "aria-label": "Edit message",
         role: "textbox",
       },
@@ -83,22 +105,43 @@ export function MessageEditor({
   }
   submitRef.current = submit;
 
+  const run = (fn: (chain: ReturnType<Editor["chain"]>) => { run: () => boolean }) => () => {
+    if (editor) fn(editor.chain().focus()).run();
+  };
+
   return (
-    <div className="mt-1 rounded-lg border border-ring bg-background shadow-xs ring-2 ring-ring/25">
-      <EditorContent editor={editor} />
-      <div className="flex items-center gap-2 border-t border-border/70 px-2 py-1.5">
-        <span className="text-[11px] text-muted-foreground">
-          <kbd className="font-sans">Enter</kbd> to save · <kbd className="font-sans">Esc</kbd> to cancel
-        </span>
-        <div className="ml-auto flex gap-1.5">
-          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="button" size="sm" disabled={empty} onClick={submit}>
-            Save
-          </Button>
+    <div className="mt-[5px]">
+      <div className="rounded-lg border border-primary bg-bg-card shadow-[0_0_0_3px_var(--accent-surface)]">
+        <EditorContent editor={editor} />
+        <div className="flex items-center gap-0.5 border-t border-border-subtle px-2 py-1.5">
+          <MarkButton label="Bold" icon={Bold} onClick={run((c) => c.toggleBold())} />
+          <MarkButton label="Italic" icon={Italic} onClick={run((c) => c.toggleItalic())} />
+          <MarkButton label="Strikethrough" icon={Strikethrough} onClick={run((c) => c.toggleStrike())} />
+          <span aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
+          <MarkButton label="Code" icon={Code} onClick={run((c) => c.toggleCode())} />
+          <MarkButton label="Code block" icon={SquareCode} onClick={run((c) => c.toggleCodeBlock())} />
+          <span className="ml-auto flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex h-[30px] items-center rounded-[7px] border border-border-strong bg-bg-card px-[11px] text-[12.5px] font-semibold text-fg-400 hover:border-border-hover hover:bg-bg-card-hover"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={empty}
+              onClick={submit}
+              className="flex h-[30px] items-center rounded-[7px] border border-accent-border bg-primary px-3 text-[12.5px] font-semibold text-primary-foreground shadow-[0_1px_2px_0_var(--shadow-tint-md),inset_0_1px_0_rgba(255,255,255,0.2)] hover:border-accent-border-hover hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-50"
+            >
+              Save changes
+            </button>
+          </span>
         </div>
       </div>
+      <p className="mt-1.5 text-[11.5px] text-muted-foreground">
+        <kbd className={KBD}>Esc</kbd> to cancel · <kbd className={KBD}>Enter</kbd> to save
+      </p>
     </div>
   );
 }

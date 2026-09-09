@@ -17,7 +17,7 @@ export function EditHistory({ messageId, editedAt }: { messageId: string; edited
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="ml-1 rounded align-baseline text-[11px] text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+          className="ml-1 rounded-sm align-baseline text-[12px] text-muted-foreground hover:text-fg-400 hover:underline"
           aria-label="Show edit history"
           title={editedAt ? `Edited ${formatFullTimestamp(editedAt)}` : "Edited"}
         >
@@ -25,9 +25,9 @@ export function EditHistory({ messageId, editedAt }: { messageId: string; edited
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-96 p-0">
-        <div className="border-b border-border px-4 py-2.5">
-          <h3 className="text-[13px] font-semibold">Edit history</h3>
-          {editedAt && <p className="text-[12px] text-muted-foreground">Last edited {formatFullTimestamp(editedAt)}</p>}
+        <div className="border-b border-border px-4 py-3">
+          <h3 className="text-[13.5px] font-semibold text-ink">Edit history</h3>
+          {editedAt && <p className="mt-px text-[12px] text-muted-foreground">Last edited {formatFullTimestamp(editedAt)}</p>}
         </div>
         <div className="max-h-80 overflow-y-auto">
           {isPending && (
@@ -37,15 +37,15 @@ export function EditHistory({ messageId, editedAt }: { messageId: string; edited
               <Skeleton className="h-3 w-3/5" />
             </div>
           )}
-          {data && data.length === 0 && <p className="px-4 py-5 text-[13px] text-muted-foreground">No earlier versions are recorded for this message.</p>}
+          {data && data.length === 0 && <p className="px-4 py-5 text-[13px] text-fg-600">No earlier versions are recorded for this message.</p>}
           {data && data.length > 0 && (
             <ol className="divide-y divide-border">
               {data.map((v, i) => (
                 <li key={v.id} className="px-4 py-3">
-                  <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  <p className="mb-1 text-[11.5px] font-bold uppercase tracking-[0.05em] text-fg-600">
                     {i === data.length - 1 ? "Original" : `Version ${data.length - i}`} · until {formatFullTimestamp(v.edited_at)}
                   </p>
-                  <div className="text-[13px] leading-[1.5] text-foreground/90 [&>p+p]:mt-1">{renderContent(v.content as Parameters<typeof renderContent>[0])}</div>
+                  <div className="text-[13px] leading-[1.55] text-body [&>p+p]:mt-1">{renderContent(v.content as Parameters<typeof renderContent>[0])}</div>
                 </li>
               ))}
             </ol>

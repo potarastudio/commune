@@ -15,6 +15,16 @@ import { isEmptyDoc } from "@/lib/utils/tiptap";
 import { EmojiPicker } from "./emoji-picker";
 import { PendingAttachments } from "./pending-attachments";
 import { SendLaterMenu } from "./send-later";
+import { Kbd } from "./suggestion-list";
+
+/** 30px toolbar affordance from the design: fg-600 at rest, subtle fill on hover. */
+const TOOL_BUTTON = "grid size-[30px] place-items-center rounded-[7px] transition-colors";
+const TOOL_IDLE = "text-fg-600 hover:bg-bg-subtle hover:text-ink";
+const TOOL_ACTIVE = "bg-bg-subtle text-ink";
+
+function ToolDivider() {
+  return <span className="mx-1 h-4 w-px shrink-0 bg-border" aria-hidden="true" />;
+}
 
 /**
  * Tiptap composer (§5): bold/italic/strike/code/code block/links/bulleted
@@ -92,7 +102,7 @@ export function MessageComposer({
     content: draft ?? "",
     editorProps: {
       attributes: {
-        class: "tiptap min-h-[40px] max-h-64 overflow-y-auto px-3 py-2.5 text-[14px] leading-[1.5] outline-none",
+        class: "tiptap min-h-[44px] max-h-64 caret-primary overflow-y-auto px-3.5 py-3 text-[14px] leading-[1.55] outline-none",
         "aria-label": placeholder,
         role: "textbox",
         "aria-multiline": "true",
@@ -152,42 +162,58 @@ export function MessageComposer({
   }
   submitRef.current = submit;
 
-  const tools = editor
+  // Two groups per the design: marks, then blocks. Attach/emoji/mention follow.
+  const marks = editor
     ? [
         { label: "Bold", icon: Bold, active: editor.isActive("bold"), run: () => editor.chain().focus().toggleBold().run() },
         { label: "Italic", icon: Italic, active: editor.isActive("italic"), run: () => editor.chain().focus().toggleItalic().run() },
         { label: "Strikethrough", icon: Strikethrough, active: editor.isActive("strike"), run: () => editor.chain().focus().toggleStrike().run() },
+      ]
+    : [];
+  const blocks = editor
+    ? [
         { label: "Code", icon: Code, active: editor.isActive("code"), run: () => editor.chain().focus().toggleCode().run() },
         { label: "Code block", icon: SquareCode, active: editor.isActive("codeBlock"), run: () => editor.chain().focus().toggleCodeBlock().run() },
         { label: "Bulleted list", icon: List, active: editor.isActive("bulletList"), run: () => editor.chain().focus().toggleBulletList().run() },
       ]
     : [];
 
+  const renderTool = (t: { label: string; icon: typeof Bold; active: boolean; run: () => void }) => (
+    <Tooltip key={t.label}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={t.label}
+          aria-pressed={t.active}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={t.run}
+          className={`${TOOL_BUTTON} ${t.active ? TOOL_ACTIVE : TOOL_IDLE}`}
+        >
+          <t.icon className="size-[15px]" aria-hidden="true" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{t.label}</TooltipContent>
+    </Tooltip>
+  );
+
   return (
-    <div className="rounded-lg border border-input bg-background shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/25">
-      {uploads && <PendingAttachments uploads={uploads.uploads} onRemove={uploads.remove} />}
+    <div className="field-focus rounded-xl border border-border-input bg-bg-card shadow-xs transition-[border-color,box-shadow]">
+      {uploads && (
+        <PendingAttachments
+          uploads={uploads.uploads}
+          onRemove={uploads.remove}
+          onRetry={(u) => {
+            uploads.remove(u.id);
+            uploads.addFiles([u.file]);
+          }}
+        />
+      )}
       <EditorContent editor={editor} />
-      <div className="flex items-center gap-0.5 border-t border-border/70 px-1.5 py-1">
-        {tools.map((t) => (
-          <Tooltip key={t.label}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                aria-label={t.label}
-                aria-pressed={t.active}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={t.run}
-                className={`grid size-7 place-items-center rounded-md ${
-                  t.active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <t.icon className="size-4" aria-hidden="true" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top">{t.label}</TooltipContent>
-          </Tooltip>
-        ))}
-        <span className="mx-0.5 h-4 w-px bg-border" aria-hidden="true" />
+      <div className="flex items-center gap-0.5 border-t border-border-subtle px-2 py-1.5">
+        {marks.map(renderTool)}
+        <ToolDivider />
+        {blocks.map(renderTool)}
+        <ToolDivider />
         {uploads && (
           <>
             <Tooltip>
@@ -197,9 +223,9 @@ export function MessageComposer({
                   aria-label="Attach files"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => fileInputRef.current?.click()}
-                  className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className={`${TOOL_BUTTON} ${TOOL_IDLE}`}
                 >
-                  <Paperclip className="size-4" aria-hidden="true" />
+                  <Paperclip className="size-[15px]" aria-hidden="true" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top">Attach files</TooltipContent>
@@ -217,18 +243,16 @@ export function MessageComposer({
             />
           </>
         )}
-        <EmojiPicker
-          onPick={(e) => editor?.chain().focus().insertContent(`${e.native} `).run()}
-        >
-          <button
-            type="button"
-            aria-label="Add emoji"
-            onMouseDown={(e) => e.preventDefault()}
-            className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <SmilePlus className="size-4" aria-hidden="true" />
-          </button>
-        </EmojiPicker>
+        <Tooltip>
+          <EmojiPicker onPick={(e) => editor?.chain().focus().insertContent(`${e.native} `).run()}>
+            <TooltipTrigger asChild>
+              <button type="button" aria-label="Add emoji" onMouseDown={(e) => e.preventDefault()} className={`${TOOL_BUTTON} ${TOOL_IDLE}`}>
+                <SmilePlus className="size-[15px]" aria-hidden="true" />
+              </button>
+            </TooltipTrigger>
+          </EmojiPicker>
+          <TooltipContent side="top">Add emoji</TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -236,41 +260,44 @@ export function MessageComposer({
               aria-label="Mention someone"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => editor?.chain().focus().insertContent("@").run()}
-              className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+              className={`${TOOL_BUTTON} ${TOOL_IDLE}`}
             >
-              <AtSign className="size-4" aria-hidden="true" />
+              <AtSign className="size-[15px]" aria-hidden="true" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top">Mention someone</TooltipContent>
         </Tooltip>
-        <span className={`ml-auto mr-1 text-[11px] text-muted-foreground ${compact ? "hidden" : "hidden sm:block"}`}>
-          <kbd className="font-sans">Enter</kbd> to send · <kbd className="font-sans">Shift+Enter</kbd> for a new line
+
+        <span className="ml-auto flex items-center gap-2">
+          <span className={`items-center gap-[5px] text-[11.5px] text-muted-foreground ${compact ? "hidden" : "hidden sm:flex"}`}>
+            <Kbd>Enter</Kbd> to send
+          </span>
+          {onSchedule && (
+            <SendLaterMenu
+              disabled={!canSend || Boolean(uploads?.uploads.length)}
+              onPick={(at) => {
+                const doc = editor?.getJSON();
+                if (!doc || !editor) return;
+                onSchedule(JSON.parse(JSON.stringify(doc)) as JSONContent, at);
+                editor.commands.clearContent(true);
+              }}
+            />
+          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label="Send message"
+                disabled={!canSend}
+                onClick={submit}
+                className="grid size-[30px] place-items-center rounded-[7px] border border-accent-border bg-primary text-primary-foreground shadow-sm inset-shadow-2xs inset-shadow-white/20 transition-colors hover:border-accent-border-hover hover:bg-primary-hover disabled:cursor-not-allowed disabled:border-border-strong disabled:bg-bg-subtle disabled:text-muted-foreground disabled:shadow-none disabled:inset-shadow-none"
+              >
+                <SendHorizontal className="size-[15px]" aria-hidden="true" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Send</TooltipContent>
+          </Tooltip>
         </span>
-        {onSchedule && (
-          <SendLaterMenu
-            disabled={!canSend || Boolean(uploads?.uploads.length)}
-            onPick={(at) => {
-              const doc = editor?.getJSON();
-              if (!doc || !editor) return;
-              onSchedule(JSON.parse(JSON.stringify(doc)) as JSONContent, at);
-              editor.commands.clearContent(true);
-            }}
-          />
-        )}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label="Send message"
-              disabled={!canSend}
-              onClick={submit}
-              className="ml-auto grid size-7 place-items-center rounded-md bg-primary text-primary-foreground transition-colors hover:bg-primary-hover disabled:bg-muted disabled:text-muted-foreground"
-            >
-              <SendHorizontal className="size-4" aria-hidden="true" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="top">Send</TooltipContent>
-        </Tooltip>
       </div>
     </div>
   );

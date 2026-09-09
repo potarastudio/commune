@@ -1,7 +1,7 @@
 "use client";
 
 import { Bookmark, Pin } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileCard } from "@/components/profile/profile-card";
@@ -9,8 +9,9 @@ import { EditHistory } from "./edit-history";
 import { UserStatus } from "@/components/profile/user-status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/queries/messages";
+import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/utils/render";
-import { extractLinks } from "@/lib/utils/tiptap";
+import { extractLinks, extractMentions } from "@/lib/utils/tiptap";
 import { formatFullTimestamp, formatMessageTime } from "@/lib/utils/time";
 import { AttachmentList } from "./attachment-list";
 import { LinkPreviews } from "./link-previews";
@@ -29,6 +30,8 @@ export function MessageItem({
   onEdit,
   onTogglePin,
   onToggleSave,
+  onRetry,
+  onDiscard,
   allowBroadcast = true,
   replySummary,
   inThread = false,
@@ -43,6 +46,10 @@ export function MessageItem({
   onEdit: (content: JSONContent) => void;
   onTogglePin: (pinned: boolean) => void;
   onToggleSave: (saved: boolean) => void;
+  /** Failed send: re-run it. Absent when the container has no retry path. */
+  onRetry?: () => void;
+  /** Failed send: drop the unsent draft row. */
+  onDiscard?: () => void;
   allowBroadcast?: boolean;
   replySummary?: React.ReactNode;
   inThread?: boolean;
@@ -52,42 +59,80 @@ export function MessageItem({
   const name = author?.display_name ?? "Unknown";
   const deleted = message.deleted_at !== null;
   const time = formatMessageTime(message.created_at);
+  const isMine = message.author_id === meId;
+
+  // A direct @you tints the row with the accent (design decision 1: mentions are orange).
+  const content = message.content as JSONContent;
+  const mentionsMe = useMemo(
+    () => !isMine && extractMentions(content).some((m) => m.kind === "user" && m.userId === meId),
+    [content, isMine, meId],
+  );
+
+  const pinned = message.is_pinned && !deleted;
+  const failed = Boolean(message.failed);
+  // One ground per row: failed beats a mention, a mention beats pinned.
+  const tinted = failed || (mentionsMe && !deleted) || pinned;
+
+  if (deleted) {
+    return (
+      <article id={`message-${message.id}`} className="relative flex gap-3 px-4 py-1.5 md:px-6" aria-label="Deleted message">
+        <div className="w-9 shrink-0">
+          <span aria-hidden="true" className="grid size-9 place-items-center rounded-[10px] border border-dashed border-border-input bg-bg-hover" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-h-9 items-center">
+            <p className="text-[13.5px] italic text-muted-foreground">This message was deleted</p>
+          </div>
+          {/* A soft-deleted parent keeps its thread reachable — the replies survive the delete. */}
+          {!inThread && replySummary}
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
       id={`message-${message.id}`}
-      className={`group relative flex gap-3 px-5 hover:bg-message-hover ${grouped ? "py-0.5" : "mt-2 py-1"} ${
-        message.pending ? "opacity-60" : ""
-      } ${message.failed ? "bg-destructive/5" : ""} ${message.is_pinned && !deleted ? "bg-mention/25 hover:bg-mention/35" : ""}`}
+      className={cn(
+        "group relative flex gap-3 px-4 md:px-6",
+        grouped ? "py-0.5" : "py-1.5",
+        !tinted && !editing && "hover:bg-bg-hover",
+        message.pending && "opacity-70",
+        failed && "bg-danger-surface",
+        !failed && mentionsMe && "bg-accent-surface",
+        !failed && !mentionsMe && pinned && "bg-bg-pinned",
+      )}
       aria-label={`${name} at ${time}`}
     >
+      {(failed || mentionsMe) && (
+        <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-[3px]", failed ? "bg-danger" : "bg-primary")} />
+      )}
+
       <div className="w-9 shrink-0">
         {grouped ? (
-          <span className="mt-1 hidden text-[11px] tabular-nums text-muted-foreground group-hover:block">{time}</span>
+          <span className="mt-[3px] hidden w-9 pr-1 text-right text-[11px] tabular-nums text-tertiary group-hover:block">{time}</span>
         ) : (
           <ProfileCard userId={author?.id ?? ""}>
-            <button type="button" aria-label={`${name}'s profile`} className="block rounded-md focus-visible:outline-2 focus-visible:outline-ring">
-              <Avatar className="size-9 rounded-md">
+            <button type="button" aria-label={`${name}'s profile`} className="block rounded-[10px]">
+              <Avatar size="lg">
                 <AvatarImage src={author?.avatar_url ?? undefined} alt="" />
-                <AvatarFallback className="rounded-md bg-accent text-[13px] font-semibold text-accent-foreground">
-                  {name.slice(0, 1).toUpperCase()}
-                </AvatarFallback>
+                <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
               </Avatar>
             </button>
           </ProfileCard>
         )}
       </div>
 
-      <div className="min-w-0 flex-1 leading-[1.5]">
-        {(message.is_pinned || message.is_saved) && !deleted && (
-          <p className="mb-0.5 flex items-center gap-3 text-[11px] font-medium text-muted-foreground">
+      <div className="min-w-0 flex-1">
+        {(message.is_pinned || message.is_saved) && (
+          <p className="mb-[3px] flex items-center gap-3 text-[11.5px] font-semibold tracking-[0.01em]">
             {message.is_pinned && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5 text-accent-foreground">
                 <Pin className="size-3" aria-hidden="true" /> Pinned
               </span>
             )}
             {message.is_saved && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5 text-fg-600">
                 <Bookmark className="size-3" aria-hidden="true" /> Saved for later
               </span>
             )}
@@ -96,14 +141,22 @@ export function MessageItem({
         {!grouped && (
           <div className="flex items-baseline gap-2">
             <ProfileCard userId={author?.id ?? ""}>
-              <button type="button" className="rounded text-[14px] font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-ring">
+              <button
+                type="button"
+                className="rounded-sm text-[14px] font-semibold tracking-[-0.005em] text-ink hover:underline"
+              >
                 {name}
               </button>
             </ProfileCard>
+            {isMine && (
+              <span className="rounded-[5px] border border-border-strong bg-bg-chip px-[5px] text-[10.5px] font-semibold tracking-[0.02em] text-fg-600">
+                YOU
+              </span>
+            )}
             {author && <UserStatus userId={author.id} className="self-center" />}
             <Tooltip>
               <TooltipTrigger asChild>
-                <time dateTime={message.created_at} className="text-[11px] tabular-nums text-muted-foreground">
+                <time dateTime={message.created_at} className="text-[12px] tabular-nums text-muted-foreground">
                   {time}
                 </time>
               </TooltipTrigger>
@@ -112,11 +165,9 @@ export function MessageItem({
           </div>
         )}
 
-        {deleted ? (
-          <p className="italic text-muted-foreground">This message was deleted</p>
-        ) : editing ? (
+        {editing ? (
           <MessageEditor
-            content={message.content as JSONContent}
+            content={content}
             allowBroadcast={allowBroadcast}
             onCancel={() => setEditing(false)}
             onSave={(doc) => {
@@ -125,24 +176,66 @@ export function MessageItem({
             }}
           />
         ) : (
-          <div className="text-[14px] [&>p+p]:mt-1 [&>p:last-of-type]:inline [&>p:last-of-type]:after:content-['']">
-            {renderContent(message.content as Parameters<typeof renderContent>[0])}
+          <div
+            className={cn(
+              "text-[14px] leading-[1.55] text-body [&>p+p]:mt-1 [&>p:last-of-type]:inline [&>p:last-of-type]:after:content-['']",
+              !grouped && "mt-px",
+            )}
+          >
+            {renderContent(content as Parameters<typeof renderContent>[0])}
             {message.is_edited && <EditHistory messageId={message.id} editedAt={message.edited_at} />}
-            {message.failed && <span className="ml-1 align-baseline text-[11px] text-destructive">Not sent</span>}
           </div>
         )}
 
-        {!deleted && <AttachmentList attachments={message.attachments} />}
-        {!deleted && !message.pending && !editing && <LinkPreviews urls={extractLinks(message.content as JSONContent, 2)} />}
-        {!deleted && <ReactionBar reactions={message.reactions} meId={meId} onToggle={onToggleReaction} />}
+        {message.pending && !editing && (
+          <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+            <span
+              aria-hidden="true"
+              className="commune-spin block size-[11px] rounded-full border-[1.5px] border-border-hover border-t-primary"
+            />
+            Sending…
+          </p>
+        )}
+
+        {failed && !editing && (
+          <div className="mt-2 flex flex-wrap items-center gap-2.5">
+            <p className="text-[12.5px] font-semibold text-danger">Couldn&rsquo;t send — it stays here so you can copy it.</p>
+            {(onRetry || onDiscard) && (
+              <span className="flex items-center gap-1.5">
+                {onRetry && (
+                  <button
+                    type="button"
+                    onClick={onRetry}
+                    className="flex h-7 items-center rounded-[7px] border border-border-strong bg-bg-card px-2.5 text-[12.5px] font-semibold text-ink hover:border-border-hover hover:bg-bg-card-hover"
+                  >
+                    Try again
+                  </button>
+                )}
+                {onDiscard && (
+                  <button
+                    type="button"
+                    onClick={onDiscard}
+                    className="flex h-7 items-center rounded-[7px] px-2 text-[12.5px] font-semibold text-muted-foreground hover:text-danger"
+                  >
+                    Discard
+                  </button>
+                )}
+              </span>
+            )}
+          </div>
+        )}
+
+        <AttachmentList attachments={message.attachments} />
+        {!message.pending && !editing && <LinkPreviews urls={extractLinks(content, 2)} />}
+        <ReactionBar reactions={message.reactions} meId={meId} onToggle={onToggleReaction} />
         {!inThread && replySummary}
       </div>
 
-      {!deleted && !message.pending && !message.failed && !editing && (
+      {!message.pending && !failed && !editing && (
         <MessageActions
           messageId={message.id}
           canDelete={canDelete}
-          canEdit={message.author_id === meId}
+          canEdit={isMine}
           isPinned={message.is_pinned}
           isSaved={message.is_saved}
           onEdit={() => setEditing(true)}

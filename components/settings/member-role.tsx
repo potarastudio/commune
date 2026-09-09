@@ -31,23 +31,24 @@ export function MemberRole({ userId, role, name, isMe }: { userId: string; role:
           type="button"
           disabled={pending}
           aria-label={`Change ${name}'s role, currently ${isAdmin ? "admin" : "member"}`}
-          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
+          className="flex h-[34px] shrink-0 items-center gap-2 rounded-[8px] border border-border-input bg-bg-card px-[10px] text-[13px] font-medium text-ink shadow-xs transition-colors hover:border-border-hover hover:bg-bg-card-hover disabled:pointer-events-none disabled:opacity-50"
         >
-          {isAdmin && <ShieldCheck className="size-3.5" aria-hidden="true" />}
           {pending ? "Saving…" : isAdmin ? "Admin" : "Member"}
-          <ChevronDown className="size-3" aria-hidden="true" />
+          <ChevronDown className="size-[13px] text-muted-foreground" aria-hidden="true" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-[248px]">
         <DropdownMenuItem disabled={isAdmin} onSelect={() => change("admin")}>
-          <ShieldCheck className="size-4" aria-hidden="true" />
+          <ShieldCheck aria-hidden="true" />
           <span className="flex-1">Make admin</span>
         </DropdownMenuItem>
         <DropdownMenuItem disabled={!isAdmin} onSelect={() => change("member")}>
-          <User className="size-4" aria-hidden="true" />
+          <User aria-hidden="true" />
           <span className="flex-1">{isMe ? "Step down to member" : "Make member"}</span>
         </DropdownMenuItem>
-        <p className="px-2 pb-1 pt-1.5 text-[11px] leading-snug text-muted-foreground">Admins invite people, archive channels and can delete any message.</p>
+        <p className="px-2 pb-[6px] pt-[6px] text-[12px] leading-[1.45] text-fg-600">
+          Admins invite people, archive channels and can delete any message.
+        </p>
       </DropdownMenuContent>
     </DropdownMenu>
   );

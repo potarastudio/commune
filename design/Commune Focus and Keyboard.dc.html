@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Commune — focus-visible treatment, tab order and keyboard rules." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #ffffff; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "cv11", "ss01", "calt"; }
+  a { color: #171717; }
+  a:hover { color: #b44309; }
+  [data-commune] {
+    --bg-main:#ffffff; --bg-card:#ffffff; --bg-col:#fafafa; --bg-chip:#f6f6f6; --bg-subtle:#f5f5f5;
+    --bg-avatar:#f0f0f0; --rail:#101010; --border:#e9e9e9; --border-strong:#e2e2e2;
+    --border-subtle:#ebebeb; --border-input:#dcdcdc; --border-hover:#d0d0d0; --ink:#171717;
+    --body:#262626; --fg-400:#404040; --fg-500:#525252; --fg-600:#666666; --muted:#6b6b6b;
+    --tertiary:#737373; --link-underline:#d4d4d4; --accent:#f05710; --accent-border:#d9490a;
+    --accent-fg:#8a3308; --accent-surface:#fef3ec; --accent-surface-border:#f9c4a6;
+    --danger:#b42318; --avatar-ring:rgba(0,0,0,0.04);
+    --shadow-tint-sm:rgba(16,24,40,0.05); --shadow-tint-md:rgba(16,24,40,0.08); --shadow-tint-lg:rgba(16,24,40,0.1);
+    color-scheme: light;
+  }
+  [data-commune="dark"] {
+    --bg-main:#171717; --bg-card:#1f1f1f; --bg-col:#0f0f0f; --bg-chip:#1f1f1f; --bg-subtle:#212121;
+    --bg-avatar:#262626; --rail:#0a0a0a; --border:#262626; --border-strong:#2e2e2e;
+    --border-subtle:#262626; --border-input:#333333; --border-hover:#3d3d3d; --ink:#ededed;
+    --body:#d6d6d6; --fg-400:#a3a3a3; --fg-500:#b0b0b0; --fg-600:#9d9d9d; --muted:#9d9d9d;
+    --tertiary:#8a8a8a; --link-underline:#4a4a4a; --accent:#f05710; --accent-border:#d9490a;
+    --accent-fg:#ffb48a; --accent-surface:#2b1a11; --accent-surface-border:#4a2a14;
+    --danger:#f97066; --avatar-ring:rgba(255,255,255,0.06);
+    --shadow-tint-sm:rgba(0,0,0,0.4); --shadow-tint-md:rgba(0,0,0,0.5); --shadow-tint-lg:rgba(0,0,0,0.6);
+    color-scheme: dark;
+  }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-pin" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-at-sign" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-mic-off" viewBox="0 0 24 24"><line x1="2" x2="22" y1="2" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><line x1="12" x2="12" y1="19" y2="22"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-smile-plus" viewBox="0 0 24 24"><path d="M22 11v1a10 10 0 1 1-9-10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/><path d="M16 5h6"/><path d="M19 2v6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-message-square-text" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+</defs></svg>
+
+<div data-commune="{{ theme }}" style="font-family:Inter, ui-sans-serif, system-ui, sans-serif; display:flex; height:100vh; flex-direction:column; overflow:hidden; background:var(--bg-main); color:var(--ink)">
+<div style="flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:8px; border-bottom:1px solid var(--border); background:var(--bg-col); padding:12px 16px">
+  <span style="margin-right:2px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Focus &amp; keyboard</span>
+  <div role="group" aria-label="State" style="display:flex; flex-wrap:wrap; gap:4px">
+    <button type="button" onClick="{{ pickrings }}" aria-pressed="{{ isrings }}" style="{{ btnrings }}">The ring</button>
+    <button type="button" onClick="{{ pickorder }}" aria-pressed="{{ isorder }}" style="{{ btnorder }}">Tab order & keys</button>
+  </div>
+  <button type="button" onClick="{{ toggleTheme }}" style="display:flex; height:28px; align-items:center; border-radius:7px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer">{{ themeLabel }}</button>
+  <p style="margin:0 0 0 auto; max-width:360px; font-size:12.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">{{ note }}</p>
+</div>
+  <div style="flex:1; min-height:0; overflow-y:auto">
+    <sc-if value="{{ isrings }}" hint-placeholder-val="{{ true }}">
+    <div style="width:100%; max-width:880px; box-sizing:border-box; margin:0 auto; padding:26px 24px 56px">
+      <div style="margin-top:0">
+        <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+          <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>01
+        </p>
+        <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">The ring</h2>
+        <p style="margin:6px 0 14px; max-width:620px; font-size:13.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Two rules. Anything you click gets a hard 2px accent outline at 2px offset, keyboard-only. Anything you type into gets a soft 3px accent halo plus an accent border, on click and keyboard alike — because a text field needs to look active while you use it, not just while you tab to it.</p>
+      </div>
+      <div style="overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; background:var(--bg-col); padding:9px 16px">
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Control</span>
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Resting</span>
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Focus-visible</span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Primary button</span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:34px; align-items:center; border-radius:8px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:0 1px 2px 0 var(--shadow-tint-md), inset 0 1px 0 rgba(255,255,255,0.2); padding:0 13px; font-family:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer">Huddle</button></span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:34px; align-items:center; border-radius:8px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:0 1px 2px 0 var(--shadow-tint-md), inset 0 1px 0 rgba(255,255,255,0.2); padding:0 13px; font-family:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer; outline:2px solid var(--accent); outline-offset:2px">Huddle</button></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Secondary button</span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:34px; align-items:center; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 13px; font-family:inherit; font-size:13px; font-weight:600; color:var(--ink); cursor:pointer">Cancel</button></span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:34px; align-items:center; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 13px; font-family:inherit; font-size:13px; font-weight:600; color:var(--ink); cursor:pointer; outline:2px solid var(--accent); outline-offset:2px">Cancel</button></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Ghost button</span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:34px; align-items:center; border:1px solid transparent; background:none; border-radius:8px; padding:0 11px; font-family:inherit; font-size:13px; font-weight:600; color:var(--fg-600); cursor:pointer">Skip</button></span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:34px; align-items:center; border:1px solid transparent; background:none; border-radius:8px; padding:0 11px; font-family:inherit; font-size:13px; font-weight:600; color:var(--fg-600); cursor:pointer; outline:2px solid var(--accent); outline-offset:2px">Skip</button></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Danger button</span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:34px; align-items:center; border-radius:8px; border:1px solid #a01b12; background:var(--danger); box-shadow:0 1px 2px 0 var(--shadow-tint-md); padding:0 13px; font-family:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer">Delete</button></span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:34px; align-items:center; border-radius:8px; border:1px solid #a01b12; background:var(--danger); box-shadow:0 1px 2px 0 var(--shadow-tint-md); padding:0 13px; font-family:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer; outline:2px solid var(--accent); outline-offset:2px">Delete</button></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Icon button</span>
+          <span style="display:flex; align-items:center"><button type="button" aria-label="Pin" style="display:grid; width:30px; height:30px; place-items:center; border:0; background:none; border-radius:7px; color:var(--fg-600); cursor:pointer"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-pin"/></svg></button></span>
+          <span style="display:flex; align-items:center"><button type="button" aria-label="Pin" style="display:grid; width:30px; height:30px; place-items:center; border:0; background:none; border-radius:7px; color:var(--fg-600); cursor:pointer; outline:2px solid var(--accent); outline-offset:2px"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-pin"/></svg></button></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Reaction chip</span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:28px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:0 9px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--accent-fg); cursor:pointer">🔥 3</button></span>
+          <span style="display:flex; align-items:center"><button type="button" style="display:flex; height:28px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:0 9px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--accent-fg); cursor:pointer; outline:2px solid var(--accent); outline-offset:2px">🔥 3</button></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Avatar button</span>
+          <span style="display:flex; align-items:center"><button type="button" aria-label="Sari Wijaya" style="display:block; padding:0; border:0; background:none; border-radius:9999px; cursor:pointer"><span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span></button></span>
+          <span style="display:flex; align-items:center"><button type="button" aria-label="Sari Wijaya" style="display:block; padding:0; border:0; background:none; border-radius:9999px; cursor:pointer; outline:2px solid var(--accent); outline-offset:2px"><span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span></button></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Tab</span>
+          <span style="display:flex; align-items:center"><button type="button" role="tab" aria-selected="true" style="display:flex; height:30px; align-items:center; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 11px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer">Mentions</button></span>
+          <span style="display:flex; align-items:center"><button type="button" role="tab" aria-selected="true" style="display:flex; height:30px; align-items:center; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 11px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer; outline:2px solid var(--accent); outline-offset:2px">Mentions</button></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Link</span>
+          <span style="display:flex; align-items:center"><a href="#" style="font-size:13.5px; color:var(--ink); text-decoration:underline; text-decoration-color:var(--link-underline); text-underline-offset:2.5px; border-radius:3px">Linear&rsquo;s empty states</a></span>
+          <span style="display:flex; align-items:center"><a href="#" style="font-size:13.5px; color:var(--ink); text-decoration:underline; text-decoration-color:var(--link-underline); text-underline-offset:2.5px; border-radius:3px; outline:2px solid var(--accent); outline-offset:2px">Linear&rsquo;s empty states</a></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Sidebar row</span>
+          <span style="display:flex; align-items:center"><a href="#" style="display:flex; width:190px; box-sizing:border-box; height:34px; align-items:center; gap:9px; border-radius:8px; padding:0 8px; font-size:14px; color:var(--fg-500); text-decoration:none"><span style="width:14px; text-align:center; color:var(--tertiary)">#</span>random</a></span>
+          <span style="display:flex; align-items:center"><a href="#" style="display:flex; width:190px; box-sizing:border-box; height:34px; align-items:center; gap:9px; border-radius:8px; padding:0 8px; font-size:14px; color:var(--fg-500); text-decoration:none; outline:2px solid var(--accent); outline-offset:2px"><span style="width:14px; text-align:center; color:var(--tertiary)">#</span>random</a></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Checkbox</span>
+          <span style="display:flex; align-items:center"><span role="checkbox" aria-checked="true" tabindex="0" style="display:grid; width:19px; height:19px; place-items:center; border-radius:6px; border:1.5px solid var(--accent-border); background:var(--accent); color:#ffffff; cursor:pointer"><svg style="width:11px; height:11px; flex-shrink:0"><use href="#u-check"/></svg></span></span>
+          <span style="display:flex; align-items:center"><span role="checkbox" aria-checked="true" tabindex="0" style="display:grid; width:19px; height:19px; place-items:center; border-radius:6px; border:1.5px solid var(--accent-border); background:var(--accent); color:#ffffff; cursor:pointer; outline:2px solid var(--accent); outline-offset:2px"><svg style="width:11px; height:11px; flex-shrink:0"><use href="#u-check"/></svg></span></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Radio</span>
+          <span style="display:flex; align-items:center"><span role="radio" aria-checked="true" tabindex="0" style="display:grid; width:18px; height:18px; place-items:center; border-radius:9999px; border:1.5px solid var(--accent); background:var(--bg-card); cursor:pointer"><span style="display:block; width:10px; height:10px; border-radius:9999px; background:var(--accent)"></span></span></span>
+          <span style="display:flex; align-items:center"><span role="radio" aria-checked="true" tabindex="0" style="display:grid; width:18px; height:18px; place-items:center; border-radius:9999px; border:1.5px solid var(--accent); background:var(--bg-card); cursor:pointer; outline:2px solid var(--accent); outline-offset:2px"><span style="display:block; width:10px; height:10px; border-radius:9999px; background:var(--accent)"></span></span></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Toggle</span>
+          <span style="display:flex; align-items:center"><span role="switch" aria-checked="true" tabindex="0" style="display:flex; width:38px; height:22px; align-items:center; justify-content:flex-end; border-radius:9999px; border:1px solid var(--accent-border); background:var(--accent); padding:2px; cursor:pointer"><span style="display:block; width:16px; height:16px; border-radius:9999px; background:#ffffff; box-shadow:0 1px 2px 0 rgba(0,0,0,0.25)"></span></span></span>
+          <span style="display:flex; align-items:center"><span role="switch" aria-checked="true" tabindex="0" style="display:flex; width:38px; height:22px; align-items:center; justify-content:flex-end; border-radius:9999px; border:1px solid var(--accent-border); background:var(--accent); padding:2px; cursor:pointer; outline:2px solid var(--accent); outline-offset:2px"><span style="display:block; width:16px; height:16px; border-radius:9999px; background:#ffffff; box-shadow:0 1px 2px 0 rgba(0,0,0,0.25)"></span></span></span>
+        </div>
+      </div>
+
+      <div style="margin-top:34px">
+        <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+          <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>02
+        </p>
+        <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Fields are different</h2>
+        <p style="margin:6px 0 14px; max-width:620px; font-size:13.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">The halo is the resting-focus state — it stays while you type. The hard ring is not added on top; two indicators on one element reads as an error.</p>
+      </div>
+      <div style="overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; background:var(--bg-col); padding:9px 16px">
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Field</span>
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Resting</span>
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Focused</span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Text input</span>
+          <span style="display:flex; align-items:center"><span style="display:flex; width:220px; box-sizing:border-box; height:38px; align-items:center; border-radius:9px; border:1px solid var(--border-input); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 12px; font-size:14px; color:var(--muted)">Display name</span></span>
+          <span style="display:flex; align-items:center"><span style="display:flex; width:220px; box-sizing:border-box; height:38px; align-items:center; border-radius:9px; border:1px solid var(--accent); background:var(--bg-card); box-shadow:0 0 0 3px var(--accent-surface); padding:0 12px; font-size:14px; color:var(--body)">Hakim<span style="display:inline-block; width:1.5px; height:16px; margin-left:1px; vertical-align:-3px; background:var(--accent)"></span></span></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Search field</span>
+          <span style="display:flex; align-items:center"><span style="display:flex; width:220px; box-sizing:border-box; height:36px; align-items:center; gap:8px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 10px; font-size:13.5px; color:var(--muted)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-search"/></svg>Search Commune</span></span>
+          <span style="display:flex; align-items:center"><span style="display:flex; width:220px; box-sizing:border-box; height:36px; align-items:center; gap:8px; border-radius:8px; border:1px solid var(--accent); background:var(--bg-card); box-shadow:0 0 0 3px var(--accent-surface); padding:0 10px; font-size:13.5px; color:var(--muted)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-search"/></svg>Search Commune</span></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid var(--border-subtle); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:var(--ink)">Composer</span>
+          <span style="display:flex; align-items:center"><span style="display:block; width:260px; box-sizing:border-box; border-radius:12px; border:1px solid var(--border-input); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:11px 13px; font-size:14px; color:var(--muted)">Message #design</span></span>
+          <span style="display:flex; align-items:center"><span style="display:block; width:260px; box-sizing:border-box; border-radius:12px; border:1px solid var(--accent); background:var(--bg-card); box-shadow:0 0 0 3px var(--accent-surface); padding:11px 13px; font-size:14px; color:var(--body)">Locking the type scale<span style="display:inline-block; width:1.5px; height:16px; margin-left:1px; vertical-align:-3px; background:var(--accent)"></span></span></span>
+        </div>
+      </div>
+
+      <div style="margin-top:34px">
+        <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+          <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>03
+        </p>
+        <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">On dark ground</h2>
+        <p style="margin:6px 0 14px; max-width:620px; font-size:13.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">The rail and the huddle stage are near-black in both themes, so the ring is checked against #0A0A0A rather than the page. Accent orange holds up at 2px; white would read as a selection, not a focus.</p>
+      </div>
+      <div style="overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--rail); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; background:rgba(255,255,255,0.05); padding:9px 16px">
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#ffffff">Control</span>
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.5)">Resting</span>
+          <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.5)">Focus-visible</span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:#ffffff">Rail item</span>
+          <span style="display:flex; align-items:center"><a href="#" style="display:flex; width:44px; min-height:44px; box-sizing:border-box; flex-direction:column; align-items:center; justify-content:center; gap:3px; border-radius:10px; color:rgba(255,255,255,0.55); text-decoration:none"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-at-sign"/></svg></a></span>
+          <span style="display:flex; align-items:center"><a href="#" style="display:flex; width:44px; min-height:44px; box-sizing:border-box; flex-direction:column; align-items:center; justify-content:center; gap:3px; border-radius:10px; color:rgba(255,255,255,0.55); text-decoration:none; outline:2px solid var(--accent); outline-offset:2px"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-at-sign"/></svg></a></span>
+        </div>
+        <div style="display:grid; grid-template-columns:minmax(110px,0.7fr) minmax(150px,1fr) minmax(150px,1fr); gap:16px; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding:14px 16px">
+          <span style="font-size:12.5px; font-weight:600; color:#ffffff">Call control</span>
+          <span style="display:flex; align-items:center"><button type="button" aria-label="Unmute" style="display:grid; width:40px; height:40px; place-items:center; border-radius:11px; border:1px solid #f97066; background:rgba(249,112,102,0.16); color:#ff9a92; cursor:pointer"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-mic-off"/></svg></button></span>
+          <span style="display:flex; align-items:center"><button type="button" aria-label="Unmute" style="display:grid; width:40px; height:40px; place-items:center; border-radius:11px; border:1px solid #f97066; background:rgba(249,112,102,0.16); color:#ff9a92; cursor:pointer; outline:2px solid var(--accent); outline-offset:2px"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-mic-off"/></svg></button></span>
+        </div>
+      </div>
+
+      <div style="margin-top:34px">
+        <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+          <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>04
+        </p>
+        <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Whole rows</h2>
+        <p style="margin:6px 0 14px; max-width:620px; font-size:13.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">A message is one stop, not eight. Tab lands on the row, the action bar appears with it, and the left and right arrows move along the actions inside.</p>
+      </div>
+      <div style="border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:8px">
+        <article tabindex="0" style="position:relative; display:flex; gap:12px; border-radius:9px; padding:8px 12px; outline:2px solid var(--accent); outline-offset:2px">
+          <span style="display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; overflow:hidden; border-radius:10px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:36px; height:36px; object-fit:cover" /></span>
+          <div style="min-width:0; flex:1">
+            <div style="display:flex; align-items:baseline; gap:8px">
+              <span style="font-size:14px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+              <time style="font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums">09:14</time>
+            </div>
+            <p style="margin:1px 0 0; font-size:14px; line-height:1.55; color:var(--body)">Uploaded v3 of the Bluebird homepage.</p>
+          </div>
+          <div style="position:absolute; top:-14px; right:12px; display:flex; align-items:center; gap:2px; border-radius:10px; border:1px solid var(--border); background:var(--bg-card); padding:3px; box-shadow:0 4px 8px -2px var(--shadow-tint-lg)" role="toolbar" aria-label="Message actions">
+            <button type="button" aria-label="smile-plus" style="display:grid; width:28px; height:28px; place-items:center; border:0; background:var(--bg-subtle); border-radius:6px; color:var(--ink); cursor:pointer"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-smile-plus"/></svg></button>
+            <button type="button" aria-label="message-square-text" style="display:grid; width:28px; height:28px; place-items:center; border:0; background:none; border-radius:6px; color:var(--fg-600); cursor:pointer"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-message-square-text"/></svg></button>
+            <button type="button" aria-label="bookmark" style="display:grid; width:28px; height:28px; place-items:center; border:0; background:none; border-radius:6px; color:var(--fg-600); cursor:pointer"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-bookmark"/></svg></button>
+            <button type="button" aria-label="pin" style="display:grid; width:28px; height:28px; place-items:center; border:0; background:none; border-radius:6px; color:var(--fg-600); cursor:pointer"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-pin"/></svg></button>
+          </div>
+        </article>
+      </div>
+      <p style="margin:11px 0 0; max-width:620px; font-size:12.5px; line-height:1.6; color:var(--muted); text-wrap:pretty">The first action is shown pre-highlighted: arrowing into the toolbar moves a roving tabindex, so the toolbar itself never adds four stops to the page.</p>
+    </div>
+    </sc-if>
+    <sc-if value="{{ isorder }}">
+    <div style="width:100%; max-width:880px; box-sizing:border-box; margin:0 auto; padding:26px 24px 56px">
+      <div style="margin-top:0">
+        <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+          <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>01
+        </p>
+        <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Tab order</h2>
+        <p style="margin:6px 0 14px; max-width:620px; font-size:13.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Seven stops from the top of the page to the send button. Lists collapse to one stop each, so Tab crosses the app in seconds and the arrows do the work inside.</p>
+      </div>
+      <div style="overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">0</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Skip to conversation</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">Hidden until focused, then it appears over the rail. Without it, reaching a message means tabbing past every channel.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">1</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Workspace and rail</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">One stop for the workspace button, then one for the rail as a group — up and down move between Channels, Activity, DMs, Saved.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">2</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Search</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">Also reachable from anywhere with ⌘K, which is the path most people will use.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">3</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Channel list</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">One stop. Up and down move through channels and DMs; Enter opens; the list remembers where you were.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">4</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Channel header</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">Channel name, then the header actions — members, pins, Huddle.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">5</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Message list</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">One stop. Up and down move between messages, left and right along a message&rsquo;s actions.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">6</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Composer</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">Formatting controls sit after the field in the DOM, so Tab from the field reaches them rather than leaving the composer.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">7</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Send</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">The last stop. Enter sends from the field itself, so most people never land here.</span>
+            </span>
+          </div>
+      </div>
+
+      <div style="margin-top:34px">
+        <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+          <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>02
+        </p>
+        <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Keys</h2>
+        <p style="margin:6px 0 14px; max-width:620px; font-size:13.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">What each key does once focus is inside the app. Nothing here overrides a browser default.</p>
+      </div>
+      <div style="overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(120px,0.6fr) minmax(200px,1.6fr); gap:16px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:flex; align-items:flex-start"><kbd style="display:inline-grid; place-items:center; min-width:22px; height:22px; box-sizing:border-box; border-radius:6px; border:1px solid var(--border-strong); background:var(--bg-subtle); padding:0 7px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--fg-400)">Tab</kbd></span>
+            <span style="font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Move to the next region. Never traps, except inside an open modal.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(120px,0.6fr) minmax(200px,1.6fr); gap:16px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:flex; align-items:flex-start"><kbd style="display:inline-grid; place-items:center; min-width:22px; height:22px; box-sizing:border-box; border-radius:6px; border:1px solid var(--border-strong); background:var(--bg-subtle); padding:0 7px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--fg-400)">↑ ↓</kbd></span>
+            <span style="font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Move within the focused list — channels, messages, palette results, member lists.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(120px,0.6fr) minmax(200px,1.6fr); gap:16px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:flex; align-items:flex-start"><kbd style="display:inline-grid; place-items:center; min-width:22px; height:22px; box-sizing:border-box; border-radius:6px; border:1px solid var(--border-strong); background:var(--bg-subtle); padding:0 7px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--fg-400)">← →</kbd></span>
+            <span style="font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Move along a focused message&rsquo;s action bar, or between tabs in a tablist.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(120px,0.6fr) minmax(200px,1.6fr); gap:16px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:flex; align-items:flex-start"><kbd style="display:inline-grid; place-items:center; min-width:22px; height:22px; box-sizing:border-box; border-radius:6px; border:1px solid var(--border-strong); background:var(--bg-subtle); padding:0 7px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--fg-400)">Enter</kbd></span>
+            <span style="font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Open the focused thing. In the composer, send.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(120px,0.6fr) minmax(200px,1.6fr); gap:16px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:flex; align-items:flex-start"><kbd style="display:inline-grid; place-items:center; min-width:22px; height:22px; box-sizing:border-box; border-radius:6px; border:1px solid var(--border-strong); background:var(--bg-subtle); padding:0 7px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--fg-400)">Esc</kbd></span>
+            <span style="font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Close the topmost thing: palette, popover, modal, thread panel — one layer per press, and focus returns to whatever opened it.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(120px,0.6fr) minmax(200px,1.6fr); gap:16px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:flex; align-items:flex-start"><kbd style="display:inline-grid; place-items:center; min-width:22px; height:22px; box-sizing:border-box; border-radius:6px; border:1px solid var(--border-strong); background:var(--bg-subtle); padding:0 7px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--fg-400)">⌘K</kbd></span>
+            <span style="font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Search, from anywhere including inside a modal.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(120px,0.6fr) minmax(200px,1.6fr); gap:16px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:flex; align-items:flex-start"><kbd style="display:inline-grid; place-items:center; min-width:22px; height:22px; box-sizing:border-box; border-radius:6px; border:1px solid var(--border-strong); background:var(--bg-subtle); padding:0 7px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--fg-400)">?</kbd></span>
+            <span style="font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">The shortcuts sheet.</span>
+          </div>
+      </div>
+
+      <div style="margin-top:34px">
+        <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+          <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>03
+        </p>
+        <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Modals and popovers</h2>
+        <p style="margin:6px 0 14px; max-width:620px; font-size:13.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Three obligations, all of which are currently missing from the app.</p>
+      </div>
+      <div style="overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">1</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Focus moves in</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">On open, focus goes to the first field — or the dialog itself when there is nothing to type into. Never left behind on the trigger.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">2</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Focus is trapped</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">Tab cycles within the dialog. The conversation behind it is inert, not merely covered.</span>
+            </span>
+          </div>
+          <div style="display:flex; gap:12px; border-top:1px solid var(--border-subtle); padding:12px 16px">
+            <span style="display:grid; width:24px; height:24px; flex-shrink:0; place-items:center; border-radius:7px; background:var(--accent); color:#ffffff; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums">3</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; font-size:13.5px; font-weight:600; color:var(--ink)">Focus comes back</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">On close, focus returns to the element that opened it. Delete confirmations return to the message, not the top of the page.</span>
+            </span>
+          </div>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: null, fState: "rings" };
+  notes = {
+    "rings": "Two indicators, deliberately different: a hard outline for things you click, a soft halo for things you type into.",
+    "order": "Seven stops across the whole app, because lists collapse to a single stop and arrows move inside them."
+  };
+  componentDidMount() {
+    let saved = null;
+    try { saved = localStorage.getItem("commune-theme"); } catch (e) {}
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    this.setState({ theme: saved });
+  }
+  pillStyle(active) {
+    return [
+      "display:flex", "align-items:center", "height:28px", "border-radius:7px",
+      "padding:0 10px", "font-family:inherit", "font-size:12.5px", "font-weight:600",
+      "cursor:pointer", "white-space:nowrap",
+      active
+        ? "border:1px solid var(--accent-border); background:var(--accent); color:#ffffff; box-shadow:0 1px 2px 0 var(--shadow-tint-sm)"
+        : "border:1px solid var(--border-strong); background:var(--bg-card); color:var(--fg-400)",
+    ].join("; ");
+  }
+  renderVals() {
+    const theme = this.state.theme === "dark" ? "dark" : "light";
+    const isDark = theme === "dark";
+    const cur = this.state.fState;
+    const vals = {
+      theme,
+      themeLabel: isDark ? "Light" : "Dark",
+      toggleTheme: () => {
+        const next = isDark ? "light" : "dark";
+        this.setState({ theme: next });
+        try { localStorage.setItem("commune-theme", next); } catch (e) {}
+      },
+      note: this.notes[cur] || "",
+    };
+    ["rings", "order"].forEach((k) => {
+      vals["is" + k] = cur === k;
+      vals["pick" + k] = () => this.setState({ fState: k });
+      vals["btn" + k] = this.pillStyle(cur === k);
+    });
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

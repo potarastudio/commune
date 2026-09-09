@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Eye, Lock } from "lucide-react";
 import { z } from "zod";
 import { BookmarksBar } from "@/components/channel/bookmarks-bar";
+import { ConnectionBanner } from "./connection-banner";
 import { ChannelHeader } from "@/components/channel/channel-header";
 import { UnarchiveButton } from "@/components/channel/archive-channel";
 import { JoinLeaveButton } from "@/components/channel/join-leave-button";
@@ -10,6 +13,7 @@ import { PinsButton } from "@/components/pins/pins-button";
 import { ContainerPanel } from "@/components/panel/container-panel";
 import { ThreadPanel } from "@/components/thread/thread-panel";
 import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
+import { Button } from "@/components/ui/button";
 import { reconcileHuddle } from "@/lib/actions/huddles";
 import { getActiveHuddle } from "@/lib/queries/huddles";
 import { getChannel, getChannelMembers, getMembership } from "@/lib/queries/channel";
@@ -29,18 +33,88 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return { title: channel ? `#${channel.name}` : "Channel" };
 }
 
+/**
+ * The composer's stand-in when a channel can be read but not posted to
+ * (archived, or a public channel you're only previewing). Geometry from the
+ * design's read-only composer: 34px icon tile, 13.5/600 reason, 12.5/1.5 body,
+ * the way out inline on the right. The dashed 12px card around it is drawn by
+ * MessagePane.
+ */
+function ReadOnlyNotice({
+  icon,
+  title,
+  body,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: React.ReactNode;
+  body: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <span className="flex flex-wrap items-center gap-[12px]">
+      <span
+        className="grid size-[34px] shrink-0 place-items-center rounded-lg border border-border-subtle bg-bg-card text-fg-600"
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+      <span className="min-w-[180px] flex-1">
+        <span className="block text-[13.5px] font-semibold text-ink">{title}</span>
+        <span className="mt-[2px] block text-[12.5px] leading-[1.5] text-fg-600">{body}</span>
+      </span>
+      {action}
+    </span>
+  );
+}
+
+/**
+ * A channel row that RLS won't hand over reads the same whether it's private or
+ * gone, so we say the honest thing rather than leaking which. The design's
+ * "no access" state: a 40px lock tile, 15.5/600 line, and the way onward.
+ */
+function NoChannelAccess() {
+  return (
+    <>
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-bg-main px-5">
+        <span className="text-[16px] font-semibold tracking-[-0.02em] text-ink">Channel</span>
+      </header>
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-[24px] pb-[22px] pt-[18px] text-center">
+        <span
+          className="grid size-[40px] place-items-center rounded-[11px] border border-border-subtle bg-bg-chip text-fg-600"
+          aria-hidden="true"
+        >
+          <Lock className="size-[17px]" />
+        </span>
+        <h1 className="mt-[12px] text-[15.5px] font-semibold tracking-[-0.015em] text-ink">
+          You don&rsquo;t have access to this channel
+        </h1>
+        <p className="mt-[5px] max-w-[400px] text-pretty text-[13px] leading-[1.55] text-fg-600">
+          It&rsquo;s private, or it isn&rsquo;t there any more. Any member who can see it can add you — until then it
+          stays out of sight.
+        </p>
+        <Button asChild variant="outline" size="md" className="mt-[12px] px-[13px]">
+          <Link href="/channels">Browse channels</Link>
+        </Button>
+      </div>
+    </>
+  );
+}
+
 export default async function ChannelPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const [{ channelId }, { thread, panel }] = await Promise.all([params, searchParams]);
   const threadId = thread && z.string().uuid().safeParse(thread).success ? thread : null;
   const panelOpen = !threadId && (panel === "pins" || panel === "details");
-  if (!z.string().uuid().safeParse(channelId).success) notFound();
+  // A malformed id reads the same to the reader as one RLS won't hand over, and
+  // the designed state says the honest thing; Next's stock 404 has no shell at all.
+  if (!z.string().uuid().safeParse(channelId).success) return <NoChannelAccess />;
 
   const supabase = await createSupabaseServerClient();
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
 
   const channel = await getChannel(supabase, channelId);
-  if (!channel) notFound();
+  if (!channel) return <NoChannelAccess />;
 
   const container = { kind: "channel" as const, id: channelId };
   const [membership, members, firstPage, rawHuddle, pins, bookmarks] = await Promise.all([
@@ -56,6 +130,12 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
 
   const me = { id: profile.id, display_name: profile.display_name, handle: profile.handle, avatar_url: profile.avatar_url };
   const canPost = membership !== null && !channel.is_archived;
+  // The design's intro line is the channel's own words plus a nudge. Topic first,
+  // because the topic is what the header shows — description would contradict it.
+  const intro = channel.topic?.trim() || channel.description?.trim();
+  const startBody = intro
+    ? `${intro.replace(/[.!?]+$/, "")}. Post the first thing — half-finished is fine.`
+    : "Everything the channel has ever said is below.";
 
   return (
     <>
@@ -65,6 +145,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
         huddle={canPost ? <HuddleButton {...huddleProps} /> : undefined}
         pins={<PinsButton container={container} initialPins={pins} />}
       />
+      <ConnectionBanner />
       <BookmarksBar channelId={channel.id} initialBookmarks={bookmarks} canEdit={(membership !== null || profile.role === "admin") && !channel.is_archived} />
       {canPost && <HuddleBanner {...huddleProps} />}
       <div className="flex min-h-0 flex-1">
@@ -77,22 +158,22 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
         initialPage={firstPage}
         placeholder={`Message #${channel.name}`}
         startTitle={`This is the start of #${channel.name}`}
-        startBody="Everything the channel has ever said is below."
+        startBody={startBody}
         readOnlyNotice={
           channel.is_archived ? (
-            <span className="flex items-center justify-between gap-3">
-              <span>
-                <strong>#{channel.name}</strong> is archived. You can read it, but nobody can post.
-              </span>
-              {profile.role === "admin" && <UnarchiveButton channelId={channel.id} channelName={channel.name} />}
-            </span>
+            <ReadOnlyNotice
+              icon={<Lock className="size-[16px]" />}
+              title={<>#{channel.name} is archived</>}
+              body="Everything here stays readable and searchable. Reopen it to post again."
+              action={profile.role === "admin" ? <UnarchiveButton channelId={channel.id} channelName={channel.name} /> : undefined}
+            />
           ) : (
-            <span className="flex items-center justify-between gap-3">
-              <span>
-                You&apos;re previewing <strong>#{channel.name}</strong>. Join to post.
-              </span>
-              <JoinLeaveButton channelId={channel.id} channelName={channel.name} joined={false} />
-            </span>
+            <ReadOnlyNotice
+              icon={<Eye className="size-[16px]" />}
+              title={<>You&rsquo;re previewing #{channel.name}</>}
+              body="Read anything you like. Join to post, and it lands in your sidebar."
+              action={<JoinLeaveButton channelId={channel.id} channelName={channel.name} joined={false} />}
+            />
           )
         }
       />

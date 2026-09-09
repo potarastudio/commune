@@ -13,15 +13,17 @@ export const EmojiList = forwardRef<SuggestionListRef, SuggestionProps<EmojiItem
       command={(item) => props.command(item)}
       label="Emoji"
       emptyLabel="No emoji match."
+      heading={props.query ? `Emoji matching “:${props.query}”` : "Emoji"}
+      widthClass="w-[332px]"
       renderItem={(item) => (
         <>
-          <span className="grid w-6 place-items-center text-[18px] leading-none">
+          <span className="grid size-[21px] shrink-0 place-items-center text-[17px] leading-none">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {item.src ? <img src={item.src} alt="" className="size-5 object-contain" /> : item.native}
+            {item.src ? <img src={item.src} alt="" className="size-[17px] object-contain" /> : item.native}
           </span>
           <span className="min-w-0 flex-1 truncate">
-            <span className="font-mono text-[12.5px]">:{item.id}:</span>
-            <span className="ml-1.5 text-muted-foreground">{item.name}</span>
+            <span className="font-mono text-[12.5px] font-medium text-ink">:{item.id}:</span>
+            <span className="ml-2 text-[12px] text-muted-foreground">{item.name}</span>
           </span>
         </>
       )}

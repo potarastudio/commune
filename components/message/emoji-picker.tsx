@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadEmoji } from "@/lib/composer/emoji";
@@ -45,7 +46,12 @@ export function EmojiPicker({
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent side={side} align={align} className="w-auto overflow-hidden p-0 emoji-picker-popover" sideOffset={6}>
+      <PopoverContent
+        side={side}
+        align={align}
+        sideOffset={8}
+        className="emoji-picker-popover w-auto overflow-hidden rounded-xl border-border bg-bg-card p-0 shadow-lg"
+      >
         {mod ? (
           <mod.Picker
             data={mod.data}
@@ -54,7 +60,7 @@ export function EmojiPicker({
             previewPosition="none"
             skinTonePosition="search"
             maxFrequentRows={2}
-            perLine={9}
+            perLine={8}
             autoFocus
             onEmojiSelect={(e: { native?: string; id: string }) => {
               // Custom emoji have no unicode form; they travel as ":name:" (§4 reactions.emoji).
@@ -63,9 +69,21 @@ export function EmojiPicker({
             }}
           />
         ) : (
-          <div className="w-[352px] space-y-2 p-3" aria-label="Loading emoji">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-64 w-full" />
+          <div className="w-[332px]" aria-label="Loading emoji">
+            <div className="border-b border-border-subtle p-2">
+              <div className="flex h-8 items-center gap-[7px] rounded-md border border-border-strong bg-bg-chip px-[9px]">
+                <Search className="size-[14px] shrink-0 text-muted-foreground" aria-hidden="true" />
+                <span className="text-[13px] text-muted-foreground">Search emoji</span>
+              </div>
+            </div>
+            <p className="px-3 pb-[5px] pt-[9px] text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Frequently used
+            </p>
+            <div className="grid grid-cols-8 gap-0.5 px-2 pb-2">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 rounded-[7px]" />
+              ))}
+            </div>
           </div>
         )}
       </PopoverContent>

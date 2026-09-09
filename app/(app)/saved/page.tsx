@@ -15,16 +15,14 @@ export default async function SavedPage() {
 
   return (
     <>
-      <header className="flex h-12 shrink-0 items-center border-b border-border px-5">
-        <h1 className="text-[15px] font-semibold tracking-tight">Saved</h1>
-        <span className="ml-2 text-[13px] text-muted-foreground">
-          {saved.length === 0 ? "For later" : `${saved.length} ${saved.length === 1 ? "message" : "messages"} for later`}
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
+        <h1 className="text-[16px] font-semibold tracking-[-0.02em] text-ink">Saved</h1>
+        <span className="text-[12.5px] text-muted-foreground">
+          {saved.length === 0 ? "For later" : `${saved.length} ${saved.length === 1 ? "item" : "items"}`}
         </span>
       </header>
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-2xl px-3 py-6">
-          <SavedList meId={profile.id} initialSaved={saved} />
-        </div>
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        <SavedList meId={profile.id} initialSaved={saved} />
       </div>
     </>
   );

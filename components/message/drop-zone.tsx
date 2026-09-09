@@ -48,15 +48,15 @@ export function DropZone({ label, onFiles, children }: { label: string; onFiles:
       {children}
       {over && (
         <div
-          className="pointer-events-none absolute inset-2 z-20 grid place-items-center rounded-xl border-2 border-dashed border-primary bg-background/85 backdrop-blur-[2px]"
+          className="pointer-events-none absolute inset-2 z-20 grid place-items-center rounded-xl border-2 border-dashed border-accent-surface-border bg-accent-surface/95 backdrop-blur-[2px]"
           aria-live="polite"
         >
-          <div className="flex flex-col items-center gap-2 text-center">
-            <span className="grid size-12 place-items-center rounded-xl bg-accent text-accent-foreground">
-              <Upload className="size-5" aria-hidden="true" />
+          <div className="flex flex-col items-center gap-2.5 text-center">
+            <span className="grid size-[46px] place-items-center rounded-xl border border-accent-surface-border bg-bg-card text-primary shadow-xs">
+              <Upload className="size-[21px]" aria-hidden="true" />
             </span>
-            <p className="text-[15px] font-semibold">Drop to upload to {label}</p>
-            <p className="text-[13px] text-muted-foreground">Up to 10 files, 25 MB each.</p>
+            <p className="text-[16px] font-semibold tracking-[-0.02em] text-ink">Drop to upload to {label}</p>
+            <p className="text-[13px] text-fg-600">Up to 10 files, 25 MB each.</p>
           </div>
         </div>
       )}

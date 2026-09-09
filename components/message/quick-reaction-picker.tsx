@@ -45,7 +45,7 @@ export function QuickReactionPicker({ children, onPick }: { children: React.Reac
                 onPick(e);
                 setOpen(false);
               }}
-              className="grid size-8 place-items-center rounded-md text-[18px] hover:bg-muted"
+              className="grid size-8 place-items-center rounded-sm text-[18px] hover:bg-bg-subtle"
             >
               {e}
             </button>
@@ -54,7 +54,7 @@ export function QuickReactionPicker({ children, onPick }: { children: React.Reac
         <button
           type="button"
           onClick={() => setFull(true)}
-          className="mt-1 w-full rounded-md px-2 py-1 text-left text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="mt-1 w-full rounded-sm px-2 py-1.5 text-left text-[12.5px] font-semibold text-muted-foreground hover:bg-bg-subtle hover:text-ink"
         >
           More emoji…
         </button>

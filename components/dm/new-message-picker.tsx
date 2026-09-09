@@ -4,12 +4,27 @@ import { Check, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { AvatarPresence } from "@/components/presence/online-dot";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { startConversationAction } from "@/lib/actions/conversations";
 import type { Profile } from "@/lib/queries/profile";
 
 const MAX_OTHERS = 7; // 8 people including you (§5)
+
+/**
+ * Person avatar. The shared primitive already carries the round shape,
+ * --bg-avatar and the inset --avatar-ring hairline, so this only picks a size
+ * off the handoff scale.
+ */
+function PersonAvatar({ person, size }: { person: Profile; size?: "xs" }) {
+  return (
+    <Avatar size={size}>
+      <AvatarImage src={person.avatar_url ?? undefined} alt="" />
+      <AvatarFallback>{person.display_name.slice(0, 1).toUpperCase()}</AvatarFallback>
+    </Avatar>
+  );
+}
 
 export function NewMessagePicker({ people, meId }: { people: Profile[]; meId: string }) {
   const router = useRouter();
@@ -47,43 +62,65 @@ export function NewMessagePicker({ people, meId }: { people: Profile[]; meId: st
   };
 
   return (
-    <div className="mx-auto w-full max-w-xl px-6 py-8">
-      <h2 className="text-[20px] font-semibold tracking-tight">New message</h2>
-      <p className="mt-1 text-muted-foreground">Pick one person for a direct message, or up to seven for a group.</p>
+    <div className="mx-auto w-full max-w-[560px] px-6 py-8">
+      <h2 className="text-[22px] font-semibold tracking-[-0.025em] text-ink">New message</h2>
+      <p className="mt-1.5 text-[13px] leading-[1.55] text-fg-600">
+        Pick one person for a direct message, or up to seven for a group.
+      </p>
 
-      <div className="mt-6 flex min-h-11 flex-wrap items-center gap-1.5 rounded-lg border border-input bg-background px-2.5 py-1.5 shadow-xs focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/25">
-        {picked.map((p) => (
-          <span key={p.id} className="flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-[13px] text-accent-foreground">
-            {p.display_name}
-            <button type="button" aria-label={`Remove ${p.display_name}`} onClick={() => toggle(p)} className="rounded hover:bg-black/10">
-              <X className="size-3.5" aria-hidden="true" />
-            </button>
+      <div className="mt-6">
+        <span className="mb-1.5 block text-[12.5px] font-semibold text-fg-400">People</span>
+        <div className="field-focus flex min-h-[38px] flex-wrap items-center gap-1.5 rounded-md border border-border-input bg-bg-card px-2 py-1.5 shadow-xs">
+          {picked.map((p) => (
+            <span
+              key={p.id}
+              className="flex h-[26px] items-center gap-1.5 rounded-md border border-accent-surface-border bg-accent-surface pr-1 pl-0.5 text-[12.5px] font-medium text-accent-foreground"
+            >
+              <PersonAvatar person={p} size="xs" />
+              {p.display_name}
+              <button
+                type="button"
+                aria-label={`Remove ${p.display_name}`}
+                onClick={() => toggle(p)}
+                className="grid size-[18px] place-items-center rounded-sm hover:bg-accent-surface-border"
+              >
+                <X className="size-[11px]" aria-hidden="true" />
+              </button>
+            </span>
+          ))}
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <Search className="size-[15px] shrink-0 text-muted-foreground" aria-hidden="true" />
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Backspace" && query === "" && picked.length) setPicked((c) => c.slice(0, -1));
+                if (e.key === "Enter" && results.length === 1) {
+                  e.preventDefault();
+                  toggle(results[0]);
+                  setQuery("");
+                }
+              }}
+              placeholder={picked.length ? "Add someone else" : "Search by name or @handle"}
+              aria-label="Search people"
+              className="h-[26px] min-w-32 flex-1 bg-transparent text-[14px] text-body outline-none placeholder:text-muted-foreground"
+            />
           </span>
-        ))}
-        <span className="flex flex-1 items-center gap-2">
-          <Search className="size-4 text-muted-foreground" aria-hidden="true" />
-          <input
-            autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Backspace" && query === "" && picked.length) setPicked((c) => c.slice(0, -1));
-              if (e.key === "Enter" && results.length === 1) {
-                e.preventDefault();
-                toggle(results[0]);
-                setQuery("");
-              }
-            }}
-            placeholder={picked.length ? "Add someone else" : "Search by name or @handle"}
-            aria-label="Search people"
-            className="h-7 min-w-32 flex-1 bg-transparent text-[14px] outline-none placeholder:text-muted-foreground"
-          />
-        </span>
+        </div>
+        <p className="mt-1.5 text-[12px] leading-[1.45] text-muted-foreground">
+          Names or @handles. A group holds eight people, you included.
+        </p>
       </div>
 
-      <ul className="mt-3 divide-y divide-border rounded-lg border border-border" role="listbox" aria-label="People" aria-multiselectable="true">
+      <ul className="mt-4 flex flex-col gap-px" role="listbox" aria-label="People" aria-multiselectable="true">
         {results.length === 0 && (
-          <li className="px-4 py-6 text-center text-[13px] text-muted-foreground">Nobody matches &ldquo;{query}&rdquo;.</li>
+          <li className="px-3 py-7 text-center">
+            <p className="text-[14px] font-semibold text-ink">No matches for &ldquo;{query}&rdquo;</p>
+            <p className="mx-auto mt-1.5 max-w-[300px] text-[12.5px] leading-[1.55] text-fg-600">
+              Try their first name, or the @handle they use in messages.
+            </p>
+          </li>
         )}
         {results.map((p) => {
           const selected = picked.some((x) => x.id === p.id);
@@ -94,28 +131,30 @@ export function NewMessagePicker({ people, meId }: { people: Profile[]; meId: st
                 role="option"
                 aria-selected={selected}
                 onClick={() => toggle(p)}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+                className={`flex w-full items-center gap-[11px] rounded-md px-2.5 py-[9px] text-left hover:bg-bg-hover ${
+                  selected ? "bg-bg-subtle" : ""
+                }`}
               >
-                <Avatar className="size-8 rounded-md">
-                  <AvatarImage src={p.avatar_url ?? undefined} alt="" className="object-cover" />
-                  <AvatarFallback className="rounded-md bg-accent text-[12px] font-semibold text-accent-foreground">
-                    {p.display_name.slice(0, 1).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="min-w-0 flex-1 leading-tight">
-                  <span className="block truncate text-[14px] font-medium">{p.display_name}</span>
+                <span className="relative block size-8 shrink-0">
+                  <PersonAvatar person={p} />
+                  <AvatarPresence userId={p.id} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13.5px] font-semibold text-ink">{p.display_name}</span>
                   <span className="block truncate text-[12px] text-muted-foreground">
                     @{p.handle}
                     {p.title ? ` · ${p.title}` : ""}
                   </span>
                 </span>
                 <span
-                  className={`grid size-5 place-items-center rounded-full border ${
-                    selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                  className={`grid size-[18px] shrink-0 place-items-center rounded-sm border ${
+                    selected
+                      ? "border-accent-border bg-primary text-primary-foreground"
+                      : "border-border-input text-transparent"
                   }`}
                   aria-hidden="true"
                 >
-                  {selected && <Check className="size-3.5" />}
+                  <Check className="size-[11px]" />
                 </span>
               </button>
             </li>
@@ -123,8 +162,13 @@ export function NewMessagePicker({ people, meId }: { people: Profile[]; meId: st
         })}
       </ul>
 
-      <div className="mt-5 flex items-center gap-3">
-        <Button type="button" size="lg" className="h-10 px-5" disabled={picked.length === 0 || pending} onClick={start}>
+      <div className="mt-6 flex items-center gap-2.5">
+        <Button
+          type="button"
+          className="h-[34px] rounded-md border border-accent-border px-[13px] text-[13px] font-semibold shadow-sm"
+          disabled={picked.length === 0 || pending}
+          onClick={start}
+        >
           {pending ? "Opening…" : picked.length > 1 ? `Start group with ${picked.length} people` : "Start conversation"}
         </Button>
         <span className="text-[12px] text-muted-foreground">Existing conversations with the same people are reused.</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Pencil } from "lucide-react";
+import { Check, Pencil, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -12,6 +12,11 @@ import type { Profile } from "@/lib/queries/profile";
 import { useProfiles } from "@/lib/queries/profiles";
 
 export type Member = Pick<Profile, "id" | "display_name" | "handle" | "avatar_url" | "title">;
+
+/** 11.5/700 caps overline — the design's label for every panel field. */
+const overline = "text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground";
+const field =
+  "field-focus w-full rounded-lg border border-border-input bg-bg-card px-[11px] text-[14px] text-body shadow-xs outline-none placeholder:text-muted-foreground";
 
 /** Label + value that turns into an input on the pencil, saves on Enter. */
 export function InlineField({
@@ -41,9 +46,9 @@ export function InlineField({
     });
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
+    <div className="border-b border-border-subtle py-[11px]">
+      <div className="flex min-h-[18px] items-center justify-between gap-2">
+        <span className={overline}>{label}</span>
         {canEdit && !editing && (
           <button
             type="button"
@@ -52,14 +57,14 @@ export function InlineField({
               setEditing(true);
             }}
             aria-label={`Edit ${label.toLowerCase()}`}
-            className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            className="grid size-[22px] shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-bg-subtle hover:text-ink"
           >
-            <Pencil className="size-3.5" aria-hidden="true" />
+            <Pencil className="size-[13px]" aria-hidden="true" />
           </button>
         )}
       </div>
       {editing ? (
-        <div className="mt-1 space-y-2">
+        <div className="mt-2">
           {multiline ? (
             <textarea
               autoFocus
@@ -67,7 +72,7 @@ export function InlineField({
               maxLength={maxLength}
               rows={3}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full resize-none rounded-md border border-input bg-background px-2.5 py-1.5 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25"
+              className={`${field} resize-none py-2 leading-[1.5]`}
             />
           ) : (
             <input
@@ -82,10 +87,10 @@ export function InlineField({
                 }
                 if (e.key === "Escape") setEditing(false);
               }}
-              className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25"
+              className={`${field} h-[38px]`}
             />
           )}
-          <div className="flex justify-end gap-1.5">
+          <div className="mt-2 flex justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
               Cancel
             </Button>
@@ -95,7 +100,7 @@ export function InlineField({
           </div>
         </div>
       ) : (
-        <p className={`mt-0.5 text-[13px] leading-relaxed ${value ? "" : "text-muted-foreground"}`}>{value || placeholder}</p>
+        <p className={`mt-1 text-[13.5px] leading-[1.5] ${value ? "text-body" : "text-muted-foreground"}`}>{value || placeholder}</p>
       )}
     </div>
   );
@@ -127,17 +132,21 @@ export function AddPeople({ channel, members, onDone }: { channel: ChannelRow; m
     });
 
   return (
-    <div className="space-y-2">
-      <input
-        autoFocus
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search people"
-        aria-label="Search people to add"
-        className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25"
-      />
-      <ul className="max-h-48 overflow-y-auto rounded-md border border-border" role="listbox" aria-multiselectable="true" aria-label="People to add">
-        {candidates.length === 0 && <li className="px-2.5 py-3 text-[12px] text-muted-foreground">Everyone is already here.</li>}
+    <div>
+      <div className="field-focus flex h-[34px] items-center gap-2 rounded-md border border-border-strong bg-bg-chip px-2.5">
+        <Search className="size-[14px] shrink-0 text-muted-foreground" aria-hidden="true" />
+        <input
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Find a person"
+          aria-label="Search people to add"
+          className="min-w-0 flex-1 bg-transparent text-[13px] text-body outline-none placeholder:text-muted-foreground"
+        />
+      </div>
+
+      <ul className="mt-2 max-h-52 overflow-y-auto rounded-md border border-border-subtle" role="listbox" aria-multiselectable="true" aria-label="People to add">
+        {candidates.length === 0 && <li className="px-3 py-3.5 text-[12.5px] text-muted-foreground">Everyone is already here.</li>}
         {candidates.map((p) => {
           const on = picked.includes(p.id);
           return (
@@ -147,22 +156,29 @@ export function AddPeople({ channel, members, onDone }: { channel: ChannelRow; m
                 role="option"
                 aria-selected={on}
                 onClick={() => setPicked((c) => (on ? c.filter((x) => x !== p.id) : [...c, p.id]))}
-                className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-[13px] hover:bg-muted"
+                className="flex w-full items-center gap-2.5 px-2.5 py-1.5 text-left hover:bg-bg-hover"
               >
-                <Avatar className="size-5 rounded">
+                <Avatar size="sm">
                   <AvatarImage src={p.avatar_url ?? undefined} alt="" className="object-cover" />
-                  <AvatarFallback className="rounded bg-accent text-[9px] font-semibold text-accent-foreground">{p.display_name.slice(0, 1).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{p.display_name.slice(0, 1).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <span className="min-w-0 flex-1 truncate">{p.display_name}</span>
-                <span className={`grid size-4 place-items-center rounded-full border ${on ? "border-primary bg-primary text-primary-foreground" : "border-border"}`} aria-hidden="true">
-                  {on && <Check className="size-3" />}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13.5px] font-semibold text-ink">{p.display_name}</span>
+                  <span className="block truncate text-[12px] text-fg-600">@{p.handle}</span>
+                </span>
+                <span
+                  className={`grid size-[18px] shrink-0 place-items-center rounded-full border ${on ? "border-accent-border bg-primary text-primary-foreground" : "border-border-input"}`}
+                  aria-hidden="true"
+                >
+                  {on && <Check className="size-[11px]" />}
                 </span>
               </button>
             </li>
           );
         })}
       </ul>
-      <Button type="button" size="sm" className="w-full" disabled={picked.length === 0 || pending} onClick={add}>
+
+      <Button type="button" size="sm" className="mt-2.5 w-full" disabled={picked.length === 0 || pending} onClick={add}>
         {pending ? "Adding…" : picked.length ? `Add ${picked.length} to #${channel.name}` : "Add people"}
       </Button>
     </div>

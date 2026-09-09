@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = { title: "Privacy" };
@@ -6,15 +7,29 @@ export const metadata: Metadata = { title: "Privacy" };
 /** Public privacy notice for Commune, an internal tool for Potara Studio's team. Needed for Google's app verification too. */
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-6 py-14">
-      <Link href="/login" className="flex w-fit items-center gap-2.5 text-[15px] font-semibold tracking-tight">
-        <span className="grid size-7 place-items-center rounded-md bg-primary text-[13px] font-bold text-primary-foreground">C</span>
+    <main className="mx-auto w-full max-w-[680px] px-[24px] pt-[30px] pb-[64px]">
+      <Link
+        href="/login"
+        className="flex w-fit items-center gap-[9px] rounded-[8px] text-[14.5px] font-semibold tracking-[-0.015em] text-ink"
+      >
+        <span className="block size-[32px] shrink-0 overflow-hidden rounded-[9px] bg-primary">
+          <Image
+            src="/commune-logo.png"
+            alt=""
+            width={32}
+            height={32}
+            className="block size-[32px] scale-[1.12] object-cover"
+          />
+        </span>
         Commune
       </Link>
-      <h1 className="mt-10 text-[28px] font-semibold leading-tight tracking-tight">Privacy notice</h1>
-      <p className="mt-2 text-muted-foreground">Last updated 9 September 2026</p>
 
-      <div className="mt-8 space-y-8 text-[15px] leading-relaxed [&_h2]:text-[17px] [&_h2]:font-semibold [&_h2]:tracking-tight [&_p]:mt-2 [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-6">
+      <h1 className="mt-[28px] text-[30px] leading-[1.15] font-semibold tracking-[-0.032em] text-ink text-pretty">
+        Privacy notice
+      </h1>
+      <p className="mt-[9px] text-[13px] text-muted-foreground">Last updated 9 September 2026</p>
+
+      <div className="mt-[28px] flex flex-col gap-[28px] text-[14px] leading-[1.6] text-body [&_h2]:text-[16px] [&_h2]:font-semibold [&_h2]:tracking-[-0.02em] [&_h2]:text-ink [&_p]:mt-[7px] [&_p]:text-pretty [&_strong]:font-semibold [&_strong]:text-ink [&_ul]:mt-[7px] [&_ul]:list-disc [&_ul]:space-y-[6px] [&_ul]:pl-[22px] [&_ul]:marker:text-tertiary">
         <section>
           <h2>What Commune is</h2>
           <p>
@@ -81,7 +96,7 @@ export default function PrivacyPage() {
         <section>
           <h2>Contact</h2>
           <p>
-            Questions about this notice go to Potara Studio at <a href="mailto:hi@potarastudio.com" className="text-link underline-offset-2 hover:underline">hi@potarastudio.com</a>.
+            Questions about this notice go to Potara Studio at <a href="mailto:hi@potarastudio.com" className="link-ink">hi@potarastudio.com</a>.
           </p>
         </section>
       </div>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Recreation of Commune's current channel view, as built today." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #ffffff; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  a { color: #d64b0c; text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: #b03d09; }
+  @keyframes typing-bounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.5; } 40% { transform: translateY(-3px); opacity: 1; } }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-chevrons-up-down" viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-at-sign" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-hash" viewBox="0 0 24 24"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-compass" viewBox="0 0 24 24"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-headphones" viewBox="0 0 24 24"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-link-2" viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-smile-plus" viewBox="0 0 24 24"><path d="M22 11v1a10 10 0 1 1-9-10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/><path d="M16 5h6"/><path d="M19 2v6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-message-square-text" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-trash-2" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-bold" viewBox="0 0 24 24"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-italic" viewBox="0 0 24 24"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-strikethrough" viewBox="0 0 24 24"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" x2="20" y1="12" y2="12"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-square-code" viewBox="0 0 24 24"><path d="M10 9.5 8 12l2 2.5"/><path d="m14 9.5 2 2.5-2 2.5"/><rect width="18" height="18" x="3" y="3" rx="2"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-list" viewBox="0 0 24 24"><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-paperclip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57a4 4 0 0 1 5.66 5.66l-8.58 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-send-horizontal" viewBox="0 0 24 24"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z"/><path d="M6 12h16"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-file-text" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+</defs></svg>
+
+<div style="font-family:Inter, ui-sans-serif, system-ui, sans-serif; font-size:14px; color:#1b1b1a; height:100vh; overflow:auto; background:#ffffff">
+<div style="display:flex; height:100%; min-height:0; min-width:940px; overflow:hidden">
+
+  <aside style="display:flex; width:260px; flex-shrink:0; flex-direction:column; background:#161616; color:#ececec">
+    <div style="display:flex; height:42px; flex-shrink:0; align-items:center; gap:5.25px; border-bottom:1px solid rgba(255,255,255,0.08); padding:0 14px">
+      <span style="font-size:15px; font-weight:600; letter-spacing:-0.025em">Potara Studio</span>
+      <svg style="width:12.25px; height:12.25px; color:#9c9c9c"><use href="#i-chevron-down"/></svg>
+    </div>
+
+    <div style="padding:7px 7px 0">
+      <button type="button" style="display:flex; height:28px; width:100%; align-items:center; gap:7px; border-radius:5px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); padding:0 8.75px; font-family:inherit; font-size:13px; color:#9c9c9c; cursor:pointer">
+        <svg style="width:12.25px; height:12.25px; flex-shrink:0"><use href="#i-search"/></svg>
+        <span style="flex:1; text-align:left">Search Commune</span>
+        <kbd style="border-radius:3.5px; border:1px solid rgba(255,255,255,0.08); padding:0 3.5px; font-family:inherit; font-size:11px">⌘K</kbd>
+      </button>
+    </div>
+
+    <nav style="flex:1; overflow-y:auto; padding:10.5px 7px" aria-label="Sidebar">
+      <ul style="margin:0 0 14px; padding:0; list-style:none">
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; color:rgba(236,236,236,0.85); text-decoration:none">
+          <svg style="width:12.25px; height:12.25px; flex-shrink:0; opacity:0.7"><use href="#i-at-sign"/></svg>
+          <span>Activity</span>
+        </a></li>
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; color:rgba(236,236,236,0.85); text-decoration:none">
+          <svg style="width:12.25px; height:12.25px; flex-shrink:0; opacity:0.7"><use href="#i-bookmark"/></svg>
+          <span>Saved</span>
+        </a></li>
+      </ul>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.75px; padding-right:3.5px">
+        <button type="button" style="display:flex; align-items:center; gap:3.5px; border:0; background:none; border-radius:5px; padding:3.5px 5.25px; font-family:inherit; font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.08em; color:#9c9c9c; cursor:pointer">
+          <svg style="width:10.5px; height:10.5px; transform:rotate(90deg)"><use href="#i-chevron-right"/></svg>
+          Channels
+        </button>
+        <button type="button" aria-label="Create channel" style="display:grid; width:21px; height:21px; place-items:center; border:0; background:none; border-radius:5px; color:#9c9c9c; cursor:pointer">
+          <svg style="width:12.25px; height:12.25px"><use href="#i-plus"/></svg>
+        </button>
+      </div>
+      <ul style="margin:0 0 14px; padding:0; list-style:none">
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none">
+          <svg style="width:12.25px; height:12.25px; flex-shrink:0; opacity:0.7"><use href="#i-hash"/></svg>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">general</span>
+          <span style="margin-left:auto; border-radius:9999px; background:rgba(236,236,236,0.9); color:#161616; padding:0 5.25px; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; line-height:18px">4</span>
+        </a></li>
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; background:#2a2a2a; padding:0 7px; font-size:14px; color:#ffffff; text-decoration:none">
+          <svg style="width:12.25px; height:12.25px; flex-shrink:0; opacity:0.7"><use href="#i-hash"/></svg>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">design</span>
+        </a></li>
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; color:rgba(236,236,236,0.85); text-decoration:none">
+          <svg style="width:12.25px; height:12.25px; flex-shrink:0; opacity:0.7"><use href="#i-hash"/></svg>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">random</span>
+        </a></li>
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; color:rgba(236,236,236,0.85); text-decoration:none">
+          <svg style="width:12.25px; height:12.25px; flex-shrink:0; opacity:0.7"><use href="#i-lock"/></svg>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">bluebird-client</span>
+        </a></li>
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; color:#9c9c9c; text-decoration:none">
+          <svg style="width:12.25px; height:12.25px; flex-shrink:0; opacity:0.7"><use href="#i-compass"/></svg>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Browse channels</span>
+        </a></li>
+      </ul>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.75px; padding-right:3.5px">
+        <button type="button" style="display:flex; align-items:center; gap:3.5px; border:0; background:none; border-radius:5px; padding:3.5px 5.25px; font-family:inherit; font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.08em; color:#9c9c9c; cursor:pointer">
+          <svg style="width:10.5px; height:10.5px; transform:rotate(90deg)"><use href="#i-chevron-right"/></svg>
+          Direct messages
+        </button>
+        <a href="#" aria-label="New message" style="display:grid; width:21px; height:21px; place-items:center; border-radius:5px; color:#9c9c9c; text-decoration:none">
+          <svg style="width:12.25px; height:12.25px"><use href="#i-plus"/></svg>
+        </a>
+      </div>
+      <ul style="margin:0; padding:0; list-style:none">
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none">
+          <span style="position:relative; flex-shrink:0; display:block; width:14px; height:14px">
+            <span style="display:grid; place-items:center; width:14px; height:14px; border-radius:3px; background:#2a2a2a; font-size:9px; font-weight:600; overflow:hidden">
+              <img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:14px; height:14px; object-fit:cover" />
+            </span>
+            <span style="position:absolute; right:-1.75px; bottom:-1.75px; width:8.75px; height:8.75px; border-radius:9999px; border:2px solid #161616; background:#2fb37a"></span>
+          </span>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Sari</span>
+          <span style="margin-left:auto; border-radius:9999px; background:#c93b3b; color:#ffffff; padding:0 5.25px; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; line-height:18px">2</span>
+        </a></li>
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; color:rgba(236,236,236,0.85); text-decoration:none">
+          <span style="position:relative; flex-shrink:0; display:block; width:14px; height:14px">
+            <span style="display:grid; place-items:center; width:14px; height:14px; border-radius:3px; background:#2a2a2a; font-size:9px; font-weight:600; overflow:hidden">
+              <img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:14px; height:14px; object-fit:cover" />
+            </span>
+          </span>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Raka</span>
+          <span style="font-size:13px; line-height:1; flex-shrink:0">🌴</span>
+        </a></li>
+        <li><a href="#" style="display:flex; height:24.5px; align-items:center; gap:7px; border-radius:5px; padding:0 7px; font-size:14px; color:rgba(236,236,236,0.85); text-decoration:none">
+          <span style="display:grid; width:14px; height:14px; flex-shrink:0; place-items:center; border-radius:3px; background:#2a2a2a; font-size:10px; font-weight:600; font-variant-numeric:tabular-nums">3</span>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Sari, Raka</span>
+        </a></li>
+      </ul>
+    </nav>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.08); padding:5.25px">
+      <button type="button" aria-label="Account menu" style="display:flex; width:100%; align-items:center; gap:8.75px; border:0; background:none; border-radius:5px; padding:5.25px; text-align:left; cursor:pointer; color:inherit; font-family:inherit">
+        <span style="position:relative; display:block; width:28px; height:28px">
+          <span style="display:grid; place-items:center; width:28px; height:28px; border-radius:5px; background:#f05710; color:#ffffff; font-size:12px; font-weight:600; overflow:hidden">
+            <img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:28px; height:28px; object-fit:cover" />
+          </span>
+          <span style="position:absolute; right:-1.75px; bottom:-1.75px; width:8.75px; height:8.75px; border-radius:9999px; border:2px solid #161616; background:#2fb37a"></span>
+        </span>
+        <span style="min-width:0; flex:1; line-height:1.25">
+          <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:500">Hakim Haiman</span>
+          <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:#9c9c9c">🎧 Heads down</span>
+        </span>
+        <svg style="width:12.25px; height:12.25px; color:#9c9c9c; flex-shrink:0"><use href="#i-chevrons-up-down"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main style="display:flex; min-width:0; flex:1; flex-direction:column; background:#ffffff">
+    <header style="display:flex; height:42px; flex-shrink:0; align-items:center; gap:10.5px; border-bottom:1px solid #e4e4df; padding:0 12.25px">
+      <button type="button" style="display:flex; align-items:center; gap:3.5px; border:0; background:none; border-radius:5px; padding:3.5px 5.25px; font-family:inherit; font-size:15px; font-weight:600; letter-spacing:-0.025em; color:inherit; cursor:pointer">
+        <svg style="width:14px; height:14px; color:#6e6e69"><use href="#i-hash"/></svg>
+        design
+        <svg style="width:12.25px; height:12.25px; color:#6e6e69"><use href="#i-chevron-down"/></svg>
+      </button>
+      <span style="height:14px; width:1px; background:#e4e4df"></span>
+      <p style="margin:0; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; color:#6e6e69">Crit, references, and work in progress</p>
+      <span style="margin-left:auto; display:flex; align-items:center; gap:7px">
+        <button type="button" style="display:inline-flex; height:24.5px; align-items:center; justify-content:center; gap:5.25px; border-radius:5px; border:1px solid #e4e4df; background:#ffffff; box-shadow:0 1px 2px 0 rgba(0,0,0,0.05); padding:0 8.75px; font-family:inherit; font-size:12px; font-weight:500; color:inherit; cursor:pointer">
+          <svg style="width:12.25px; height:12.25px"><use href="#i-headphones"/></svg>
+          Huddle
+        </button>
+        <button type="button" style="display:flex; align-items:center; gap:5.25px; border-radius:5px; border:1px solid #e4e4df; background:none; padding:3.5px 7px; font-family:inherit; font-size:12px; color:#6e6e69; cursor:pointer">
+          <svg style="width:12.25px; height:12.25px"><use href="#i-pin"/></svg>
+          <span style="font-variant-numeric:tabular-nums">2</span>
+        </button>
+        <span style="margin-right:5.25px">
+          <button type="button" style="display:flex; align-items:center; gap:5.25px; border-radius:5px; border:1px solid #e4e4df; background:none; padding:3.5px 7px; font-family:inherit; font-size:12px; color:#6e6e69; cursor:pointer">
+            <svg style="width:12.25px; height:12.25px"><use href="#i-users"/></svg>
+            <span style="font-variant-numeric:tabular-nums">3</span>
+          </button>
+        </span>
+      </span>
+    </header>
+
+    <div style="display:flex; height:31.5px; flex-shrink:0; align-items:center; gap:1.75px; overflow-x:auto; border-bottom:1px solid #e4e4df; padding:0 10.5px" aria-label="Bookmarks">
+      <svg style="margin-right:3.5px; width:12.25px; height:12.25px; flex-shrink:0; color:#6e6e69"><use href="#i-bookmark"/></svg>
+      <a href="#" style="display:flex; height:24.5px; max-width:224px; align-items:center; gap:5.25px; border-radius:5px; padding:0 7px; font-size:13px; color:rgba(27,27,26,0.85); text-decoration:none">
+        <span style="font-size:13px; line-height:1">🎨</span>
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Bluebird — Figma</span>
+      </a>
+      <a href="#" style="display:flex; height:24.5px; max-width:224px; align-items:center; gap:5.25px; border-radius:5px; padding:0 7px; font-size:13px; color:rgba(27,27,26,0.85); text-decoration:none">
+        <svg style="width:12.25px; height:12.25px; flex-shrink:0; color:#6e6e69"><use href="#i-link-2"/></svg>
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Type scale doc</span>
+      </a>
+      <button type="button" style="display:flex; height:24.5px; flex-shrink:0; align-items:center; gap:3.5px; border:0; background:none; border-radius:5px; padding:0 7px; font-family:inherit; font-size:12px; color:#6e6e69; opacity:0.7; cursor:pointer">
+        <svg style="width:12.25px; height:12.25px"><use href="#i-plus"/></svg>
+        Add
+      </button>
+    </div>
+
+    <div data-scroll="messages" style="flex:1; overflow-y:auto; overscroll-behavior:contain" role="log" aria-label="Messages">
+      <div style="min-height:100%; padding-bottom:10.5px">
+
+        <div style="padding:35px 17.5px 14px">
+          <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:11px; background:#feeee6; color:#8a3308">
+            <svg style="width:17.5px; height:17.5px"><use href="#i-hash"/></svg>
+          </span>
+          <h2 style="margin:14px 0 0; font-size:20px; font-weight:600; letter-spacing:-0.025em">This is the start of #design</h2>
+          <p style="margin:3.5px 0 0; color:#6e6e69">Everything the channel has ever said is below.</p>
+        </div>
+
+        <div style="position:relative; display:flex; align-items:center; margin:10.5px 0; padding:0 17.5px" role="separator">
+          <span style="height:1px; flex:1; background:#e4e4df"></span>
+          <span style="border-radius:9999px; border:1px solid #e4e4df; background:#ffffff; padding:1.75px 10.5px; font-size:12px; font-weight:500; color:rgba(27,27,26,0.8); box-shadow:0 1px 2px 0 rgba(0,0,0,0.05)">Yesterday</span>
+          <span style="height:1px; flex:1; background:#e4e4df"></span>
+        </div>
+
+        <article style="position:relative; display:flex; gap:10.5px; padding:3.5px 17.5px; margin-top:7px">
+          <div style="width:31.5px; flex-shrink:0">
+            <span style="display:grid; place-items:center; width:31.5px; height:31.5px; border-radius:5px; background:#feeee6; color:#8a3308; font-size:13px; font-weight:600; overflow:hidden">
+              <img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:31.5px; height:31.5px; object-fit:cover" />
+            </span>
+          </div>
+          <div style="min-width:0; flex:1; line-height:1.5">
+            <div style="display:flex; align-items:baseline; gap:7px">
+              <button type="button" style="border:0; background:none; padding:0; font-family:inherit; font-size:14px; font-weight:600; color:inherit; cursor:pointer">Sari Wijaya</button>
+              <time style="font-size:11px; font-variant-numeric:tabular-nums; color:#6e6e69">09:14</time>
+            </div>
+            <div style="font-size:14px">Uploaded v3 of the Bluebird homepage. Hero is tighter, CTA moved above the fold.</div>
+            <div style="margin-top:5.25px; display:flex; flex-wrap:wrap; align-items:center; gap:3.5px">
+              <button type="button" style="display:flex; height:21px; align-items:center; gap:3.5px; border-radius:9999px; border:1px solid rgba(240,87,16,0.5); background:#feeee6; padding:0 7px; font-family:inherit; font-size:12px; font-variant-numeric:tabular-nums; color:#8a3308; cursor:pointer">
+                <span style="font-size:13px; line-height:1">🔥</span><span style="font-weight:500">3</span>
+              </button>
+              <button type="button" style="display:flex; height:21px; align-items:center; gap:3.5px; border-radius:9999px; border:1px solid #e4e4df; background:#ffffff; padding:0 7px; font-family:inherit; font-size:12px; font-variant-numeric:tabular-nums; color:rgba(27,27,26,0.8); cursor:pointer">
+                <span style="font-size:13px; line-height:1">👀</span><span style="font-weight:500">2</span>
+              </button>
+              <button type="button" aria-label="Add reaction" style="display:grid; width:24.5px; height:21px; place-items:center; border-radius:9999px; border:1px solid #e4e4df; background:none; color:#6e6e69; cursor:pointer">
+                <svg style="width:12.25px; height:12.25px"><use href="#i-smile-plus"/></svg>
+              </button>
+            </div>
+            <button type="button" style="margin-top:5.25px; margin-left:-5.25px; display:flex; height:28px; max-width:100%; align-items:center; gap:7px; border-radius:5px; border:1px solid transparent; background:none; padding:0 5.25px; font-family:inherit; font-size:13px; cursor:pointer">
+              <span style="display:flex">
+                <span style="display:grid; place-items:center; width:17.5px; height:17.5px; border-radius:3.5px; background:#feeee6; box-shadow:0 0 0 2px #ffffff; overflow:hidden">
+                  <img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:17.5px; height:17.5px; object-fit:cover" />
+                </span>
+                <span style="display:grid; place-items:center; width:17.5px; height:17.5px; margin-left:-3.5px; border-radius:3.5px; background:#feeee6; box-shadow:0 0 0 2px #ffffff; overflow:hidden">
+                  <img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:17.5px; height:17.5px; object-fit:cover" />
+                </span>
+              </span>
+              <span style="font-weight:500; color:#d64b0c">4 replies</span>
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#6e6e69">Last reply 2h ago</span>
+            </button>
+          </div>
+        </article>
+
+        <article style="position:relative; display:flex; gap:10.5px; padding:1.75px 17.5px">
+          <div style="width:31.5px; flex-shrink:0"></div>
+          <div style="min-width:0; flex:1; line-height:1.5">
+            <div style="font-size:14px">Card radius: 8 or 12? I keep flip-flopping.</div>
+          </div>
+        </article>
+
+        <article style="position:relative; display:flex; gap:10.5px; padding:3.5px 17.5px; margin-top:7px; background:rgba(228,238,252,0.25)">
+          <div style="width:31.5px; flex-shrink:0">
+            <span style="display:grid; place-items:center; width:31.5px; height:31.5px; border-radius:5px; background:#feeee6; color:#8a3308; font-size:13px; font-weight:600; overflow:hidden">
+              <img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:31.5px; height:31.5px; object-fit:cover" />
+            </span>
+          </div>
+          <div style="min-width:0; flex:1; line-height:1.5">
+            <p style="margin:0 0 1.75px; display:flex; align-items:center; gap:10.5px; font-size:11px; font-weight:500; color:#6e6e69">
+              <span style="display:flex; align-items:center; gap:3.5px">
+                <svg style="width:10.5px; height:10.5px"><use href="#i-pin"/></svg> Pinned
+              </span>
+            </p>
+            <div style="display:flex; align-items:baseline; gap:7px">
+              <button type="button" style="border:0; background:none; padding:0; font-family:inherit; font-size:14px; font-weight:600; color:inherit; cursor:pointer">Raka Pratama</button>
+              <span style="font-size:13px; line-height:1">🌴</span>
+              <time style="font-size:11px; font-variant-numeric:tabular-nums; color:#6e6e69">10:02</time>
+            </div>
+            <div style="font-size:14px">Type scale proposal: 12/14/16/20/24/32/40. Thoughts?</div>
+            <pre style="margin:4.9px 0; font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:12.5px; background:#f3f3f0; border:1px solid #e4e4df; border-radius:6px; padding:8.4px 10.5px; overflow-x:auto"><code>--radius-md: 8px;
+--radius-lg: 12px;</code></pre>
+          </div>
+        </article>
+
+        <article style="position:relative; display:flex; gap:10.5px; padding:3.5px 17.5px; margin-top:7px; background:#f7f7f5">
+          <div style="width:31.5px; flex-shrink:0">
+            <span style="display:grid; place-items:center; width:31.5px; height:31.5px; border-radius:5px; background:#feeee6; color:#8a3308; font-size:13px; font-weight:600; overflow:hidden">
+              <img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:31.5px; height:31.5px; object-fit:cover" />
+            </span>
+          </div>
+          <div style="min-width:0; flex:1; line-height:1.5">
+            <div style="display:flex; align-items:baseline; gap:7px">
+              <button type="button" style="border:0; background:none; padding:0; font-family:inherit; font-size:14px; font-weight:600; color:inherit; cursor:pointer">Hakim Haiman</button>
+              <span style="font-size:13px; line-height:1">🎧</span>
+              <time style="font-size:11px; font-variant-numeric:tabular-nums; color:#6e6e69">10:08</time>
+            </div>
+            <div style="font-size:14px"><span style="background:#e4eefc; color:#1d4f93; border-radius:4px; padding:0 3px; font-weight:500">@sari</span> Colour contrast on the secondary button fails AA in dark mode. Fixing.</div>
+            <div style="margin-top:5.25px">
+              <div style="display:flex; width:fit-content; max-width:100%; align-items:center; gap:10.5px; border-radius:7px; border:1px solid #e4e4df; background:#ffffff; padding:7px 7px 7px 10.5px">
+                <span style="display:grid; width:31.5px; height:31.5px; flex-shrink:0; place-items:center; border-radius:5px; background:#feeee6; color:#8a3308">
+                  <svg style="width:14px; height:14px"><use href="#i-file-text"/></svg>
+                </span>
+                <span style="min-width:0; line-height:1.25">
+                  <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:500">contrast-audit.pdf</span>
+                  <span style="display:block; font-size:12px; color:#6e6e69">248 KB · PDF</span>
+                </span>
+                <button type="button" aria-label="Download contrast-audit.pdf" style="margin-left:7px; display:grid; width:28px; height:28px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer">
+                  <svg style="width:14px; height:14px"><use href="#i-download"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div style="position:absolute; top:-10.5px; right:17.5px; display:flex; align-items:center; gap:1.75px; border-radius:7px; border:1px solid #e4e4df; background:#ffffff; padding:1.75px; box-shadow:0 1px 3px 0 rgba(0,0,0,0.1)" role="toolbar" aria-label="Message actions">
+            <button type="button" aria-label="Add reaction" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-smile-plus"/></svg></button>
+            <button type="button" aria-label="Reply in thread" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-message-square-text"/></svg></button>
+            <button type="button" aria-label="Save for later" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-bookmark"/></svg></button>
+            <button type="button" aria-label="Pin" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-pin"/></svg></button>
+            <button type="button" aria-label="Remind me" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-clock"/></svg></button>
+            <button type="button" aria-label="Copy link" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-link-2"/></svg></button>
+            <button type="button" aria-label="Edit message" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-pencil"/></svg></button>
+            <button type="button" aria-label="Delete message" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-trash-2"/></svg></button>
+          </div>
+        </article>
+
+        <div style="position:relative; display:flex; align-items:center; margin:10.5px 0; padding:0 17.5px" role="separator">
+          <span style="height:1px; flex:1; background:rgba(201,59,59,0.5)"></span>
+          <span style="padding:0 10.5px; font-size:12px; font-weight:500; color:#c93b3b">New messages</span>
+          <span style="height:1px; flex:1; background:rgba(201,59,59,0.5)"></span>
+        </div>
+
+        <article style="position:relative; display:flex; gap:10.5px; padding:3.5px 17.5px; margin-top:7px">
+          <div style="width:31.5px; flex-shrink:0">
+            <span style="display:grid; place-items:center; width:31.5px; height:31.5px; border-radius:5px; background:#feeee6; color:#8a3308; font-size:13px; font-weight:600; overflow:hidden">
+              <img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:31.5px; height:31.5px; object-fit:cover" />
+            </span>
+          </div>
+          <div style="min-width:0; flex:1; line-height:1.5">
+            <div style="display:flex; align-items:baseline; gap:7px">
+              <button type="button" style="border:0; background:none; padding:0; font-family:inherit; font-size:14px; font-weight:600; color:inherit; cursor:pointer">Sari Wijaya</button>
+              <time style="font-size:11px; font-variant-numeric:tabular-nums; color:#6e6e69">11:31</time>
+            </div>
+            <div style="font-size:14px">Rebuilt the component library with variables. Theme switching is one toggle now.</div>
+          </div>
+        </article>
+
+        <article style="position:relative; display:flex; gap:10.5px; padding:1.75px 17.5px">
+          <div style="width:31.5px; flex-shrink:0"></div>
+          <div style="min-width:0; flex:1; line-height:1.5">
+            <div style="font-size:14px">Spacing audit done. Found 14 places using <code style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:0.92em; background:#f3f3f0; padding:0.1em 0.3em; border-radius:4px">magic numbers</code>.</div>
+          </div>
+        </article>
+
+        <article style="position:relative; display:flex; gap:10.5px; padding:3.5px 17.5px; margin-top:7px">
+          <div style="width:31.5px; flex-shrink:0">
+            <span style="display:grid; place-items:center; width:31.5px; height:31.5px; border-radius:5px; background:#feeee6; color:#8a3308; font-size:13px; font-weight:600; overflow:hidden">
+              <img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:31.5px; height:31.5px; object-fit:cover" />
+            </span>
+          </div>
+          <div style="min-width:0; flex:1; line-height:1.5">
+            <div style="display:flex; align-items:baseline; gap:7px">
+              <button type="button" style="border:0; background:none; padding:0; font-family:inherit; font-size:14px; font-weight:600; color:inherit; cursor:pointer">Raka Pratama</button>
+              <span style="font-size:13px; line-height:1">🌴</span>
+              <time style="font-size:11px; font-variant-numeric:tabular-nums; color:#6e6e69">11:44</time>
+            </div>
+            <div style="font-size:14px">Reference: the way <a href="#">Linear handles empty states</a> is really clean.</div>
+            <div style="margin-top:5.25px; display:flex; flex-wrap:wrap; align-items:center; gap:3.5px">
+              <button type="button" style="display:flex; height:21px; align-items:center; gap:3.5px; border-radius:9999px; border:1px solid #e4e4df; background:#ffffff; padding:0 7px; font-family:inherit; font-size:12px; font-variant-numeric:tabular-nums; color:rgba(27,27,26,0.8); cursor:pointer">
+                <span style="font-size:13px; line-height:1">💯</span><span style="font-weight:500">1</span>
+              </button>
+              <button type="button" aria-label="Add reaction" style="display:grid; width:24.5px; height:21px; place-items:center; border-radius:9999px; border:1px solid #e4e4df; background:none; color:#6e6e69; cursor:pointer">
+                <svg style="width:12.25px; height:12.25px"><use href="#i-smile-plus"/></svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+    <div style="flex-shrink:0; padding:0 17.5px 14px">
+      <p style="margin:0; display:flex; height:17.5px; align-items:center; gap:5.25px; padding:0 3.5px; font-size:12px; color:#6e6e69">
+        <span style="display:flex; align-items:flex-end; gap:1.75px">
+          <span style="width:3.5px; height:3.5px; border-radius:9999px; background:#6e6e69; animation:typing-bounce 1.2s infinite ease-in-out"></span>
+          <span style="width:3.5px; height:3.5px; border-radius:9999px; background:#6e6e69; animation:typing-bounce 1.2s infinite ease-in-out 150ms"></span>
+          <span style="width:3.5px; height:3.5px; border-radius:9999px; background:#6e6e69; animation:typing-bounce 1.2s infinite ease-in-out 300ms"></span>
+        </span>
+        Sari is typing…
+      </p>
+      <div style="border-radius:7px; border:1px solid #d9d9d3; background:#ffffff; box-shadow:0 1px 2px 0 rgba(0,0,0,0.05)">
+        <div style="min-height:40px; padding:8.75px 10.5px; font-size:14px; line-height:1.5; color:#6e6e69">Message #design</div>
+        <div style="display:flex; align-items:center; gap:1.75px; border-top:1px solid rgba(228,228,223,0.7); padding:3.5px 5.25px">
+          <button type="button" aria-label="Bold" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-bold"/></svg></button>
+          <button type="button" aria-label="Italic" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-italic"/></svg></button>
+          <button type="button" aria-label="Strikethrough" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-strikethrough"/></svg></button>
+          <button type="button" aria-label="Code" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-code"/></svg></button>
+          <button type="button" aria-label="Code block" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-square-code"/></svg></button>
+          <button type="button" aria-label="Bulleted list" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-list"/></svg></button>
+          <span style="margin:0 1.75px; height:14px; width:1px; background:#e4e4df"></span>
+          <button type="button" aria-label="Attach files" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-paperclip"/></svg></button>
+          <button type="button" aria-label="Add emoji" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-smile-plus"/></svg></button>
+          <button type="button" aria-label="Mention someone" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-at-sign"/></svg></button>
+          <span style="margin-left:auto; margin-right:3.5px; font-size:11px; color:#6e6e69"><kbd style="font-family:inherit">Enter</kbd> to send · <kbd style="font-family:inherit">Shift+Enter</kbd> for a new line</span>
+          <button type="button" aria-label="Send later" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; background:none; border-radius:5px; color:#6e6e69; cursor:pointer"><svg style="width:14px; height:14px"><use href="#i-clock"/></svg></button>
+          <button type="button" aria-label="Send message" style="display:grid; width:24.5px; height:24.5px; place-items:center; border:0; border-radius:5px; background:#f3f3f0; color:#6e6e69; cursor:not-allowed"><svg style="width:14px; height:14px"><use href="#i-send-horizontal"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.pin(); }
+  componentDidUpdate() { this.pin(); }
+  pin() {
+    const el = document.querySelector('[data-scroll="messages"]');
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+}
+</script>
+</body>
+</html>

@@ -16,8 +16,8 @@ export default async function NewMessagePage() {
 
   return (
     <>
-      <header className="flex h-12 shrink-0 items-center border-b border-border px-5">
-        <h1 className="text-[15px] font-semibold tracking-tight">New message</h1>
+      <header className="flex h-14 shrink-0 items-center border-b border-border px-5">
+        <h1 className="text-[16px] font-semibold tracking-[-0.02em] text-ink">New message</h1>
       </header>
       <div className="flex-1 overflow-y-auto">
         <NewMessagePicker people={data as Profile[]} meId={profile.id} />

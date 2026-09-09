@@ -4,7 +4,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfileMap } from "@/lib/queries/profiles";
 
-/** "3 replies · avatars · Last reply 5 min ago" under a threaded parent (§5). */
+/** "avatars · 4 replies · Last reply 2h ago" under a threaded parent (§5). */
 export function ReplySummary({
   count,
   lastReplyAt,
@@ -26,23 +26,23 @@ export function ReplySummary({
         e.currentTarget.blur();
         onOpen();
       }}
-      className="group/replies mt-1.5 -ml-1.5 flex h-8 max-w-full items-center gap-2 rounded-md border border-transparent px-1.5 text-[13px] hover:border-border hover:bg-background focus-visible:outline-2 focus-visible:outline-ring"
+      className="group/replies mt-2 -ml-2 flex h-8 max-w-full items-center gap-[9px] rounded-md px-2 text-[13px] hover:bg-bg-chip focus-visible:outline-2 focus-visible:outline-ring"
       aria-label={`Open thread, ${count} ${count === 1 ? "reply" : "replies"}`}
     >
-      <span className="flex -space-x-1">
-        {participantIds.slice(0, 4).map((id) => {
+      <span className="flex">
+        {participantIds.slice(0, 4).map((id, i) => {
           const p = profiles.get(id);
           return (
-            <Avatar key={id} className="size-5 rounded ring-2 ring-background">
+            <Avatar key={id} className={`size-[22px] rounded-full bg-bg-avatar ring-2 ring-bg-main ${i > 0 ? "-ml-1.5" : ""}`}>
               <AvatarImage src={p?.avatar_url ?? undefined} alt="" className="object-cover" />
-              <AvatarFallback className="rounded bg-accent text-[9px] font-semibold text-accent-foreground">
+              <AvatarFallback className="rounded-full bg-bg-avatar text-[9px] font-semibold text-fg-600">
                 {(p?.display_name ?? "?").slice(0, 1).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           );
         })}
       </span>
-      <span className="font-medium text-link">
+      <span className="shrink-0 font-semibold text-ink">
         {count} {count === 1 ? "reply" : "replies"}
       </span>
       {lastReplyAt && (

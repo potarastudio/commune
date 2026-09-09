@@ -12,7 +12,10 @@ export function highlightText(text: string, terms: string[]): ReactNode {
   const parts = text.split(re);
   return parts.map((part, i) =>
     re.test(part) && i % 2 === 1 ? (
-      <mark key={i} className="rounded-sm bg-mention px-0.5 text-mention-foreground">
+      <mark
+        key={i}
+        className="rounded-[4px] bg-accent-surface px-[3px] font-semibold text-accent-foreground shadow-[inset_0_0_0_1px_var(--accent-surface-border)]"
+      >
         {part}
       </mark>
     ) : (

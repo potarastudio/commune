@@ -1,15 +1,23 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bookmark, BookmarkX } from "lucide-react";
+import { format, isToday, isYesterday } from "date-fns";
+import { Bookmark, Hash } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { ActivityItem } from "@/components/activity/activity-item";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toggleSaveAction } from "@/lib/actions/messages";
 import { messageHref } from "@/lib/queries/activity";
 import { fetchSaved, messageKeys, type SavedMessage } from "@/lib/queries/messages";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { renderContent } from "@/lib/utils/render";
+
+function when(iso: string) {
+  const d = new Date(iso);
+  if (isToday(d)) return `Today ${format(d, "HH:mm")}`;
+  if (isYesterday(d)) return `Yesterday ${format(d, "HH:mm")}`;
+  return format(d, "d MMM");
+}
 
 /** Saved for later (§5 Phase 3): the user's private reading list, newest save first. */
 export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: SavedMessage[] }) {
@@ -46,58 +54,72 @@ export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: 
   });
 
   const items = saved ?? [];
-  const where = (m: SavedMessage["message"]) => (m.channel ? `#${m.channel.name}` : m.conversation ? "a direct message" : "");
 
   if (items.length === 0) {
     return (
-      <div className="mt-10 text-center">
-        <span className="mx-auto grid size-12 place-items-center rounded-xl bg-accent text-accent-foreground">
-          <Bookmark className="size-5" aria-hidden="true" />
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 pt-[18px] pb-[22px] text-center">
+        <span className="grid size-10 place-items-center rounded-[11px] border border-border-subtle bg-bg-chip text-fg-600">
+          <Bookmark className="size-[17px]" aria-hidden="true" />
         </span>
-        <h2 className="mt-4 text-[18px] font-semibold tracking-tight">Nothing saved yet</h2>
-        <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-muted-foreground">
-          Hover a message and choose <strong className="font-medium text-foreground">Save for later</strong>. Only you can see this list.
+        <h2 className="mt-3 text-[15.5px] font-semibold tracking-[-0.015em] text-ink">Nothing saved yet</h2>
+        <p className="mt-[5px] max-w-[400px] text-[13px] leading-[1.55] text-fg-600 [text-wrap:pretty]">
+          Save a message to come back to it later. It stays here until you clear it.
         </p>
       </div>
     );
   }
 
   return (
-    <ul className="mt-2 space-y-0.5">
+    <ul>
       {items.map(({ message: m, saved_at }) => (
-        <ActivityItem
-          key={m.id}
-          href={messageHref(m)}
-          person={m.author}
-          createdAt={saved_at}
-          eyebrow={
-            <>
-              <span className="font-medium text-foreground">{m.author?.display_name ?? "Someone"}</span> in {where(m)}
-              {m.parent_id ? " · in a thread" : ""}
-            </>
-          }
-          action={
+        <li key={m.id} className="flex items-start border-b border-border-subtle transition-colors hover:bg-bg-hover">
+          <Link href={messageHref(m)} className="min-w-0 flex-1 px-5 py-[13px]">
+            <span className="flex flex-wrap items-baseline gap-1.5 text-[12.5px] text-muted-foreground">
+              {m.channel ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-fg-400">
+                  <Hash className="size-[11px] text-muted-foreground" aria-hidden="true" />
+                  {m.channel.name}
+                </span>
+              ) : (
+                <span className="font-semibold text-fg-400">Direct message</span>
+              )}
+              <span>·</span>
+              <span className="font-semibold text-fg-400">{m.author?.display_name ?? "Someone"}</span>
+              <span>·</span>
+              <time dateTime={saved_at} className="tabular-nums">
+                {when(saved_at)}
+              </time>
+              {m.parent_id && (
+                <>
+                  <span>·</span>
+                  <span>in a thread</span>
+                </>
+              )}
+            </span>
+            <div className="mt-1 text-[13.5px] leading-[1.55] text-body [text-wrap:pretty] [&>p]:inline">
+              {m.deleted_at ? (
+                <span className="italic text-muted-foreground">This message was deleted</span>
+              ) : (
+                renderContent(m.content as Parameters<typeof renderContent>[0])
+              )}
+            </div>
+          </Link>
+          <div className="shrink-0 py-[13px] pr-5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   type="button"
                   onClick={() => unsave.mutate(m.id)}
                   aria-label="Remove from saved"
-                  className="grid size-7 place-items-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring group-hover/item:opacity-100"
+                  className="grid size-7 place-items-center rounded-[7px] text-fg-600 transition-colors hover:bg-bg-subtle hover:text-ink"
                 >
-                  <BookmarkX className="size-4" aria-hidden="true" />
+                  <Bookmark className="size-[15px] fill-current" aria-hidden="true" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="left">Remove from saved</TooltipContent>
             </Tooltip>
-          }
-        >
-          {m.deleted_at ? (
-            <span className="italic text-muted-foreground">This message was deleted</span>
-          ) : (
-            renderContent(m.content as Parameters<typeof renderContent>[0])
-          )}
-        </ActivityItem>
+          </div>
+        </li>
       ))}
     </ul>
   );

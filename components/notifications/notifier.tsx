@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { AtSign, MessageSquareText } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -28,6 +29,8 @@ export function Notifier({ meId, mutedChannelIds }: { meId: string; mutedChannel
   const seen = useRef(new Set<string>());
 
   // Tab title: "(3) Commune" from the unread map already kept for the sidebar.
+  // The design's "9+" cap belongs to the fixed-width rail and sidebar pills; the
+  // title has no such constraint, so it keeps the real number up to 99.
   useEffect(() => {
     const base = document.title.replace(/^\(\d+\+?\)\s*/, "");
     const apply = () => {
@@ -68,6 +71,13 @@ export function Notifier({ meId, mutedChannelIds }: { meId: string; mutedChannel
         ? `/channel/${m.channel_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`
         : `/dm/${m.conversation_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`;
       toast(reason === "dm" ? who : `${who} mentioned you${where}`, {
+        // The icon fills the design's 26px leading tile (see components/ui/sonner.tsx).
+        icon:
+          reason === "dm" ? (
+            <MessageSquareText className="size-[14px]" aria-hidden="true" />
+          ) : (
+            <AtSign className="size-[14px]" aria-hidden="true" />
+          ),
         description: m.content_text.slice(0, 120) || "Sent a file",
         action: { label: "Open", onClick: () => router.push(href) },
         duration: 6000,

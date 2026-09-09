@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Commune redesign — token reference and developer handoff, mapped onto the app's globals.css." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #ffffff; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "cv11", "ss01", "calt"; }
+  a { color: #171717; text-decoration: underline; text-decoration-color: #d4d4d4; text-underline-offset: 2.5px; }
+  a:hover { color: #b44309; }
+  [data-commune] {
+    --bg-main:#ffffff; --bg-card:#ffffff; --bg-col:#fafafa; --bg-chip:#f6f6f6; --bg-subtle:#f5f5f5;
+    --bg-avatar:#f0f0f0; --rail:#101010; --border:#e9e9e9; --border-strong:#e2e2e2;
+    --border-subtle:#ebebeb; --border-hover:#d0d0d0; --ink:#171717; --body:#262626;
+    --fg-400:#404040; --fg-600:#666666; --muted:#6b6b6b; --accent:#f05710;
+    --accent-fg:#8a3308; --accent-surface:#fef3ec; --accent-surface-border:#f9c4a6;
+    --accent-text:#b44309; --avatar-ring:rgba(0,0,0,0.04); --shadow-tint-sm:rgba(16,24,40,0.05);
+    color-scheme: light;
+  }
+  [data-commune="dark"] {
+    --bg-main:#171717; --bg-card:#1f1f1f; --bg-col:#0f0f0f; --bg-chip:#1f1f1f; --bg-subtle:#212121;
+    --bg-avatar:#262626; --rail:#0a0a0a; --border:#262626; --border-strong:#2e2e2e;
+    --border-subtle:#262626; --border-hover:#3d3d3d; --ink:#ededed; --body:#d6d6d6;
+    --fg-400:#a3a3a3; --fg-600:#9d9d9d; --muted:#9d9d9d; --accent:#f05710;
+    --accent-fg:#ffb48a; --accent-surface:#2b1a11; --accent-surface-border:#4a2a14;
+    --accent-text:#ff9a5e; --avatar-ring:rgba(255,255,255,0.06); --shadow-tint-sm:rgba(0,0,0,0.4);
+    color-scheme: dark;
+  }
+</style>
+</helmet>
+
+<div data-commune="{{ theme }}" style="font-family:Inter, ui-sans-serif, system-ui, sans-serif; min-height:100vh; background:var(--bg-main); color:var(--ink)">
+  <div style="width:100%; max-width:1000px; box-sizing:border-box; margin:0 auto; padding:32px 24px 72px">
+
+    <div style="display:flex; flex-wrap:wrap; align-items:flex-start; gap:16px">
+      <div style="min-width:280px; flex:1">
+        <p style="margin:0; display:flex; align-items:center; gap:9px">
+          <span style="display:block; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--accent)"><img src="./commune-logo.png" alt="Commune" style="display:block; width:32px; height:32px; object-fit:cover; transform:scale(1.12)" /></span>
+          <span style="font-size:14.5px; font-weight:600; letter-spacing:-0.015em">Commune</span>
+        </p>
+        <h1 style="margin:22px 0 0; font-size:30px; font-weight:600; letter-spacing:-0.032em; line-height:1.15; text-wrap:pretty">Tokens and handoff</h1>
+        <p style="margin:9px 0 0; max-width:620px; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Every colour in the redesign, mapped to the variable it replaces in <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:12px">app/globals.css</span>. Four are decisions rather than substitutions — those come first.</p>
+      </div>
+      <button type="button" onClick="{{ toggleTheme }}" style="display:flex; height:32px; flex-shrink:0; align-items:center; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 12px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer">{{ themeLabel }}</button>
+    </div>
+
+        <div style="margin-top:34px">
+          <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+            <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>01
+          </p>
+          <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Four decisions</h2>
+          <p style="margin:6px 0 0; max-width:640px; font-size:13px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">These change how the app looks, not just what the variables are called. Everything after this section is a straight substitution.</p>
+        </div>
+        <div style="margin-top:14px; display:flex; flex-direction:column; gap:9px">
+          <div style="border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:15px 16px">
+            <p style="margin:0; display:flex; align-items:center; gap:9px">
+              <span style="display:grid; width:21px; height:21px; flex-shrink:0; place-items:center; border-radius:6px; background:var(--accent); color:#ffffff; font-size:11px; font-weight:700">1</span>
+              <span style="font-size:14px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)">Mentions are orange, not blue</span>
+            </p>
+            <div style="margin-top:11px; display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:190px; flex:1; flex-direction:column; gap:3px; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-chip); padding:8px 10px">
+                <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Was</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--mention #e4eefc · --mention-foreground #1d4f93</span>
+              </span>
+              <span style="display:flex; min-width:190px; flex:1; flex-direction:column; gap:3px; border-radius:9px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:8px 10px">
+                <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent-fg)">Now</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--accent-fg)">--accent-surface #fef3ec · --accent-fg #8a3308</span>
+              </span>
+            </div>
+            <p style="margin:10px 0 0; font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">The blue mention chip was the last borrowed colour in the app. A mention is the most important highlight in a chat client, so it uses the brand accent. This retires --mention, --mention-foreground and --mention-self.</p>
+          </div>
+          <div style="border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:15px 16px">
+            <p style="margin:0; display:flex; align-items:center; gap:9px">
+              <span style="display:grid; width:21px; height:21px; flex-shrink:0; place-items:center; border-radius:6px; background:var(--accent); color:#ffffff; font-size:11px; font-weight:700">2</span>
+              <span style="font-size:14px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)">The sidebar split into a rail and a column</span>
+            </p>
+            <div style="margin-top:11px; display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:190px; flex:1; flex-direction:column; gap:3px; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-chip); padding:8px 10px">
+                <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Was</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">One 260px --sidebar, dark in both themes</span>
+              </span>
+              <span style="display:flex; min-width:190px; flex:1; flex-direction:column; gap:3px; border-radius:9px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:8px 10px">
+                <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent-fg)">Now</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--accent-fg)">64px --rail (near-black, both themes) + 272px --bg-col (themed)</span>
+              </span>
+            </div>
+            <p style="margin:10px 0 0; font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">This is the change that stops it reading as a Slack clone. The rail keeps the dark anchor; the column joins the theme, so light mode is genuinely light.</p>
+          </div>
+          <div style="border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:15px 16px">
+            <p style="margin:0; display:flex; align-items:center; gap:9px">
+              <span style="display:grid; width:21px; height:21px; flex-shrink:0; place-items:center; border-radius:6px; background:var(--accent); color:#ffffff; font-size:11px; font-weight:700">3</span>
+              <span style="font-size:14px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)">Warm greys became neutral</span>
+            </p>
+            <div style="margin-top:11px; display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:190px; flex:1; flex-direction:column; gap:3px; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-chip); padding:8px 10px">
+                <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Was</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">#f3f3f0 · #e4e4df · #1b1b1a · #6e6e69</span>
+              </span>
+              <span style="display:flex; min-width:190px; flex:1; flex-direction:column; gap:3px; border-radius:9px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:8px 10px">
+                <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent-fg)">Now</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--accent-fg)">#f5f5f5 · #e9e9e9 · #171717 · #6b6b6b</span>
+              </span>
+            </div>
+            <p style="margin:10px 0 0; font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">You asked for grey-black over grey-orange. Neutral also stops the greys competing with #F05710, which is warm and needs a cool ground to stay loud.</p>
+          </div>
+          <div style="border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:15px 16px">
+            <p style="margin:0; display:flex; align-items:center; gap:9px">
+              <span style="display:grid; width:21px; height:21px; flex-shrink:0; place-items:center; border-radius:6px; background:var(--accent); color:#ffffff; font-size:11px; font-weight:700">4</span>
+              <span style="font-size:14px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)">Destructive got darker</span>
+            </p>
+            <div style="margin-top:11px; display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:190px; flex:1; flex-direction:column; gap:3px; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-chip); padding:8px 10px">
+                <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Was</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">#c93b3b — 3.9:1 on white</span>
+              </span>
+              <span style="display:flex; min-width:190px; flex:1; flex-direction:column; gap:3px; border-radius:9px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:8px 10px">
+                <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent-fg)">Now</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--accent-fg)">#b42318 — 5.0:1 on white</span>
+              </span>
+            </div>
+            <p style="margin:10px 0 0; font-size:12.5px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">The old red only worked as a button fill. The redesign uses red as text — "Couldn’t send", "Delete message" — which needs 4.5:1.</p>
+          </div>
+        </div>
+
+        <div style="margin-top:40px">
+          <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+            <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>02
+          </p>
+          <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Colour tokens</h2>
+          <p style="margin:6px 0 0; max-width:640px; font-size:13px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Swatches show light then dark. Rows marked <span style="font-weight:600; color:var(--accent-text)">new token</span> have no equivalent today and need adding.</p>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Surfaces</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Light</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Dark</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">globals.css</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Note</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#ffffff; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#171717; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-main</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#ffffff</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#171717</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--background</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Dark lifts from #0f0f0f so the rail can sit darker than the pane</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#ffffff; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#1f1f1f; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-card</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#ffffff</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#1f1f1f</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--card</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Dark lifts from #161616, same reason</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#fafafa; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#242424; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-card-hover</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#fafafa</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#242424</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Hover for cards and secondary buttons</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#fafafa; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#1c1c1c; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-hover</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#fafafa</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#1c1c1c</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--message-hover</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Neutralised from #f7f7f5</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#fafafa; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#0f0f0f; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-col</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#fafafa</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#0f0f0f</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">The 272px channel column — light in light, dark in dark</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#f6f6f6; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#1f1f1f; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-chip</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#f6f6f6</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#1f1f1f</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--secondary</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Neutralised from #f3f3f0</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#f5f5f5; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#212121; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-subtle</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#f5f5f5</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#212121</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--muted</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Icon-button hover, kbd keys</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#f0f0f0; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#262626; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-avatar</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#f0f0f0</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#262626</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Avatar backing and hairline fills</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#f4f4f5; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#212121; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-pinned</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#f4f4f5</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#212121</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Pinned row ground</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#fafafa; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#101010; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--bg-code</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#fafafa</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#101010</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Code blocks</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#101010; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#0a0a0a; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--rail</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#101010</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#0a0a0a</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--sidebar</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Light darkens from #161616 — the rail is the darkest thing on screen</span>
+          </div>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Borders</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Light</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Dark</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">globals.css</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Note</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#e9e9e9; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#262626; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--border</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#e9e9e9</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#262626</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--border</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Neutralised from #e4e4df</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#e2e2e2; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#2e2e2e; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--border-strong</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#e2e2e2</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#2e2e2e</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Buttons, chips, card edges</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#ebebeb; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#262626; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--border-subtle</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#ebebeb</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#262626</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Internal dividers</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#dcdcdc; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#333333; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--border-input</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#dcdcdc</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#333333</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--input</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Neutralised from #d9d9d3</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#d0d0d0; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#3d3d3d; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--border-hover</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#d0d0d0</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#3d3d3d</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Bordered-button hover</span>
+          </div>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Text</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Light</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Dark</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">globals.css</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Note</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#171717; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#ededed; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--ink</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#171717</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#ededed</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--foreground</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Neutralised from #1b1b1a</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#262626; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#d6d6d6; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--body</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#262626</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#d6d6d6</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Message text — one step softer than headings</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#404040; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#a3a3a3; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--fg-400</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#404040</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#a3a3a3</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Labels, secondary button text</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#525252; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#b0b0b0; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--fg-500</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#525252</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#b0b0b0</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Inactive sidebar rows</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#666666; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#9d9d9d; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--fg-600</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#666666</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#9d9d9d</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Section headings, helper text</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#6b6b6b; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#9d9d9d; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--muted</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#6b6b6b</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#9d9d9d</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--muted-foreground</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">4.8:1 on white — was #6e6e69</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#737373; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#8a8a8a; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--tertiary</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#737373</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#8a8a8a</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Hash glyphs, muted rows — 4.7:1</span>
+          </div>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Brand — unchanged from yours</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Light</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Dark</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">globals.css</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Note</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#f05710; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#f05710; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--accent</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#f05710</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#f05710</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--primary</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Untouched</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#d64b0c; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#ff6a24; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--accent-hover</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#d64b0c</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#ff6a24</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--primary-hover</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Darker in light, lighter in dark — as you had it</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#8a3308; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#ffb48a; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--accent-fg</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#8a3308</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#ffb48a</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--accent-foreground</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Ink on accent surfaces</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#d9490a; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#d9490a; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--accent-border</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#d9490a</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#d9490a</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">1px edge on filled accent buttons</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#fef3ec; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#2b1a11; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--accent-surface</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#fef3ec</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#2b1a11</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--accent</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Light shifted from #feeee6 onto the neutral ramp</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#f9c4a6; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#4a2a14; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--accent-surface-border</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#f9c4a6</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#4a2a14</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Edge for accent chips and banners</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#b44309; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#ff9a5e; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--accent-text</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#b44309</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#ff9a5e</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--link</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Accent labels and link hover</span>
+          </div>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Semantic</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Light</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Dark</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">globals.css</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Note</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#3aa676; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#3fcb8c; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--presence</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#3aa676</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#3fcb8c</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--online</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Light nudged from #2fb37a</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#b42318; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#f97066; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--danger</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#b42318</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#f97066</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--fg-400)">--destructive</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Was #c93b3b — see decision 4</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#fdf2f2; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#2b1414; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--danger-surface</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#fdf2f2</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#2b1414</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Failed-message and danger-zone grounds</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#d4d4d4; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:#4a4a4a; box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--link-underline</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#d4d4d4</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">#4a4a4a</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Links are ink with a grey underline, not orange</span>
+          </div>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Effects</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Light</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Dark</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">globals.css</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Note</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:rgba(0,0,0,0.04); box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:rgba(255,255,255,0.06); box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--avatar-ring</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">rgba(0,0,0,0.04)</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">rgba(255,255,255,0.06)</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Inset hairline so avatars read on any ground</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:rgba(16,24,40,0.05); box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:rgba(0,0,0,0.4); box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--shadow-tint-sm</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">rgba(16,24,40,0.05)</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">rgba(0,0,0,0.4)</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Cards and buttons</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:rgba(16,24,40,0.08); box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:rgba(0,0,0,0.5); box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--shadow-tint-md</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">rgba(16,24,40,0.08)</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">rgba(0,0,0,0.5)</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Toolbars, filled buttons</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(140px,1.05fr) 74px 74px minmax(112px,0.85fr) minmax(170px,1.55fr); gap:13px; align-items:center; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="display:flex; align-items:center; gap:8px; min-width:0"><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:rgba(16,24,40,0.1); box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="display:block; width:20px; height:20px; flex-shrink:0; border-radius:5px; background:rgba(0,0,0,0.6); box-shadow:inset 0 0 0 1px var(--avatar-ring), inset 0 0 0 1px var(--border)"></span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">--shadow-tint-lg</span></span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">rgba(16,24,40,0.1)</span>
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--muted)">rgba(0,0,0,0.6)</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent-text)">new token</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Popovers, modals, panels</span>
+          </div>
+        </div>
+
+        <div style="margin-top:40px">
+          <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+            <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>03
+          </p>
+          <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Type</h2>
+          <p style="margin:6px 0 0; max-width:640px; font-size:13px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">The app sets html to 14px, so message body is 1rem. Ten steps cover every screen, using Inter with your existing cv11/ss01/calt features.</p>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Size / weight / tracking</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Used for</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">30 / 600 / -0.032em</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Handoff and onboarding headlines</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">26 / 600 / -0.03em</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Login heading</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">22 / 600 / -0.025em</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Channel intro</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">16 / 600 / -0.02em</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Channel and view headers</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">14 / 400 / 1.55</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Message body — the size everything defers to</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">13.5 / 600</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Row titles, member names</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">13 / 400</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Secondary copy, descriptions</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">12.5 / 600</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Section headings, chips, buttons</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">12 / 400 tabular</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Timestamps and counts</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--ink)">11.5 / 700 / 0.05em caps</span><span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">Overlines</span>
+          </div>
+        </div>
+
+        <div style="margin-top:40px">
+          <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+            <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>04
+          </p>
+          <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Sizes</h2>
+          <p style="margin:6px 0 0; max-width:640px; font-size:13px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Pick from these rather than inventing values — the redesign uses only what is listed here.</p>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Property</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Scale (px)</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">In order</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Button height</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--body)">28 · 30 · 32 · 34 · 40 · 44</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">chip · toolbar · header · form · onboarding · touch</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Input height</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--body)">34 · 38 · 40 · 44</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">settings · modal · onboarding · touch</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Icon size</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--body)">11 · 13 · 15 · 17 · 21</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">inline · chip · button · tile · mobile tab</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Avatar size</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--body)">22 · 26 · 32 · 36 · 46 · 56 · 64</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">sidebar · stack · panel · message · intro · empty · profile</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Radius</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--body)">6 · 8 · 10 · 12 · 14 · 22</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">chip · button · card · modal · popover · mobile pill</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Row height</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--body)">34 · 36 · 52</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">sidebar · settings · mobile list</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Column width</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--body)">64 · 272 · 340 · 380</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">rail · channel column · side panel · thread</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Focus ring</span><span style="font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; line-height:1.5; color:var(--body)">2px solid accent, 2px offset</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600)">buttons and rows · fields use a 3px accent halo instead</span>
+          </div>
+        </div>
+
+        <div style="margin-top:40px">
+          <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+            <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>05
+          </p>
+          <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Where the states live</h2>
+          <p style="margin:6px 0 0; max-width:640px; font-size:13px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Ninety-five states across sixteen files. Each has its own state picker and the same light/dark toggle.</p>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">File</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">States</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Covers</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Channel</span>
+            <span style="font-size:12px; font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums">—</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">The design: channel view, composer, light/dark toggle</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Message States</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">9</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">hover · own · editing · edited · sending · failed · deleted · pinned · mention</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Composer States</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">8</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">empty · typing · mention · emoji · uploading · upload failed · read-only · send later</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Thread and Nav States</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">9</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">thread open/empty/following/broadcast · unread · jump · badges · muted · palette</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Empty and Error States</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">13</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">six empties · three skeletons · offline · reconnecting · load failed · no access</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Overlay States</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">8</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">create channel · invite · delete · profile card · members · details · context menu · shortcuts</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Search and Notification States</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">6</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">palette results/empty · results page · two toasts · badge overflow</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Presence and Huddle States</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">9</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">presence · status · banner · dock · expanded · video · screen share · ended</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune DM States</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">4</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">1:1 · group · first message · recipient away</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Feed Views</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">6</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">activity all/mentions · saved · browse channels · pins · files</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Settings</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">5</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">profile · notifications · appearance · members · account</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Login</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">6</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">sign in · sending · link sent · not invited · link expired · address rejected</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune New Member Setup</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">5</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">invited · profile · channels · notifications · first run</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Narrow Widths</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">5</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">phone list/conversation/thread · tablet collapsed/drawer</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Focus and Keyboard</span>
+            <span style="font-size:12px; font-weight:600; color:var(--accent-text); font-variant-numeric:tabular-nums">2</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">focus ring on every control · tab order and key map</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr) minmax(160px,1.5fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:8px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink); text-wrap:pretty">Commune Channel Current</span>
+            <span style="font-size:12px; font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums">—</span>
+            <span style="font-size:11.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">Baseline recreation of the pre-redesign UI, for comparison</span>
+          </div>
+        </div>
+
+        <div style="margin-top:40px">
+          <p style="margin:0; display:flex; align-items:center; gap:9px; font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">
+            <span style="display:block; width:18px; height:1px; background:var(--border-hover)"></span>06
+          </p>
+          <h2 style="margin:9px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Still open</h2>
+          <p style="margin:6px 0 0; max-width:640px; font-size:13px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">What the redesign does not yet cover, in the order I would close it.</p>
+        </div>
+        <div style="margin-top:14px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,1.15fr); gap:14px; background:var(--bg-col); padding:8px 14px">
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink)">Gap</span>
+            <span style="font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Detail</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,2.6fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:9px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Reminders</span>
+            <span style="font-size:11.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">Your reminders-list.tsx sits on the Activity page. The feed and its empty state are designed; reminders are not.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,2.6fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:9px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Bookmark editing</span>
+            <span style="font-size:11.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">bookmarks-bar.tsx supports add, rename and delete. The bar is designed; the editing is not.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,2.6fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:9px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Huddle in a DM</span>
+            <span style="font-size:11.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">All nine huddle states assume a channel.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,2.6fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:9px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Full emoji picker</span>
+            <span style="font-size:11.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">The composer shows frequently-used. The real one is emoji-mart with search and categories — its theme variables are already wired in globals.css.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,2.6fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:9px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Someone’s full profile</span>
+            <span style="font-size:11.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">The hover card exists, but "View profile" has nowhere to go.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,2.6fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:9px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Token duplication</span>
+            <span style="font-size:11.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">These tokens are copy-pasted into sixteen files. Moving them to globals.css is the first implementation task, not a later cleanup.</span>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(130px,0.85fr) minmax(150px,2.6fr); gap:14px; align-items:baseline; border-top:1px solid var(--border-subtle); padding:9px 14px">
+            <span style="font-size:12px; font-weight:600; color:var(--ink)">Palette versions</span>
+            <span style="font-size:11.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">The command palette exists in three files at different widths. Build from the one in Search and Notification States.</span>
+          </div>
+        </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: null };
+  componentDidMount() {
+    let saved = null;
+    try { saved = localStorage.getItem("commune-theme"); } catch (e) {}
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    this.setState({ theme: saved });
+  }
+  renderVals() {
+    const isDark = this.state.theme === "dark";
+    return {
+      theme: isDark ? "dark" : "light",
+      themeLabel: isDark ? "Light theme" : "Dark theme",
+      toggleTheme: () => {
+        const next = isDark ? "light" : "dark";
+        this.setState({ theme: next });
+        try { localStorage.setItem("commune-theme", next); } catch (e) {}
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

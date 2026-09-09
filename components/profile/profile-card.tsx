@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 const ProfileCardContent = dynamic(() => import("./profile-card-content").then((m) => m.ProfileCardContent), {
   ssr: false,
-  loading: () => <p className="px-4 py-3 text-[13px] text-muted-foreground">Loading…</p>,
+  loading: () => <p className="px-[16px] py-[13px] text-[12.5px] text-fg-600">Loading…</p>,
 });
 
 const OPEN_DELAY = 350;
@@ -16,6 +16,10 @@ const CLOSE_DELAY = 200;
  * Hover (or click / Enter) on a name, avatar or @mention opens a small card
  * (§5 Phase 3). The trigger stays whatever element is passed in, so it keeps
  * its own styling and keyboard path; the card's data loads on open.
+ *
+ * The design's overlay states draw it as a 300px card with a --bg-chip
+ * banner the avatar hangs off, so the surface is flush and the body owns its
+ * own padding.
  */
 export function ProfileCard({
   userId,
@@ -54,7 +58,7 @@ export function ProfileCard({
         side={side}
         align={align}
         sideOffset={6}
-        className="w-72 p-0"
+        className="w-[300px] overflow-hidden p-0"
         onPointerEnter={clear}
         onPointerLeave={() => schedule(false, CLOSE_DELAY)}
         onOpenAutoFocus={(e) => e.preventDefault()}

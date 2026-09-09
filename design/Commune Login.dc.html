@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Commune — sign-in flow: Google, magic link, and the three ways it can fail." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #ffffff; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "cv11", "ss01", "calt"; }
+  a { color: #171717; text-decoration: underline; text-decoration-color: #d4d4d4; text-underline-offset: 2.5px; }
+  a:hover { color: #b44309; text-decoration-color: #f0b48d; }
+  @keyframes commune-spin { to { transform: rotate(360deg); } }
+  @keyframes commune-typing { 0%, 80%, 100% { transform: translateY(0); opacity: 0.45; } 40% { transform: translateY(-3px); opacity: 1; } }
+  [data-commune] {
+    --bg-main:#ffffff; --bg-card:#ffffff; --bg-card-hover:#fafafa; --bg-col:#fafafa;
+    --rail:#101010; --border:#e9e9e9; --border-strong:#e2e2e2; --border-input:#dcdcdc;
+    --border-hover:#d0d0d0; --ink:#171717; --body:#262626; --fg-400:#404040;
+    --fg-600:#666666; --muted:#6b6b6b; --presence:#3aa676; --accent:#f05710;
+    --accent-fg:#8a3308; --accent-surface:#fef3ec; --accent-surface-border:#f9c4a6;
+    --danger:#b42318; --danger-surface:#fdf2f2;
+    --shadow-tint-sm:rgba(16,24,40,0.05); --shadow-tint-md:rgba(16,24,40,0.08);
+    color-scheme: light;
+  }
+  [data-commune="dark"] {
+    --bg-main:#171717; --bg-card:#1f1f1f; --bg-card-hover:#242424; --bg-col:#0f0f0f;
+    --rail:#0a0a0a; --border:#262626; --border-strong:#2e2e2e; --border-input:#333333;
+    --border-hover:#3d3d3d; --ink:#ededed; --body:#d6d6d6; --fg-400:#a3a3a3;
+    --fg-600:#9d9d9d; --muted:#9d9d9d; --presence:#3fcb8c; --accent:#f05710;
+    --accent-fg:#ffb48a; --accent-surface:#2b1a11; --accent-surface-border:#4a2a14;
+    --danger:#f97066; --danger-surface:#2b1414;
+    --shadow-tint-sm:rgba(0,0,0,0.4); --shadow-tint-md:rgba(0,0,0,0.5);
+    color-scheme: dark;
+  }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+</defs></svg>
+
+<div data-commune="{{ theme }}" style="font-family:Inter, ui-sans-serif, system-ui, sans-serif; display:flex; height:100vh; flex-direction:column; overflow:hidden; background:var(--bg-main); color:var(--ink)">
+<div style="flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:8px; border-bottom:1px solid var(--border); background:var(--bg-col); padding:12px 16px">
+  <span style="margin-right:2px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Login</span>
+  <div role="group" aria-label="State" style="display:flex; flex-wrap:wrap; gap:4px">
+    <button type="button" onClick="{{ picksignIn }}" aria-pressed="{{ issignIn }}" style="{{ btnsignIn }}">Sign in</button>
+    <button type="button" onClick="{{ picksending }}" aria-pressed="{{ issending }}" style="{{ btnsending }}">Sending link</button>
+    <button type="button" onClick="{{ picklinkSent }}" aria-pressed="{{ islinkSent }}" style="{{ btnlinkSent }}">Link sent</button>
+    <button type="button" onClick="{{ picknotInvited }}" aria-pressed="{{ isnotInvited }}" style="{{ btnnotInvited }}">Not invited</button>
+    <button type="button" onClick="{{ picklinkExpired }}" aria-pressed="{{ islinkExpired }}" style="{{ btnlinkExpired }}">Link expired</button>
+    <button type="button" onClick="{{ pickemailRejected }}" aria-pressed="{{ isemailRejected }}" style="{{ btnemailRejected }}">Address rejected</button>
+  </div>
+  <button type="button" onClick="{{ toggleTheme }}" style="display:flex; height:28px; align-items:center; gap:6px; border-radius:7px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer" style-hover="background:var(--bg-card-hover)">{{ themeLabel }}</button>
+  <p style="margin:0 0 0 auto; max-width:370px; font-size:12.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">{{ note }}</p>
+</div>
+  <div style="display:flex; flex:1; min-height:0; flex-wrap:wrap; overflow-y:auto">
+    <section style="display:flex; min-width:300px; flex:5; flex-direction:column; justify-content:space-between; gap:36px; background:var(--rail); padding:26px 28px 24px">
+      <div style="display:flex; align-items:center; gap:9px">
+        <span style="display:block; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--accent)"><img src="./commune-logo.png" alt="Commune" style="display:block; width:32px; height:32px; object-fit:cover; transform:scale(1.12)" /></span>
+        <span style="font-size:14.5px; font-weight:600; letter-spacing:-0.015em; color:#ffffff">Commune</span>
+      </div>
+
+      <div aria-hidden="true" style="display:flex; min-width:0; flex-direction:column; gap:18px; user-select:none">
+        <div style="display:flex; flex-wrap:wrap; align-items:baseline; gap:8px">
+          <span style="font-size:13px; font-weight:600; color:#ffffff">#&thinsp;general</span>
+          <span style="font-size:12px; color:rgba(255,255,255,0.45)">Studio-wide announcements and chatter</span>
+        </div>
+        <ol style="margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:16px">
+        <li style="display:flex; gap:11px">
+          <span style="flex-shrink:0; margin-top:1px"><span style="display:grid; place-items:center; width:34px; height:34px; overflow:hidden; border-radius:10px; background:rgba(255,255,255,0.08); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.08)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:34px; height:34px; object-fit:cover" /></span></span>
+          <div style="min-width:0">
+            <div style="display:flex; align-items:baseline; gap:8px">
+              <span style="font-size:13px; font-weight:600; color:#ffffff">Hakim</span>
+              <time style="font-size:11.5px; color:rgba(255,255,255,0.45); font-variant-numeric:tabular-nums">09:12</time>
+            </div>
+            <p style="margin:1px 0 0; font-size:13px; line-height:1.55; color:rgba(255,255,255,0.82); text-wrap:pretty">Welcome to Commune. This is where we talk now.</p>
+            <div style="margin-top:7px; display:flex; gap:6px">
+              <span style="display:flex; height:24px; align-items:center; gap:5px; border-radius:7px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); padding:0 8px; font-size:11.5px; font-weight:500; white-space:nowrap; color:rgba(255,255,255,0.85); font-variant-numeric:tabular-nums">🎉 3</span>
+              <span style="display:flex; height:24px; align-items:center; gap:5px; border-radius:7px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); padding:0 8px; font-size:11.5px; font-weight:500; white-space:nowrap; color:rgba(255,255,255,0.85); font-variant-numeric:tabular-nums">👀 2</span>
+            </div>
+          </div>
+        </li>
+        <li style="display:flex; gap:11px">
+          <span style="flex-shrink:0; margin-top:1px"><span style="display:grid; place-items:center; width:34px; height:34px; overflow:hidden; border-radius:10px; background:rgba(255,255,255,0.08); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.08)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:34px; height:34px; object-fit:cover" /></span></span>
+          <div style="min-width:0">
+            <div style="display:flex; align-items:baseline; gap:8px">
+              <span style="font-size:13px; font-weight:600; color:#ffffff">Sari</span>
+              <time style="font-size:11.5px; color:rgba(255,255,255,0.45); font-variant-numeric:tabular-nums">09:14</time>
+            </div>
+            <p style="margin:1px 0 0; font-size:13px; line-height:1.55; color:rgba(255,255,255,0.82); text-wrap:pretty">Uploaded v3 of the Bluebird homepage. Hero is tighter, CTA moved above the fold.</p>
+            <p style="margin:7px 0 0; font-size:12px; font-weight:600; color:#ff9a5e">4 replies</p>
+          </div>
+        </li>
+        <li style="display:flex; gap:11px">
+          <span style="flex-shrink:0; margin-top:1px"><span style="display:grid; place-items:center; width:34px; height:34px; overflow:hidden; border-radius:10px; background:rgba(255,255,255,0.08); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.08)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:34px; height:34px; object-fit:cover" /></span></span>
+          <div style="min-width:0">
+            <div style="display:flex; align-items:baseline; gap:8px">
+              <span style="font-size:13px; font-weight:600; color:#ffffff">Raka</span>
+              <time style="font-size:11.5px; color:rgba(255,255,255,0.45); font-variant-numeric:tabular-nums">09:15</time>
+            </div>
+            <p style="margin:1px 0 0; font-size:13px; line-height:1.55; color:rgba(255,255,255,0.82); text-wrap:pretty">Someone brought martabak. Kitchen. Go now.</p>
+            <div style="margin-top:7px; display:flex; gap:6px">
+              <span style="display:flex; height:24px; align-items:center; gap:5px; border-radius:7px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); padding:0 8px; font-size:11.5px; font-weight:500; white-space:nowrap; color:rgba(255,255,255,0.85); font-variant-numeric:tabular-nums">🔥 5</span>
+            </div>
+          </div>
+        </li>
+        </ol>
+        <div style="display:flex; align-items:center; gap:9px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); padding:10px 12px; font-size:12.5px; color:rgba(255,255,255,0.55)">
+          <span style="display:flex; align-items:flex-end; gap:2.5px">
+            <span style="width:4px; height:4px; border-radius:9999px; background:var(--presence); animation:commune-typing 1.2s infinite ease-in-out"></span>
+            <span style="width:4px; height:4px; border-radius:9999px; background:var(--presence); animation:commune-typing 1.2s infinite ease-in-out 150ms"></span>
+            <span style="width:4px; height:4px; border-radius:9999px; background:var(--presence); animation:commune-typing 1.2s infinite ease-in-out 300ms"></span>
+          </span>
+          Sari is typing…
+        </div>
+      </div>
+
+      <p style="margin:0; font-size:12px; color:rgba(255,255,255,0.4)">Potara Studio · Jakarta</p>
+    </section>
+    <sc-if value="{{ issignIn }}" hint-placeholder-val="{{ true }}">
+    <section style="display:flex; min-width:320px; flex:6; align-items:center; justify-content:center; background:var(--bg-main); padding:40px 28px">
+      <div style="width:100%; max-width:400px">
+        <p style="margin:0; font-size:11.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted)">Potara Studio</p>
+        <h1 style="margin:9px 0 0; font-size:28px; font-weight:600; letter-spacing:-0.03em; line-height:1.18; color:var(--ink); text-wrap:pretty">Sign in to Commune</h1>
+        <p style="margin:9px 0 0; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Channels, threads and huddles for the studio. Use the Google account you were invited with, or get a one-time link by email.</p>
+
+          <button type="button" style="margin-top:26px; display:flex; width:100%; box-sizing:border-box; height:44px; align-items:center; justify-content:center; gap:11px; border-radius:10px; border:1px solid var(--ink); background:var(--ink); box-shadow:0 1px 2px 0 var(--shadow-tint-md); padding:0 16px; font-family:inherit; font-size:14px; font-weight:600; color:var(--bg-main); cursor:pointer; opacity:1" style-hover="opacity:0.88">
+            <svg style="width:17px; height:17px; flex-shrink:0" viewBox="0 0 18 18" aria-hidden="true">
+              <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
+              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A8.99 8.99 0 0 0 9 18z"/>
+              <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z"/>
+              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A8.99 8.99 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+            </svg>
+            Continue with Google
+          </button>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:12px; margin:22px 0">
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+            <span style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted)">or</span>
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+          </div>
+          <div>
+            <span style="display:block; margin-bottom:7px; font-size:12.5px; font-weight:600; color:var(--fg-400)">Email address</span>
+            <div style="display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:180px; flex:1; box-sizing:border-box; height:44px; align-items:center; border-radius:10px; border:1px solid var(--border-input); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 13px; font-size:14px; color:var(--muted)">you@potarastudio.com</span>
+              <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; justify-content:center; gap:8px; border-radius:10px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 15px; font-family:inherit; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer" style-hover="background:var(--bg-card-hover); border-color:var(--border-hover)">
+                Email me a link
+              </button>
+            </div>
+          </div>
+        <p style="margin:24px 0 0; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty">Only invited addresses can sign in, whichever way you choose. Not invited yet? Ask Hakim to add your email.</p>
+      </div>
+    </section>
+    </sc-if>
+    <sc-if value="{{ issending }}">
+    <section style="display:flex; min-width:320px; flex:6; align-items:center; justify-content:center; background:var(--bg-main); padding:40px 28px">
+      <div style="width:100%; max-width:400px">
+        <p style="margin:0; font-size:11.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted)">Potara Studio</p>
+        <h1 style="margin:9px 0 0; font-size:28px; font-weight:600; letter-spacing:-0.03em; line-height:1.18; color:var(--ink); text-wrap:pretty">Sign in to Commune</h1>
+        <p style="margin:9px 0 0; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Channels, threads and huddles for the studio. Use the Google account you were invited with, or get a one-time link by email.</p>
+
+          <button type="button" disabled="" style="margin-top:26px; display:flex; width:100%; box-sizing:border-box; height:44px; align-items:center; justify-content:center; gap:11px; border-radius:10px; border:1px solid var(--ink); background:var(--ink); box-shadow:0 1px 2px 0 var(--shadow-tint-md); padding:0 16px; font-family:inherit; font-size:14px; font-weight:600; color:var(--bg-main); cursor:not-allowed; opacity:0.5">
+            <svg style="width:17px; height:17px; flex-shrink:0" viewBox="0 0 18 18" aria-hidden="true">
+              <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
+              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A8.99 8.99 0 0 0 9 18z"/>
+              <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z"/>
+              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A8.99 8.99 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+            </svg>
+            Continue with Google
+          </button>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:12px; margin:22px 0">
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+            <span style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted)">or</span>
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+          </div>
+          <div>
+            <span style="display:block; margin-bottom:7px; font-size:12.5px; font-weight:600; color:var(--fg-400)">Email address</span>
+            <div style="display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:180px; flex:1; box-sizing:border-box; height:44px; align-items:center; border-radius:10px; border:1px solid var(--border-input); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 13px; font-size:14px; color:var(--body)">hakim@potarastudio.com</span>
+              <button type="button" disabled="" style="display:flex; height:44px; flex-shrink:0; align-items:center; justify-content:center; gap:8px; border-radius:10px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 15px; font-family:inherit; font-size:13.5px; font-weight:600; color:var(--muted); cursor:default">
+                <span aria-hidden="true" style="display:block; width:13px; height:13px; border-radius:9999px; border:1.5px solid var(--border-hover); border-top-color:var(--accent); animation:commune-spin 700ms linear infinite"></span>
+                Sending…
+              </button>
+            </div>
+          </div>
+        <p style="margin:24px 0 0; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty">Only invited addresses can sign in, whichever way you choose. Not invited yet? Ask Hakim to add your email.</p>
+      </div>
+    </section>
+    </sc-if>
+    <sc-if value="{{ islinkSent }}">
+    <section style="display:flex; min-width:320px; flex:6; align-items:center; justify-content:center; background:var(--bg-main); padding:40px 28px">
+      <div style="width:100%; max-width:400px">
+        <p style="margin:0; font-size:11.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted)">Potara Studio</p>
+        <h1 style="margin:9px 0 0; font-size:28px; font-weight:600; letter-spacing:-0.03em; line-height:1.18; color:var(--ink); text-wrap:pretty">Sign in to Commune</h1>
+        <p style="margin:9px 0 0; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Channels, threads and huddles for the studio. Use the Google account you were invited with, or get a one-time link by email.</p>
+
+          <button type="button" style="margin-top:26px; display:flex; width:100%; box-sizing:border-box; height:44px; align-items:center; justify-content:center; gap:11px; border-radius:10px; border:1px solid var(--ink); background:var(--ink); box-shadow:0 1px 2px 0 var(--shadow-tint-md); padding:0 16px; font-family:inherit; font-size:14px; font-weight:600; color:var(--bg-main); cursor:pointer; opacity:1" style-hover="opacity:0.88">
+            <svg style="width:17px; height:17px; flex-shrink:0" viewBox="0 0 18 18" aria-hidden="true">
+              <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
+              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A8.99 8.99 0 0 0 9 18z"/>
+              <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z"/>
+              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A8.99 8.99 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+            </svg>
+            Continue with Google
+          </button>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:12px; margin:22px 0">
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+            <span style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted)">or</span>
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+          </div>
+          <div role="status" aria-live="polite" style="border-radius:11px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:14px 15px">
+            <p style="margin:0; display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; color:var(--accent-fg)">
+              <svg style="width:15px; height:15px"><use href="#u-mail"/></svg>Check your inbox
+            </p>
+            <p style="margin:6px 0 0; font-size:12.5px; line-height:1.6; color:var(--accent-fg); text-wrap:pretty">We sent a sign-in link to <span style="font-weight:600">hakim@potarastudio.com</span>. Open it on this device — it works once and expires in an hour.</p>
+            <div style="margin-top:11px; display:flex; flex-wrap:wrap; align-items:center; gap:8px">
+              <button type="button" style="display:flex; height:32px; align-items:center; border-radius:8px; border:1px solid var(--accent-surface-border); background:var(--bg-card); padding:0 11px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer" style-hover="background:var(--bg-card-hover)">Send it again</button>
+              <button type="button" style="display:flex; height:32px; align-items:center; border:0; background:none; border-radius:8px; padding:0 9px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--accent-fg); cursor:pointer">Use a different address</button>
+            </div>
+          </div>
+        <p style="margin:24px 0 0; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty">Only invited addresses can sign in, whichever way you choose. Not invited yet? Ask Hakim to add your email.</p>
+      </div>
+    </section>
+    </sc-if>
+    <sc-if value="{{ isnotInvited }}">
+    <section style="display:flex; min-width:320px; flex:6; align-items:center; justify-content:center; background:var(--bg-main); padding:40px 28px">
+      <div style="width:100%; max-width:400px">
+        <p style="margin:0; font-size:11.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted)">Potara Studio</p>
+        <h1 style="margin:9px 0 0; font-size:28px; font-weight:600; letter-spacing:-0.03em; line-height:1.18; color:var(--ink); text-wrap:pretty">Sign in to Commune</h1>
+        <p style="margin:9px 0 0; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Channels, threads and huddles for the studio. Use the Google account you were invited with, or get a one-time link by email.</p>
+          <div role="alert" style="margin-top:22px; display:flex; gap:11px; border-radius:11px; border:1px solid var(--danger); background:var(--danger-surface); padding:12px 13px">
+            <span style="display:grid; width:22px; height:22px; flex-shrink:0; place-items:center; margin-top:1px; border-radius:7px; background:var(--danger); color:#ffffff"><svg style="width:13px; height:13px"><use href="#u-alert"/></svg></span>
+            <span style="min-width:0">
+              <span style="display:block; font-size:13px; font-weight:600; color:var(--ink)">This Google account isn&rsquo;t on the Potara list yet.</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">Ask Hakim to add your email, then try again with the same account.</span>
+            </span>
+          </div>
+          <button type="button" style="margin-top:26px; display:flex; width:100%; box-sizing:border-box; height:44px; align-items:center; justify-content:center; gap:11px; border-radius:10px; border:1px solid var(--ink); background:var(--ink); box-shadow:0 1px 2px 0 var(--shadow-tint-md); padding:0 16px; font-family:inherit; font-size:14px; font-weight:600; color:var(--bg-main); cursor:pointer; opacity:1" style-hover="opacity:0.88">
+            <svg style="width:17px; height:17px; flex-shrink:0" viewBox="0 0 18 18" aria-hidden="true">
+              <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
+              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A8.99 8.99 0 0 0 9 18z"/>
+              <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z"/>
+              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A8.99 8.99 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+            </svg>
+            Continue with Google
+          </button>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:12px; margin:22px 0">
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+            <span style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted)">or</span>
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+          </div>
+          <div>
+            <span style="display:block; margin-bottom:7px; font-size:12.5px; font-weight:600; color:var(--fg-400)">Email address</span>
+            <div style="display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:180px; flex:1; box-sizing:border-box; height:44px; align-items:center; border-radius:10px; border:1px solid var(--border-input); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 13px; font-size:14px; color:var(--muted)">you@potarastudio.com</span>
+              <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; justify-content:center; gap:8px; border-radius:10px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 15px; font-family:inherit; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer" style-hover="background:var(--bg-card-hover); border-color:var(--border-hover)">
+                Email me a link
+              </button>
+            </div>
+          </div>
+        <p style="margin:24px 0 0; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty">Only invited addresses can sign in, whichever way you choose. Not invited yet? Ask Hakim to add your email.</p>
+      </div>
+    </section>
+    </sc-if>
+    <sc-if value="{{ islinkExpired }}">
+    <section style="display:flex; min-width:320px; flex:6; align-items:center; justify-content:center; background:var(--bg-main); padding:40px 28px">
+      <div style="width:100%; max-width:400px">
+        <p style="margin:0; font-size:11.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted)">Potara Studio</p>
+        <h1 style="margin:9px 0 0; font-size:28px; font-weight:600; letter-spacing:-0.03em; line-height:1.18; color:var(--ink); text-wrap:pretty">Sign in to Commune</h1>
+        <p style="margin:9px 0 0; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Channels, threads and huddles for the studio. Use the Google account you were invited with, or get a one-time link by email.</p>
+          <div role="alert" style="margin-top:22px; display:flex; gap:11px; border-radius:11px; border:1px solid var(--danger); background:var(--danger-surface); padding:12px 13px">
+            <span style="display:grid; width:22px; height:22px; flex-shrink:0; place-items:center; margin-top:1px; border-radius:7px; background:var(--danger); color:#ffffff"><svg style="width:13px; height:13px"><use href="#u-alert"/></svg></span>
+            <span style="min-width:0">
+              <span style="display:block; font-size:13px; font-weight:600; color:var(--ink)">That sign-in link didn&rsquo;t work.</span>
+              <span style="display:block; margin-top:3px; font-size:12.5px; line-height:1.55; color:var(--fg-600); text-wrap:pretty">Links work once and expire after an hour. Request a new one below and open it on this device.</span>
+            </span>
+          </div>
+          <button type="button" style="margin-top:26px; display:flex; width:100%; box-sizing:border-box; height:44px; align-items:center; justify-content:center; gap:11px; border-radius:10px; border:1px solid var(--ink); background:var(--ink); box-shadow:0 1px 2px 0 var(--shadow-tint-md); padding:0 16px; font-family:inherit; font-size:14px; font-weight:600; color:var(--bg-main); cursor:pointer; opacity:1" style-hover="opacity:0.88">
+            <svg style="width:17px; height:17px; flex-shrink:0" viewBox="0 0 18 18" aria-hidden="true">
+              <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
+              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A8.99 8.99 0 0 0 9 18z"/>
+              <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z"/>
+              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A8.99 8.99 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+            </svg>
+            Continue with Google
+          </button>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:12px; margin:22px 0">
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+            <span style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted)">or</span>
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+          </div>
+          <div>
+            <span style="display:block; margin-bottom:7px; font-size:12.5px; font-weight:600; color:var(--fg-400)">Email address</span>
+            <div style="display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:180px; flex:1; box-sizing:border-box; height:44px; align-items:center; border-radius:10px; border:1px solid var(--accent); background:var(--bg-card); box-shadow:0 0 0 3px var(--accent-surface); padding:0 13px; font-size:14px; color:var(--body)">hakim@potarastudio.com<span style="display:inline-block; width:1.5px; height:16px; margin-left:1px; vertical-align:-3px; background:var(--accent)"></span></span>
+              <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; justify-content:center; gap:8px; border-radius:10px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 15px; font-family:inherit; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer" style-hover="background:var(--bg-card-hover); border-color:var(--border-hover)">
+                Email me a link
+              </button>
+            </div>
+          </div>
+        <p style="margin:24px 0 0; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty">Only invited addresses can sign in, whichever way you choose. Not invited yet? Ask Hakim to add your email.</p>
+      </div>
+    </section>
+    </sc-if>
+    <sc-if value="{{ isemailRejected }}">
+    <section style="display:flex; min-width:320px; flex:6; align-items:center; justify-content:center; background:var(--bg-main); padding:40px 28px">
+      <div style="width:100%; max-width:400px">
+        <p style="margin:0; font-size:11.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted)">Potara Studio</p>
+        <h1 style="margin:9px 0 0; font-size:28px; font-weight:600; letter-spacing:-0.03em; line-height:1.18; color:var(--ink); text-wrap:pretty">Sign in to Commune</h1>
+        <p style="margin:9px 0 0; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Channels, threads and huddles for the studio. Use the Google account you were invited with, or get a one-time link by email.</p>
+
+          <button type="button" style="margin-top:26px; display:flex; width:100%; box-sizing:border-box; height:44px; align-items:center; justify-content:center; gap:11px; border-radius:10px; border:1px solid var(--ink); background:var(--ink); box-shadow:0 1px 2px 0 var(--shadow-tint-md); padding:0 16px; font-family:inherit; font-size:14px; font-weight:600; color:var(--bg-main); cursor:pointer; opacity:1" style-hover="opacity:0.88">
+            <svg style="width:17px; height:17px; flex-shrink:0" viewBox="0 0 18 18" aria-hidden="true">
+              <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
+              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A8.99 8.99 0 0 0 9 18z"/>
+              <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z"/>
+              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A8.99 8.99 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+            </svg>
+            Continue with Google
+          </button>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:12px; margin:22px 0">
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+            <span style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted)">or</span>
+            <span style="height:1px; flex:1; background:var(--border)"></span>
+          </div>
+          <div>
+            <span style="display:block; margin-bottom:7px; font-size:12.5px; font-weight:600; color:var(--fg-400)">Email address</span>
+            <div style="display:flex; flex-wrap:wrap; gap:8px">
+              <span style="display:flex; min-width:180px; flex:1; box-sizing:border-box; height:44px; align-items:center; border-radius:10px; border:1px solid var(--danger); background:var(--bg-card); box-shadow:0 0 0 3px var(--danger-surface); padding:0 13px; font-size:14px; color:var(--body)">priya@gmail.com</span>
+              <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; justify-content:center; gap:8px; border-radius:10px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 15px; font-family:inherit; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer" style-hover="background:var(--bg-card-hover); border-color:var(--border-hover)">
+                Email me a link
+              </button>
+            </div>
+            <p role="alert" style="margin:9px 0 0; display:flex; gap:7px; font-size:12.5px; line-height:1.55; color:var(--danger); text-wrap:pretty">
+              <svg style="width:14px; height:14px; flex-shrink:0; margin-top:1px"><use href="#u-alert"/></svg>That address isn&rsquo;t on the Potara list yet. Ask Hakim to invite it, then try again.
+            </p>
+          </div>
+        <p style="margin:24px 0 0; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty">Only invited addresses can sign in, whichever way you choose. Not invited yet? Ask Hakim to add your email.</p>
+      </div>
+    </section>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: null, lState: "signIn" };
+  notes = {
+    "signIn": "Google first because that is how the studio was invited; the email link is a real alternative, not a fallback in small print.",
+    "sending": "The pressed path shows a spinner and disables Google too — two sign-ins at once is never what you meant.",
+    "linkSent": "Names the address, says the link works once and expires in an hour, and offers both resend and a way to correct the address.",
+    "notInvited": "Names the person who can fix it, and says to retry with the same account rather than guessing.",
+    "linkExpired": "Explains why a link fails — used once, or older than an hour — and pre-fills the field for the retry.",
+    "emailRejected": "The allowlist is checked before sending, so nobody waits for an email that was never going to arrive."
+  };
+  componentDidMount() {
+    let saved = null;
+    try { saved = localStorage.getItem("commune-theme"); } catch (e) {}
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    this.setState({ theme: saved });
+  }
+  pillStyle(active) {
+    return [
+      "display:flex", "align-items:center", "height:28px", "border-radius:7px",
+      "padding:0 10px", "font-family:inherit", "font-size:12.5px", "font-weight:600",
+      "cursor:pointer", "white-space:nowrap",
+      active
+        ? "border:1px solid #d9490a; background:var(--accent); color:#ffffff; box-shadow:0 1px 2px 0 var(--shadow-tint-md)"
+        : "border:1px solid var(--border-strong); background:var(--bg-card); color:var(--fg-400)",
+    ].join("; ");
+  }
+  renderVals() {
+    const theme = this.state.theme === "dark" ? "dark" : "light";
+    const isDark = theme === "dark";
+    const cur = this.state.lState;
+    const vals = {
+      theme,
+      themeLabel: isDark ? "Light" : "Dark",
+      toggleTheme: () => {
+        const next = isDark ? "light" : "dark";
+        this.setState({ theme: next });
+        try { localStorage.setItem("commune-theme", next); } catch (e) {}
+      },
+      note: this.notes[cur] || "",
+    };
+    ["signIn","sending","linkSent","notInvited","linkExpired","emailRejected"].forEach((k) => {
+      vals["is" + k] = cur === k;
+      vals["pick" + k] = () => this.setState({ lState: k });
+      vals["btn" + k] = this.pillStyle(cur === k);
+    });
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

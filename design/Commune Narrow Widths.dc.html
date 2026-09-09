@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Commune — how the layout works below 900px: phone and tablet." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #ffffff; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "cv11", "ss01", "calt"; }
+  a { color: #171717; text-decoration: none; }
+  a:hover { color: #b44309; }
+  [data-commune] {
+    --bg-main:#ffffff; --bg-card:#ffffff; --bg-card-hover:#fafafa; --bg-hover:#fafafa;
+    --bg-col:#fafafa; --bg-chip:#f6f6f6; --bg-subtle:#f5f5f5; --bg-avatar:#f0f0f0;
+    --rail:#101010; --border:#e9e9e9; --border-strong:#e2e2e2; --border-subtle:#ebebeb;
+    --border-input:#dcdcdc; --ink:#171717; --body:#262626; --fg-400:#404040;
+    --fg-500:#525252; --fg-600:#666666; --muted:#6b6b6b; --tertiary:#737373;
+    --presence:#3aa676; --accent:#f05710; --accent-border:#d9490a; --accent-fg:#8a3308;
+    --accent-surface:#fef3ec; --accent-surface-border:#f9c4a6; --accent-rule:#f7d6bf;
+    --accent-text:#b44309; --avatar-ring:rgba(0,0,0,0.04);
+    --shadow-tint-sm:rgba(16,24,40,0.05); --shadow-tint-lg:rgba(16,24,40,0.1);
+    color-scheme: light;
+  }
+  [data-commune="dark"] {
+    --bg-main:#171717; --bg-card:#1f1f1f; --bg-card-hover:#242424; --bg-hover:#1c1c1c;
+    --bg-col:#0f0f0f; --bg-chip:#1f1f1f; --bg-subtle:#212121; --bg-avatar:#262626;
+    --rail:#0a0a0a; --border:#262626; --border-strong:#2e2e2e; --border-subtle:#262626;
+    --border-input:#333333; --ink:#ededed; --body:#d6d6d6; --fg-400:#a3a3a3;
+    --fg-500:#b0b0b0; --fg-600:#9d9d9d; --muted:#9d9d9d; --tertiary:#8a8a8a;
+    --presence:#3fcb8c; --accent:#f05710; --accent-border:#d9490a; --accent-fg:#ffb48a;
+    --accent-surface:#2b1a11; --accent-surface-border:#4a2a14; --accent-rule:#4a2a14;
+    --accent-text:#ff9a5e; --avatar-ring:rgba(255,255,255,0.06);
+    --shadow-tint-sm:rgba(0,0,0,0.4); --shadow-tint-lg:rgba(0,0,0,0.6);
+    color-scheme: dark;
+  }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-hash" viewBox="0 0 24 24"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-at-sign" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-message-square-text" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-more-vertical" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-menu" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-send-horizontal" viewBox="0 0 24 24"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z"/><path d="M6 12h16"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-headphones" viewBox="0 0 24 24"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-smile-plus" viewBox="0 0 24 24"><path d="M22 11v1a10 10 0 1 1-9-10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/><path d="M16 5h6"/><path d="M19 2v6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-paperclip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57a4 4 0 0 1 5.66 5.66l-8.58 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-bold" viewBox="0 0 24 24"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-italic" viewBox="0 0 24 24"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+</defs></svg>
+
+<div data-commune="{{ theme }}" style="font-family:Inter, ui-sans-serif, system-ui, sans-serif; display:flex; height:100vh; flex-direction:column; overflow:hidden; background:var(--bg-main); color:var(--ink)">
+<div style="flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:8px; border-bottom:1px solid var(--border); background:var(--bg-col); padding:12px 16px">
+  <span style="margin-right:2px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Narrow widths</span>
+  <div role="group" aria-label="State" style="display:flex; flex-wrap:wrap; gap:4px">
+    <button type="button" onClick="{{ pickmobileHome }}" aria-pressed="{{ ismobileHome }}" style="{{ btnmobileHome }}">Phone — list</button>
+    <button type="button" onClick="{{ pickmobileChannel }}" aria-pressed="{{ ismobileChannel }}" style="{{ btnmobileChannel }}">Phone — conversation</button>
+    <button type="button" onClick="{{ pickmobileThread }}" aria-pressed="{{ ismobileThread }}" style="{{ btnmobileThread }}">Phone — thread</button>
+    <button type="button" onClick="{{ picktablet }}" aria-pressed="{{ istablet }}" style="{{ btntablet }}">Tablet — collapsed</button>
+    <button type="button" onClick="{{ picktabletDrawer }}" aria-pressed="{{ istabletDrawer }}" style="{{ btntabletDrawer }}">Tablet — sidebar open</button>
+  </div>
+  <button type="button" onClick="{{ toggleTheme }}" style="display:flex; height:28px; align-items:center; border-radius:7px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer">{{ themeLabel }}</button>
+  <p style="margin:0 0 0 auto; max-width:360px; font-size:12.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">{{ note }}</p>
+</div>
+    <sc-if value="{{ ismobileHome }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:16px 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="display:flex; flex-shrink:0; align-items:center; gap:7px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400); font-variant-numeric:tabular-nums">390px — phone, channel list</span>
+        <div style="display:flex; width:390px; height:calc(100vh - 178px); min-height:360px; max-height:800px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:56px; flex-shrink:0; align-items:center; gap:10px; border-bottom:1px solid var(--border); padding:0 8px 0 14px">
+          <span style="display:block; width:30px; height:30px; flex-shrink:0; overflow:hidden; border-radius:8px; background:var(--accent)"><img src="./commune-logo.png" alt="" style="display:block; width:30px; height:30px; object-fit:cover; transform:scale(1.1)" /></span>
+          <span style="min-width:0; flex:1; font-size:16px; font-weight:600; letter-spacing:-0.02em; color:var(--ink)">Potara Studio</span>
+          <button type="button" aria-label="Search" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-search"/></svg></button>
+          <button type="button" aria-label="New message" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-pencil"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow-y:auto">
+          <p style="margin:0; display:flex; align-items:center; justify-content:space-between; padding:16px 16px 6px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Channels<span style="color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-plus"/></svg></span></p>
+          <a href="#" style="display:flex; height:52px; align-items:center; gap:11px; border-radius:0; padding:0 16px; text-decoration:none" style-hover="background:var(--bg-hover)">
+            <span style="display:grid; width:32px; height:32px; flex-shrink:0; place-items:center; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-chip); font-size:14px; font-weight:600; color:var(--accent)">#</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14.5px; font-weight:600; color:var(--ink)">general</span>
+            </span>
+            <span style="flex-shrink:0; border-radius:9999px; background:var(--accent); padding:0 7px; font-size:11.5px; font-weight:600; line-height:20px; color:#ffffff; font-variant-numeric:tabular-nums">4</span>
+          </a>
+          <a href="#" style="display:flex; height:52px; align-items:center; gap:11px; border-radius:0; padding:0 16px; text-decoration:none" style-hover="background:var(--bg-hover)">
+            <span style="display:grid; width:32px; height:32px; flex-shrink:0; place-items:center; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-chip); font-size:14px; font-weight:600; color:var(--accent)">#</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14.5px; font-weight:600; color:var(--ink)">design</span>
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; color:var(--muted)">Sari: Rebuilt the component library…</span>
+            </span>
+            <span style="flex-shrink:0; font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">11:31</span>
+          </a>
+          <a href="#" style="display:flex; height:52px; align-items:center; gap:11px; border-radius:0; padding:0 16px; text-decoration:none" style-hover="background:var(--bg-hover)">
+            <span style="display:grid; width:32px; height:32px; flex-shrink:0; place-items:center; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-chip); font-size:14px; font-weight:600; color:var(--tertiary)">#</span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14.5px; color:var(--fg-500)">random</span>
+            </span>
+          </a>
+          <a href="#" style="display:flex; height:52px; align-items:center; gap:11px; border-radius:0; padding:0 16px; text-decoration:none" style-hover="background:var(--bg-hover)">
+            <span style="display:grid; width:32px; height:32px; flex-shrink:0; place-items:center; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-chip); font-size:14px; font-weight:600; color:var(--tertiary)"><svg style="width:14px; height:14px; flex-shrink:0; color:var(--tertiary)"><use href="#u-lock"/></svg></span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14.5px; color:var(--fg-500)">bluebird-client</span>
+            </span>
+          </a>
+          <p style="margin:0; display:flex; align-items:center; justify-content:space-between; padding:16px 16px 6px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Direct messages<span style="color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-plus"/></svg></span></p>
+          <a href="#" style="display:flex; height:52px; align-items:center; gap:11px; border-radius:0; padding:0 16px; text-decoration:none" style-hover="background:var(--bg-hover)">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14.5px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; color:var(--muted)">Agreed. Pushing a v2 in ten.</span>
+            </span>
+            <span style="flex-shrink:0; border-radius:9999px; background:var(--accent); padding:0 7px; font-size:11.5px; font-weight:600; line-height:20px; color:#ffffff; font-variant-numeric:tabular-nums">2</span>
+          </a>
+          <a href="#" style="display:flex; height:52px; align-items:center; gap:11px; border-radius:0; padding:0 16px; text-decoration:none" style-hover="background:var(--bg-hover)">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14.5px; color:var(--fg-500)">Raka Pratama</span>
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; color:var(--muted)">No worries — reposting below.</span>
+            </span>
+            <span style="flex-shrink:0; font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:04</span>
+          </a>
+          <a href="#" style="display:flex; height:52px; align-items:center; gap:11px; border-radius:0; padding:0 16px; text-decoration:none" style-hover="background:var(--bg-hover)">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14.5px; color:var(--fg-500)">Sari, Raka</span>
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; color:var(--muted)">3 it is — I&rsquo;ll book the room.</span>
+            </span>
+            <span style="flex-shrink:0; font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">Mon</span>
+          </a>
+        </div>
+        <nav style="display:flex; height:58px; flex-shrink:0; align-items:stretch; border-top:1px solid var(--border); background:var(--bg-main)" aria-label="Sections">
+          <a href="#" aria-current="page" style="display:flex; min-width:0; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:3px; text-decoration:none; color:var(--ink)">
+            <span style="position:relative; display:block"><svg style="width:21px; height:21px; flex-shrink:0; color:var(--accent)"><use href="#u-hash"/></svg></span>
+            <span style="font-size:10.5px; font-weight:600; letter-spacing:0.01em">Channels</span>
+          </a>
+          <a href="#" style="display:flex; min-width:0; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:3px; text-decoration:none; color:var(--muted)">
+            <span style="position:relative; display:block"><svg style="width:21px; height:21px; flex-shrink:0; color:var(--muted)"><use href="#u-at-sign"/></svg><span style="position:absolute; top:-3px; right:-6px; min-width:15px; height:15px; box-sizing:border-box; border-radius:9999px; border:2px solid var(--bg-main); background:var(--accent); padding:0 3px; font-size:9.5px; font-weight:700; line-height:11px; text-align:center; color:#ffffff; font-variant-numeric:tabular-nums">3</span></span>
+            <span style="font-size:10.5px; font-weight:600; letter-spacing:0.01em">Activity</span>
+          </a>
+          <a href="#" style="display:flex; min-width:0; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:3px; text-decoration:none; color:var(--muted)">
+            <span style="position:relative; display:block"><svg style="width:21px; height:21px; flex-shrink:0; color:var(--muted)"><use href="#u-message-square-text"/></svg></span>
+            <span style="font-size:10.5px; font-weight:600; letter-spacing:0.01em">DMs</span>
+          </a>
+          <a href="#" style="display:flex; min-width:0; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:3px; text-decoration:none; color:var(--muted)">
+            <span style="position:relative; display:block"><svg style="width:21px; height:21px; flex-shrink:0; color:var(--muted)"><use href="#u-bookmark"/></svg></span>
+            <span style="font-size:10.5px; font-weight:600; letter-spacing:0.01em">Saved</span>
+          </a>
+          <a href="#" style="display:flex; min-width:0; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:3px; text-decoration:none; color:var(--muted)">
+            <span style="position:relative; display:block"><span style="display:grid; place-items:center; width:21px; height:21px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:21px; height:21px; object-fit:cover" /></span><span style="position:absolute; right:-1px; bottom:-1px; width:7px; height:7px; border-radius:9999px; border:1.5px solid var(--bg-main); background:var(--presence)"></span></span>
+            <span style="font-size:10.5px; font-weight:600">You</span>
+          </a>
+        </nav>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ismobileChannel }}">
+      <div style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:16px 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="display:flex; flex-shrink:0; align-items:center; gap:7px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400); font-variant-numeric:tabular-nums">390px — phone, conversation</span>
+        <div style="display:flex; width:390px; height:calc(100vh - 178px); min-height:360px; max-height:800px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); background:var(--bg-main); padding:0 4px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; color:var(--muted)">8 members · Crit and work in progress</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+          <button type="button" aria-label="More" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-more-vertical"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow-y:auto; padding-bottom:6px">
+          <div style="display:flex; align-items:center; gap:10px; padding:14px 16px 4px">
+            <span style="font-size:11.5px; font-weight:600; color:var(--fg-600)">Today</span>
+            <span style="height:1px; flex:1; background:var(--bg-avatar)"></span>
+          </div>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">09:14</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Uploaded v3 of the Bluebird homepage. Hero is tighter, CTA moved above the fold.</p>
+              <div style="margin-top:7px; display:flex; flex-wrap:wrap; gap:6px">
+                <span style="display:flex; height:30px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:0 10px; font-size:12.5px; font-weight:600; color:var(--accent-fg); font-variant-numeric:tabular-nums">🔥 3</span>
+                <span style="display:flex; height:30px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-size:12.5px; font-weight:600; color:var(--fg-400); font-variant-numeric:tabular-nums">👀 2</span>
+              </div>
+              <button type="button" style="margin:7px 0 0 -8px; display:flex; height:36px; align-items:center; gap:8px; border:0; background:none; border-radius:9px; padding:0 8px; font-family:inherit; font-size:13px; cursor:pointer" style-hover="background:var(--bg-subtle)">
+                <span style="display:flex"><span style="display:grid; place-items:center; width:20px; height:20px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:20px; height:20px; object-fit:cover" /></span><span style="display:block; margin-left:-6px"><span style="display:grid; place-items:center; width:20px; height:20px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:20px; height:20px; object-fit:cover" /></span></span></span>
+                <span style="font-weight:600; color:var(--ink)">4 replies</span>
+                <svg style="width:13px; height:13px; flex-shrink:0; color:var(--muted)"><use href="#u-chevron-right"/></svg>
+              </button>
+            </div>
+          </article>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka Pratama</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Type scale proposal: 12/14/16/20/24/32/40. Thoughts?</p>
+            </div>
+          </article>
+          <article style="display:flex; gap:10px; padding:2px 16px">
+            <span style="display:block; width:32px; flex-shrink:0"></span>
+            <div style="min-width:0; flex:1">
+              <p style="margin:0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Card radius: 8 or 12? I keep flip-flopping.</p>
+            </div>
+          </article>
+          <div style="display:flex; align-items:center; gap:9px; padding:14px 16px 4px">
+            <span style="font-size:11.5px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--accent-text)">New</span>
+            <span style="height:1px; flex:1; background:var(--accent-rule)"></span>
+          </div>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">11:31</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Rebuilt the component library with variables. Theme switching is one toggle now.</p>
+            </div>
+          </article>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach or format" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:0 15px; font-size:14.5px; color:var(--muted)">Message #design</span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ismobileThread }}">
+      <div style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:16px 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="display:flex; flex-shrink:0; align-items:center; gap:7px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400); font-variant-numeric:tabular-nums">390px — phone, thread</span>
+        <div style="display:flex; width:390px; height:calc(100vh - 178px); min-height:360px; max-height:800px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 4px 0 2px">
+          <button type="button" aria-label="Back to #design" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:block; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)">Thread</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)"># design · 4 replies</span>
+          </span>
+          <button type="button" style="display:flex; height:34px; flex-shrink:0; align-items:center; gap:6px; margin-right:6px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--fg-400); cursor:pointer"><svg style="width:13px; height:13px; flex-shrink:0"><use href="#u-bookmark"/></svg>Follow</button>
+        </header>
+        <div style="flex:1; min-height:0; overflow-y:auto">
+          <div style="border-bottom:1px solid var(--border); padding-bottom:6px">
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka Pratama</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Type scale proposal: 12/14/16/20/24/32/40. Thoughts?</p>
+              <div style="margin-top:7px; display:flex; flex-wrap:wrap; gap:6px">
+                <span style="display:flex; height:30px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:0 10px; font-size:12.5px; font-weight:600; color:var(--accent-fg); font-variant-numeric:tabular-nums">🔥 3</span>
+              </div>
+            </div>
+          </article>
+          </div>
+          <p style="margin:0; padding:13px 16px 4px; font-size:11.5px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted)">4 replies</p>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:14</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">40 feels large for h1 on mobile. Cap at 32?</p>
+            </div>
+          </article>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Hakim Haiman</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:19</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Agreed — 32 on mobile, 40 from md up.</p>
+            </div>
+          </article>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka Pratama</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:22</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Works. I&rsquo;ll update the tokens and the Figma file.</p>
+            </div>
+          </article>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:0 15px; font-size:14.5px; color:var(--muted)">Reply in thread</span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+          <label style="margin-top:8px; display:flex; align-items:center; gap:9px; padding:0 2px; cursor:pointer">
+            <span aria-hidden="true" style="display:grid; width:18px; height:18px; flex-shrink:0; place-items:center; border-radius:5px; border:1.5px solid var(--border-input); background:var(--bg-card)"></span>
+            <span style="font-size:12.5px; white-space:nowrap; color:var(--fg-600)">Also send to <span style="font-weight:600; color:var(--ink)">#design</span></span>
+          </label>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ istablet }}">
+      <div style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:16px 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="display:flex; flex-shrink:0; align-items:center; gap:7px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400); font-variant-numeric:tabular-nums">768px — tablet, sidebar hidden</span>
+        <div style="display:flex; width:768px; height:calc(100vh - 178px); min-height:360px; max-height:800px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <div style="position:relative; display:flex; flex:1; min-height:0; overflow:hidden">
+          <nav style="display:flex; width:60px; flex-shrink:0; flex-direction:column; align-items:center; gap:5px; background:var(--rail); padding:9px 0 11px" aria-label="Workspace">
+            <span style="display:block; width:34px; height:34px; overflow:hidden; border-radius:10px; background:var(--accent)"><img src="./commune-logo.png" alt="" style="display:block; width:34px; height:34px; object-fit:cover; transform:scale(1.1)" /></span>
+            <span style="width:22px; height:1px; margin:9px 0 6px; background:rgba(255,255,255,0.1)"></span>
+            <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:10px; background:rgba(255,255,255,0.1); color:#ffffff"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-hash"/></svg></span>
+            <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:10px; background:transparent; color:rgba(255,255,255,0.55)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-at-sign"/></svg></span>
+            <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:10px; background:transparent; color:rgba(255,255,255,0.55)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-message-square-text"/></svg></span>
+            <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:10px; background:transparent; color:rgba(255,255,255,0.55)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-bookmark"/></svg></span>
+            <span style="margin-top:auto; display:block"><span style="display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:30px; height:30px; object-fit:cover" /></span></span>
+          </nav>
+          <main style="display:flex; min-width:0; flex:1; flex-direction:column; background:var(--bg-main)">
+            <header style="display:flex; height:54px; flex-shrink:0; align-items:center; gap:8px; border-bottom:1px solid var(--border); padding:0 12px">
+              <button type="button" aria-label="Show channels" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-menu"/></svg></button>
+              <span style="min-width:0; flex:1">
+                <span style="display:flex; align-items:center; gap:6px; font-size:15.5px; font-weight:600; letter-spacing:-0.02em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+                <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; color:var(--muted)">Crit, references, and work in progress</span>
+              </span>
+              <button type="button" style="display:flex; height:34px; flex-shrink:0; align-items:center; gap:6px; border-radius:8px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:inset 0 1px 0 rgba(255,255,255,0.2); padding:0 11px; font-family:inherit; font-size:12.5px; font-weight:600; color:#ffffff; cursor:pointer"><svg style="width:14px; height:14px; flex-shrink:0"><use href="#u-headphones"/></svg>Huddle</button>
+              <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-users"/></svg></button>
+            </header>
+            <div style="flex:1; min-height:0; overflow-y:auto; padding-bottom:6px">
+              <div style="display:flex; align-items:center; gap:10px; padding:14px 20px 4px">
+                <span style="font-size:11.5px; font-weight:600; color:var(--fg-600)">Today</span>
+                <span style="height:1px; flex:1; background:var(--bg-avatar)"></span>
+              </div>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">09:14</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Uploaded v3 of the Bluebird homepage. Hero is tighter, CTA moved above the fold.</p>
+              <div style="margin-top:7px; display:flex; flex-wrap:wrap; gap:6px">
+                <span style="display:flex; height:30px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:0 10px; font-size:12.5px; font-weight:600; color:var(--accent-fg); font-variant-numeric:tabular-nums">🔥 3</span>
+                <span style="display:flex; height:30px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-size:12.5px; font-weight:600; color:var(--fg-400); font-variant-numeric:tabular-nums">👀 2</span>
+              </div>
+              <button type="button" style="margin:7px 0 0 -8px; display:flex; height:36px; align-items:center; gap:8px; border:0; background:none; border-radius:9px; padding:0 8px; font-family:inherit; font-size:13px; cursor:pointer" style-hover="background:var(--bg-subtle)">
+                <span style="display:flex"><span style="display:grid; place-items:center; width:20px; height:20px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:20px; height:20px; object-fit:cover" /></span><span style="display:block; margin-left:-6px"><span style="display:grid; place-items:center; width:20px; height:20px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:20px; height:20px; object-fit:cover" /></span></span></span>
+                <span style="font-weight:600; color:var(--ink)">4 replies</span>
+                <svg style="width:13px; height:13px; flex-shrink:0; color:var(--muted)"><use href="#u-chevron-right"/></svg>
+              </button>
+            </div>
+          </article>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka Pratama</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Type scale proposal: 12/14/16/20/24/32/40. Thoughts?</p>
+            </div>
+          </article>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">11:31</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Rebuilt the component library with variables. Theme switching is one toggle now.</p>
+            </div>
+          </article>
+            </div>
+            <div style="flex-shrink:0; padding:0 16px 14px">
+              <div style="border-radius:11px; border:1px solid var(--border-input); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+                <div style="min-height:42px; padding:11px 13px; font-size:14px; color:var(--muted)">Message #design</div>
+                <div style="display:flex; align-items:center; gap:2px; border-top:1px solid var(--border-subtle); padding:5px 7px">
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-bold"/></svg></span>
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-italic"/></svg></span>
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-paperclip"/></svg></span>
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-smile-plus"/></svg></span>
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-at-sign"/></svg></span>
+                  <span style="margin-left:auto; display:grid; width:32px; height:32px; place-items:center; border:1px solid var(--border-strong); border-radius:7px; background:var(--bg-subtle); color:var(--muted)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></span>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ istabletDrawer }}">
+      <div style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:16px 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="display:flex; flex-shrink:0; align-items:center; gap:7px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400); font-variant-numeric:tabular-nums">768px — tablet, sidebar open</span>
+        <div style="display:flex; width:768px; height:calc(100vh - 178px); min-height:360px; max-height:800px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <div style="position:relative; display:flex; flex:1; min-height:0; overflow:hidden">
+          <nav style="display:flex; width:60px; flex-shrink:0; flex-direction:column; align-items:center; gap:5px; background:var(--rail); padding:9px 0 11px" aria-label="Workspace">
+            <span style="display:block; width:34px; height:34px; overflow:hidden; border-radius:10px; background:var(--accent)"><img src="./commune-logo.png" alt="" style="display:block; width:34px; height:34px; object-fit:cover; transform:scale(1.1)" /></span>
+            <span style="width:22px; height:1px; margin:9px 0 6px; background:rgba(255,255,255,0.1)"></span>
+            <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:10px; background:rgba(255,255,255,0.1); color:#ffffff"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-hash"/></svg></span>
+            <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:10px; background:transparent; color:rgba(255,255,255,0.55)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-at-sign"/></svg></span>
+            <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:10px; background:transparent; color:rgba(255,255,255,0.55)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-message-square-text"/></svg></span>
+            <span style="display:grid; width:42px; height:42px; place-items:center; border-radius:10px; background:transparent; color:rgba(255,255,255,0.55)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-bookmark"/></svg></span>
+            <span style="margin-top:auto; display:block"><span style="display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:30px; height:30px; object-fit:cover" /></span></span>
+          </nav>
+          <main style="display:flex; min-width:0; flex:1; flex-direction:column; background:var(--bg-main)">
+            <header style="display:flex; height:54px; flex-shrink:0; align-items:center; gap:8px; border-bottom:1px solid var(--border); padding:0 12px">
+              <button type="button" aria-label="Show channels" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-menu"/></svg></button>
+              <span style="min-width:0; flex:1">
+                <span style="display:flex; align-items:center; gap:6px; font-size:15.5px; font-weight:600; letter-spacing:-0.02em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+                <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; color:var(--muted)">Crit, references, and work in progress</span>
+              </span>
+              <button type="button" style="display:flex; height:34px; flex-shrink:0; align-items:center; gap:6px; border-radius:8px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:inset 0 1px 0 rgba(255,255,255,0.2); padding:0 11px; font-family:inherit; font-size:12.5px; font-weight:600; color:#ffffff; cursor:pointer"><svg style="width:14px; height:14px; flex-shrink:0"><use href="#u-headphones"/></svg>Huddle</button>
+              <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-users"/></svg></button>
+            </header>
+            <div style="flex:1; min-height:0; overflow-y:auto; padding-bottom:6px">
+              <div style="display:flex; align-items:center; gap:10px; padding:14px 20px 4px">
+                <span style="font-size:11.5px; font-weight:600; color:var(--fg-600)">Today</span>
+                <span style="height:1px; flex:1; background:var(--bg-avatar)"></span>
+              </div>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">09:14</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Uploaded v3 of the Bluebird homepage. Hero is tighter, CTA moved above the fold.</p>
+              <div style="margin-top:7px; display:flex; flex-wrap:wrap; gap:6px">
+                <span style="display:flex; height:30px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:0 10px; font-size:12.5px; font-weight:600; color:var(--accent-fg); font-variant-numeric:tabular-nums">🔥 3</span>
+                <span style="display:flex; height:30px; align-items:center; gap:6px; white-space:nowrap; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-size:12.5px; font-weight:600; color:var(--fg-400); font-variant-numeric:tabular-nums">👀 2</span>
+              </div>
+              <button type="button" style="margin:7px 0 0 -8px; display:flex; height:36px; align-items:center; gap:8px; border:0; background:none; border-radius:9px; padding:0 8px; font-family:inherit; font-size:13px; cursor:pointer" style-hover="background:var(--bg-subtle)">
+                <span style="display:flex"><span style="display:grid; place-items:center; width:20px; height:20px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:20px; height:20px; object-fit:cover" /></span><span style="display:block; margin-left:-6px"><span style="display:grid; place-items:center; width:20px; height:20px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:20px; height:20px; object-fit:cover" /></span></span></span>
+                <span style="font-weight:600; color:var(--ink)">4 replies</span>
+                <svg style="width:13px; height:13px; flex-shrink:0; color:var(--muted)"><use href="#u-chevron-right"/></svg>
+              </button>
+            </div>
+          </article>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka Pratama</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Type scale proposal: 12/14/16/20/24/32/40. Thoughts?</p>
+            </div>
+          </article>
+          <article style="display:flex; gap:10px; padding:7px 16px">
+            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+            <div style="min-width:0; flex:1">
+              <div style="display:flex; align-items:baseline; gap:7px">
+                <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+                <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">11:31</time>
+              </div>
+              <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body); text-wrap:pretty">Rebuilt the component library with variables. Theme switching is one toggle now.</p>
+            </div>
+          </article>
+            </div>
+            <div style="flex-shrink:0; padding:0 16px 14px">
+              <div style="border-radius:11px; border:1px solid var(--border-input); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm)">
+                <div style="min-height:42px; padding:11px 13px; font-size:14px; color:var(--muted)">Message #design</div>
+                <div style="display:flex; align-items:center; gap:2px; border-top:1px solid var(--border-subtle); padding:5px 7px">
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-bold"/></svg></span>
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-italic"/></svg></span>
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-paperclip"/></svg></span>
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-smile-plus"/></svg></span>
+                  <span style="display:grid; width:32px; height:32px; place-items:center; border-radius:7px; color:var(--fg-600)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-at-sign"/></svg></span>
+                  <span style="margin-left:auto; display:grid; width:32px; height:32px; place-items:center; border:1px solid var(--border-strong); border-radius:7px; background:var(--bg-subtle); color:var(--muted)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></span>
+                </div>
+              </div>
+            </div>
+          </main>
+          <span aria-hidden="true" style="position:absolute; inset:0; z-index:8; background:rgba(10,10,10,0.42)"></span>
+          <aside style="position:absolute; left:60px; top:0; bottom:0; z-index:9; display:flex; width:276px; flex-direction:column; border-right:1px solid var(--border); background:var(--bg-col); box-shadow:0 12px 32px -8px rgba(0,0,0,0.4)" aria-label="Channels">
+            <div style="display:flex; height:54px; flex-shrink:0; align-items:center; gap:8px; padding:0 8px 0 14px">
+              <span style="min-width:0; flex:1; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)">Potara Studio</span>
+              <button type="button" aria-label="Close" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer" style-hover="background:var(--bg-subtle); color:var(--ink)"><span style="display:block; transform:rotate(45deg)"><svg style="width:18px; height:18px; flex-shrink:0"><use href="#u-plus"/></svg></span></button>
+            </div>
+            <div style="padding:0 12px 12px">
+              <span style="display:flex; height:36px; align-items:center; gap:8px; border-radius:9px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-size:13.5px; color:var(--muted)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-search"/></svg>Search Commune</span>
+            </div>
+            <div style="flex:1; overflow-y:auto; padding:0 8px 14px">
+              <a href="#" style="display:flex; height:40px; align-items:center; gap:9px; border-radius:9px; padding:0 9px; color:var(--fg-500); font-size:14px; text-decoration:none">
+                <span style="width:14px; text-align:center; color:var(--tertiary)">#</span>general
+                <span style="margin-left:auto; border-radius:9999px; background:var(--accent); padding:0 6px; font-size:11.5px; font-weight:600; line-height:18px; color:#ffffff">4</span>
+              </a>
+              <a href="#" style="display:flex; height:40px; align-items:center; gap:9px; border-radius:9px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:0 8px; font-weight:600; color:var(--ink); font-size:14px; text-decoration:none">
+                <span style="width:14px; text-align:center; color:var(--accent)">#</span>design
+              </a>
+              <a href="#" style="display:flex; height:40px; align-items:center; gap:9px; border-radius:9px; padding:0 9px; color:var(--fg-500); font-size:14px; text-decoration:none">
+                <span style="width:14px; text-align:center; color:var(--tertiary)">#</span>random
+              </a>
+            </div>
+          </aside>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: null, wState: "mobileHome" };
+  notes = {
+    "mobileHome": "The rail becomes a bottom tab bar; the channel column becomes the home screen. Rows carry a preview line, because on a phone you decide from the list.",
+    "mobileChannel": "Formatting collapses into the + button. Every target is 44px, and the composer is a pill so it reads as one tap.",
+    "mobileThread": "A thread is a screen, not a panel. The parent stays pinned above the reply count.",
+    "tablet": "At 768 the rail stays and the channel list hides behind a menu button. The conversation gets the whole width.",
+    "tabletDrawer": "The list slides over the conversation with a scrim, beside the rail rather than replacing it."
+  };
+  componentDidMount() {
+    let saved = null;
+    try { saved = localStorage.getItem("commune-theme"); } catch (e) {}
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    this.setState({ theme: saved });
+  }
+  pillStyle(active) {
+    return [
+      "display:flex", "align-items:center", "height:28px", "border-radius:7px",
+      "padding:0 10px", "font-family:inherit", "font-size:12.5px", "font-weight:600",
+      "cursor:pointer", "white-space:nowrap",
+      active
+        ? "border:1px solid var(--accent-border); background:var(--accent); color:#ffffff; box-shadow:0 1px 2px 0 var(--shadow-tint-sm)"
+        : "border:1px solid var(--border-strong); background:var(--bg-card); color:var(--fg-400)",
+    ].join("; ");
+  }
+  renderVals() {
+    const theme = this.state.theme === "dark" ? "dark" : "light";
+    const isDark = theme === "dark";
+    const cur = this.state.wState;
+    const vals = {
+      theme,
+      themeLabel: isDark ? "Light" : "Dark",
+      toggleTheme: () => {
+        const next = isDark ? "light" : "dark";
+        this.setState({ theme: next });
+        try { localStorage.setItem("commune-theme", next); } catch (e) {}
+      },
+      note: this.notes[cur] || "",
+    };
+    ["mobileHome","mobileChannel","mobileThread","tablet","tabletDrawer"].forEach((k) => {
+      vals["is" + k] = cur === k;
+      vals["pick" + k] = () => this.setState({ wState: k });
+      vals["btn" + k] = this.pillStyle(cur === k);
+    });
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

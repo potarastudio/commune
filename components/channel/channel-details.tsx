@@ -15,11 +15,11 @@ export function ChannelDetails({ channel }: { channel: ChannelRow }) {
       onClick={() => (open ? closePanel() : showPanel("details", "about"))}
       aria-pressed={open}
       aria-label={`${channel.name} details`}
-      className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[15px] font-semibold tracking-tight hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+      className={`-ml-1.5 flex shrink-0 items-center gap-[7px] rounded-md px-1.5 py-[5px] hover:bg-bg-subtle ${open ? "bg-bg-subtle" : ""}`}
     >
-      <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-      {channel.name}
-      <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden="true" />
+      <Icon className="size-[15px] shrink-0 text-tertiary" aria-hidden="true" />
+      <span className="text-[16px] font-semibold tracking-[-0.02em] text-ink">{channel.name}</span>
+      <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
     </button>
   );
 }

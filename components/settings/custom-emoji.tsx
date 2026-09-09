@@ -5,6 +5,7 @@ import { ImagePlus, Trash2 } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { deleteCustomEmojiAction } from "@/lib/actions/custom-emoji";
 import { customEmojiKeys, uploadCustomEmoji, useCustomEmoji, type CustomEmoji } from "@/lib/queries/custom-emoji";
@@ -74,8 +75,8 @@ export function CustomEmojiSettings({ meId, isAdmin }: { meId: string; isAdmin: 
   const problem = name ? emojiNameProblem(name) : null;
 
   return (
-    <div className="space-y-5">
-      <form onSubmit={add} className="flex flex-wrap items-end gap-3 rounded-lg border border-border p-4">
+    <div>
+      <form onSubmit={add} className="flex flex-wrap items-start gap-3 rounded-[12px] border border-border bg-bg-card p-4 shadow-xs">
         <input
           ref={fileRef}
           type="file"
@@ -88,54 +89,69 @@ export function CustomEmojiSettings({ meId, isAdmin }: { meId: string; isAdmin: 
           type="button"
           onClick={() => fileRef.current?.click()}
           aria-label={file ? "Change image" : "Choose image"}
-          className="grid size-14 shrink-0 place-items-center rounded-md border border-dashed border-input bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          title={file ? "Change image" : "Choose image"}
+          className="mt-[19px] grid size-[56px] shrink-0 place-items-center rounded-[12px] border border-dashed border-border-input bg-bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-ink"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {preview ? <img src={preview} alt="" className="size-8 object-contain" /> : <ImagePlus className="size-5" aria-hidden="true" />}
+          {preview ? <img src={preview} alt="" className="size-[36px] object-contain" /> : <ImagePlus className="size-[21px]" aria-hidden="true" />}
         </button>
-        <div className="min-w-0 flex-1 space-y-1">
-          <label htmlFor="emoji-name" className="text-[12px] text-muted-foreground">
+
+        <div className="min-w-[180px] flex-1">
+          <Label htmlFor="emoji-name" className="mb-[6px]">
             Name
-          </label>
-          <div className="flex h-9 items-center rounded-md border border-input bg-background pl-2.5 font-mono text-[13px] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/25">
-            <span className="text-muted-foreground">:</span>
+          </Label>
+          <div className="field-focus flex h-[34px] w-fit max-w-full items-center rounded-[8px] border border-border-input bg-bg-card px-[10px] font-mono text-[13px] text-body shadow-xs">
+            <span className="shrink-0 text-muted-foreground">:</span>
             <input
               id="emoji-name"
               value={name}
               onChange={(e) => setName(e.target.value.toLowerCase())}
               placeholder="party_parrot"
               spellCheck={false}
-              className="h-full min-w-0 flex-1 bg-transparent px-0.5 outline-none placeholder:text-muted-foreground"
+              aria-invalid={Boolean(problem)}
+              aria-describedby="emoji-name-hint"
+              className="field-sizing-content h-full min-w-[110px] max-w-full bg-transparent px-[2px] outline-none placeholder:text-muted-foreground"
             />
-            <span className="pr-2.5 text-muted-foreground">:</span>
+            <span className="shrink-0 text-muted-foreground">:</span>
           </div>
-          <p className={`text-[12px] ${problem ? "text-destructive" : "text-muted-foreground"}`}>
+          <p id="emoji-name-hint" className={`mt-[6px] text-[12px] leading-[1.5] ${problem ? "text-danger" : "text-fg-600"}`}>
             {problem ?? "PNG, GIF, WebP or JPEG, under 256 KB. Square images look best."}
           </p>
         </div>
-        <Button type="submit" size="sm" disabled={busy || !file || Boolean(problem)} className="mb-5">
+
+        <Button type="submit" disabled={busy || !file || Boolean(problem)} className="mt-[19px]">
           {busy ? "Adding…" : "Add emoji"}
         </Button>
       </form>
 
       {isPending ? (
-        <p className="text-[13px] text-muted-foreground">Loading…</p>
+        <ul className="mt-3 grid grid-cols-1 gap-[9px] sm:grid-cols-2" aria-hidden="true">
+          {[0, 1, 2, 3].map((i) => (
+            <li key={i} className="commune-pulse flex items-center gap-[10px] rounded-[10px] border border-border bg-bg-card px-[10px] py-2">
+              <span className="size-[28px] shrink-0 rounded-[6px] bg-bg-subtle" />
+              <span className="h-[10px] w-[42%] rounded-full bg-bg-subtle" />
+            </li>
+          ))}
+        </ul>
       ) : (emoji ?? []).length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-[13px] text-muted-foreground">
+        <p className="mt-3 rounded-[12px] border border-dashed border-border-input px-4 py-6 text-center text-[13px] leading-[1.5] text-fg-600">
           No custom emoji yet. Add the studio&apos;s first one above. It works in messages and reactions for everyone.
         </p>
       ) : (
-        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <ul className="mt-3 grid grid-cols-1 gap-[9px] sm:grid-cols-2">
           {(emoji ?? []).map((e) => {
             const by = e.created_by ? profiles.get(e.created_by)?.display_name : null;
             const canRemove = isAdmin || e.created_by === meId;
             return (
-              <li key={e.name} className="group/emoji flex items-center gap-2.5 rounded-lg border border-border px-2.5 py-2">
+              <li
+                key={e.name}
+                className="group/emoji flex items-center gap-[10px] rounded-[10px] border border-border bg-bg-card px-[10px] py-2 shadow-xs transition-colors hover:border-border-hover"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={e.url} alt={`:${e.name}:`} className="size-7 shrink-0 object-contain" />
+                <img src={e.url} alt={`:${e.name}:`} className="size-[28px] shrink-0 object-contain" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-mono text-[12.5px]">:{e.name}:</span>
-                  {by && <span className="block truncate text-[11px] text-muted-foreground">by {by}</span>}
+                  <span className="block truncate font-mono text-[12.5px] text-ink">:{e.name}:</span>
+                  {by && <span className="block truncate text-[11.5px] text-fg-600">by {by}</span>}
                 </span>
                 {canRemove && (
                   <Tooltip>
@@ -145,9 +161,11 @@ export function CustomEmojiSettings({ meId, isAdmin }: { meId: string; isAdmin: 
                         disabled={removing}
                         onClick={() => remove(e)}
                         aria-label={`Remove :${e.name}:`}
-                        className="grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-destructive focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring group-hover/emoji:opacity-100"
+                        // No `disabled:opacity-50` here: the variant would beat the base `opacity-0`
+                        // and flash every hidden button in during a pending removal.
+                        className="grid size-[28px] shrink-0 place-items-center rounded-[6px] text-fg-600 opacity-0 transition-[opacity,background-color,color] hover:bg-danger-surface hover:text-danger focus-visible:opacity-100 group-hover/emoji:opacity-100 disabled:pointer-events-none"
                       >
-                        <Trash2 className="size-3.5" aria-hidden="true" />
+                        <Trash2 className="size-[15px]" aria-hidden="true" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="top">Remove</TooltipContent>

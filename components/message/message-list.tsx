@@ -10,6 +10,14 @@ import { ReplySummary } from "@/components/thread/reply-summary";
 import { DateDivider } from "./date-divider";
 import { MessageItem } from "./message-item";
 
+/** Skeleton bar widths, row by row — the design's 86 / 64+58 / 92 / 52 rhythm. */
+const SKELETON_ROWS: [string, string | null][] = [
+  ["86%", null],
+  ["64%", "58%"],
+  ["92%", null],
+  ["52%", null],
+];
+
 export function MessageList({
   messages,
   me,
@@ -23,6 +31,8 @@ export function MessageList({
   onEdit,
   onTogglePin,
   onToggleSave,
+  onRetry,
+  onDiscard,
   allowBroadcast,
   onOpenThread,
   participants,
@@ -43,6 +53,10 @@ export function MessageList({
   onEdit: (messageId: string, content: JSONContent) => void;
   onTogglePin: (messageId: string, pinned: boolean) => void;
   onToggleSave: (messageId: string, saved: boolean) => void;
+  /** Failed send: re-run it. Omitted where the container has no retry path. */
+  onRetry?: (messageId: string) => void;
+  /** Failed send: drop the unsent draft row. */
+  onDiscard?: (messageId: string) => void;
   allowBroadcast: boolean;
   onOpenThread: (messageId: string) => void;
   participants: Record<string, string[]>;
@@ -132,30 +146,46 @@ export function MessageList({
 
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain" role="log" aria-live="polite" aria-label="Messages">
-      <div ref={innerRef} className="min-h-full pb-3">
+      <div ref={innerRef} className="flex min-h-full flex-col pb-2">
         <div ref={topSentinel} aria-hidden="true" />
         {isLoadingMore && (
-          <div className="space-y-3 px-5 py-3" aria-label="Loading older messages">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="flex gap-3">
-                <Skeleton className="size-9 rounded-md" />
-                <div className="flex-1 space-y-2 pt-1">
-                  <Skeleton className="h-3 w-40" />
-                  <Skeleton className="h-3 w-3/4" />
+          <div className="shrink-0 px-4 py-5 md:px-6" aria-busy="true" aria-label="Loading older messages">
+            {SKELETON_ROWS.map(([a, b], i) => {
+              // The design staggers the four rows 0 / 120 / 240 / 360ms.
+              const delay = { animationDelay: `${i * 120}ms` };
+              return (
+                <div key={i} className="flex gap-3 py-[9px]">
+                  <Skeleton className="size-9 rounded-[10px]" style={delay} />
+                  <div className="flex min-w-0 flex-1 flex-col gap-[7px]">
+                    <div className="flex gap-2">
+                      <Skeleton className="h-3 w-[108px] rounded-[4px]" style={delay} />
+                      <Skeleton className="h-3 w-11 rounded-[4px]" style={delay} />
+                    </div>
+                    <Skeleton className="h-3 rounded-[4px]" style={{ ...delay, width: a }} />
+                    {b && <Skeleton className="h-3 rounded-[4px]" style={{ ...delay, width: b }} />}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        {!hasMore && (
-          <div className="px-5 pt-10 pb-4">
-            <span className="grid size-12 place-items-center rounded-xl bg-accent text-accent-foreground">
-              <StartIcon className="size-5" aria-hidden="true" />
+        {/* Two distinct treatments: the intro block sits above history, the empty state owns the pane. */}
+        {!hasMore && messages.length > 0 && (
+          <div className="shrink-0 px-4 pb-3 pt-8 md:px-6">
+            <h2 className="text-[22px] font-semibold tracking-[-0.025em] text-ink">{startTitle}</h2>
+            <p className="mt-[5px] max-w-[560px] text-[14px] leading-[1.55] text-fg-600">{startBody}</p>
+          </div>
+        )}
+
+        {!hasMore && messages.length === 0 && (
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 pb-[18px] pt-[14px] text-center md:px-6">
+            <span className="grid size-10 place-items-center rounded-[11px] border border-border-subtle bg-bg-chip text-fg-600">
+              <StartIcon className="size-[17px]" aria-hidden="true" />
             </span>
-            <h2 className="mt-4 text-[20px] font-semibold tracking-tight">{startTitle}</h2>
-            <p className="mt-1 text-muted-foreground">
-              {messages.length === 0 ? "Nothing here yet. Say hello, share a link, or drop the first file." : startBody}
+            <h2 className="mt-3 text-[15.5px] font-semibold tracking-[-0.015em] text-ink">{startTitle}</h2>
+            <p className="mt-[5px] max-w-[400px] text-[13px] leading-[1.55] text-fg-600">
+              Nothing here yet. Say hello, share a link, or drop the first file.
             </p>
           </div>
         )}
@@ -178,6 +208,8 @@ export function MessageList({
                 onEdit={(doc) => onEdit(m.id, doc)}
                 onTogglePin={(pinned) => onTogglePin(m.id, pinned)}
                 onToggleSave={(saved) => onToggleSave(m.id, saved)}
+                onRetry={onRetry && m.failed ? () => onRetry(m.id) : undefined}
+                onDiscard={onDiscard && m.failed ? () => onDiscard(m.id) : undefined}
                 allowBroadcast={allowBroadcast}
                 onReply={() => onOpenThread(m.id)}
                 replySummary={

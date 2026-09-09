@@ -9,7 +9,7 @@ import { AddPeople, InlineField, type Member } from "@/components/channel/channe
 import { JoinLeaveButton } from "@/components/channel/join-leave-button";
 import { NotificationLevelControl } from "@/components/channel/notification-level";
 import { PinsList } from "@/components/pins/pins-list";
-import { OnlineDot } from "@/components/presence/online-dot";
+import { AvatarPresence } from "@/components/presence/online-dot";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { UserStatus } from "@/components/profile/user-status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,9 +21,12 @@ import type { Container, Message, MessageAuthor } from "@/lib/queries/messages";
 import { useThreadNav, type PanelTab } from "@/lib/utils/use-thread-nav";
 import { FilesList } from "./files-list";
 
+const overline = "text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground";
+
 /**
- * Right-hand details panel (§6: 400px) for a channel or DM: About (channels
- * only), Members, Files, Pins. Opened via ?panel=details&tab=… or ?panel=pins.
+ * Right-hand details panel for a channel or DM: About (channels only),
+ * Members, Files, Pins. 340px per the design's column scale, opened via
+ * ?panel=details&tab=… or ?panel=pins.
  */
 export function ContainerPanel({
   container,
@@ -72,18 +75,27 @@ export function ContainerPanel({
   };
 
   const labels: Record<PanelTab, string> = { about: "About", members: channel ? "Members" : "People", files: "Files", pins: "Pins" };
+  const memberWord = members.length === 1 ? "member" : "members";
+  const subtitle = channel
+    ? `${channel.is_private ? "Private" : "Public"} · ${members.length} ${memberWord}`
+    : `${members.length} ${members.length === 1 ? "person" : "people"}`;
+  const canAdd = Boolean(channel) && (isMember || isAdmin);
+  const canArchive = isAdmin && Boolean(channel) && !channel?.is_archived;
 
   return (
-    <aside className="flex w-[400px] shrink-0 flex-col border-l border-border bg-background" aria-label={`${containerLabel} details`}>
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
-        <h2 className="min-w-0 truncate text-[15px] font-semibold tracking-tight">{containerLabel}</h2>
+    <aside className="flex w-[340px] shrink-0 flex-col border-l border-border bg-bg-main" aria-label={`${containerLabel} details`}>
+      <header className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border pl-4 pr-3">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] font-semibold tracking-[-0.015em] text-ink">{containerLabel}</span>
+          <span className="block truncate text-[12px] text-muted-foreground">{subtitle}</span>
+        </span>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               onClick={closePanel}
               aria-label="Close details"
-              className="ml-auto grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              className="grid size-[30px] shrink-0 place-items-center rounded-md text-fg-600 hover:bg-bg-subtle hover:text-ink"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
@@ -92,7 +104,7 @@ export function ContainerPanel({
         </Tooltip>
       </header>
 
-      <div role="tablist" aria-label="Details sections" className="flex shrink-0 gap-1 border-b border-border px-3 pt-2">
+      <div role="tablist" aria-label="Details sections" className="flex shrink-0 items-center gap-0.5 border-b border-border px-3 py-2">
         {tabs.map((t) => (
           <button
             key={t}
@@ -100,8 +112,8 @@ export function ContainerPanel({
             type="button"
             aria-selected={tab === t}
             onClick={() => showPanel("details", t)}
-            className={`-mb-px border-b-2 px-2.5 pb-2 text-[13px] focus-visible:outline-2 focus-visible:outline-ring ${
-              tab === t ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+            className={`flex h-7 items-center rounded-[7px] border px-2.5 text-[12.5px] font-semibold transition-colors ${
+              tab === t ? "border-border-strong bg-bg-card text-ink shadow-xs" : "border-transparent text-fg-600 hover:text-ink"
             }`}
           >
             {labels[t]}
@@ -109,78 +121,69 @@ export function ContainerPanel({
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto" role="tabpanel">
+      <div className="flex min-h-0 flex-1 flex-col" role="tabpanel">
         {tab === "about" && channel && (
-          <div className="space-y-5 p-4">
+          <div className="flex-1 overflow-y-auto px-4 pb-4 pt-1">
             <InlineField label="Topic" value={channel.topic} placeholder="Add a topic" maxLength={250} canEdit={isMember || isAdmin} onSave={saveField("topic")} />
             <InlineField label="Description" value={channel.description} placeholder="Add a description" maxLength={1000} multiline canEdit={isMember || isAdmin} onSave={saveField("description")} />
             {isMember && notificationLevel && (
-              <div>
-                <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Notifications</span>
-                <div className="mt-1.5">
+              <div className="border-b border-border-subtle py-[11px]">
+                <span className={overline}>Notifications</span>
+                <div className="mt-2">
                   <NotificationLevelControl channelId={channel.id} level={notificationLevel} />
                 </div>
               </div>
             )}
-            <div>
-              <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Created</span>
-              <p className="mt-0.5 text-[13px]">{new Date(channel.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+            <div className="border-b border-border-subtle py-[11px]">
+              <span className={overline}>Created</span>
+              <p className="mt-1 text-[13.5px] leading-[1.5] text-body">
+                {new Date(channel.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
             </div>
-            <div className="flex items-center justify-between border-t border-border pt-4">
-              <span className="text-[13px] text-muted-foreground">{channel.is_private ? "Private channel" : "Public channel"}</span>
-              <JoinLeaveButton channelId={channel.id} channelName={channel.name} joined={isMember} afterLeaveHref={channel.is_private ? "/" : undefined} />
-            </div>
-            {isAdmin && !channel.is_archived && (
-              <div className="border-t border-border pt-4">
+
+            {/* Visibility already reads in the header subtitle, so the body ends
+                the design's way: archive above, then Leave — bottom, red, and
+                never adjacent to a save action. */}
+            {canArchive && (
+              <div className="pt-3.5">
                 <ArchiveChannelControl channelId={channel.id} channelName={channel.name} />
               </div>
             )}
+            <div className={canArchive ? "pt-2.5" : "pt-3.5"}>
+              <JoinLeaveButton
+                channelId={channel.id}
+                channelName={channel.name}
+                joined={isMember}
+                size="default"
+                className="w-full"
+                afterLeaveHref={channel.is_private ? "/" : undefined}
+              />
+            </div>
           </div>
         )}
 
         {tab === "members" && (
-          <div className="p-3">
-            {channel && (isMember || isAdmin) && (
-              <div className="mb-2">
-                {adding ? (
-                  <div className="rounded-lg border border-border p-3">
-                    <AddPeople channel={channel} members={members} onDone={() => setAdding(false)} />
-                    <button type="button" onClick={() => setAdding(false)} className="mt-2 text-[12px] text-muted-foreground hover:text-foreground">
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setAdding(true)}
-                    className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-[13px] font-medium text-link hover:bg-message-hover focus-visible:outline-2 focus-visible:outline-ring"
-                  >
-                    <span className="grid size-8 place-items-center rounded-md bg-accent text-accent-foreground">
-                      <UserPlus className="size-4" aria-hidden="true" />
-                    </span>
-                    Add people
-                  </button>
-                )}
-              </div>
-            )}
-            <ul>
+          <>
+            <ul className="flex-1 overflow-y-auto pb-2">
               {members.map((m) => (
                 <li key={m.id}>
                   <ProfileCard userId={m.id} side="bottom" align="start">
-                    <button type="button" className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left hover:bg-message-hover focus-visible:outline-2 focus-visible:outline-ring">
-                      <Avatar className="size-8 rounded-md">
-                        <AvatarImage src={m.avatar_url ?? undefined} alt="" className="object-cover" />
-                        <AvatarFallback className="rounded-md bg-accent text-[12px] font-semibold text-accent-foreground">{m.display_name.slice(0, 1).toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                    <button type="button" className="flex w-full items-center gap-[11px] px-4 py-[9px] text-left hover:bg-bg-hover">
+                      <span className="relative block size-8 shrink-0">
+                        <Avatar>
+                          <AvatarImage src={m.avatar_url ?? undefined} alt="" className="object-cover" />
+                          <AvatarFallback>{m.display_name.slice(0, 1).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <AvatarPresence userId={m.id} ring="border-bg-main" />
+                      </span>
                       <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1.5 text-[13px] font-medium">
-                          <span className="truncate">{m.display_name}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="truncate text-[13.5px] font-semibold text-ink">{m.display_name}</span>
                           <UserStatus userId={m.id} />
-                          <OnlineDot userId={m.id} />
                         </span>
-                        <span className="block truncate text-[12px] text-muted-foreground">
+                        <span className="block truncate text-[12px] text-fg-600">
                           @{m.handle}
-                          {m.title ? ` · ${m.title}` : ""}
+                          {m.id === me.id ? " · You" : m.title ? ` · ${m.title}` : ""}
                         </span>
                       </span>
                     </button>
@@ -188,12 +191,41 @@ export function ContainerPanel({
                 </li>
               ))}
             </ul>
+            {canAdd && channel && (
+              <div className="shrink-0 border-t border-border-subtle p-4">
+                {adding ? (
+                  <div>
+                    <AddPeople channel={channel} members={members} onDone={() => setAdding(false)} />
+                    <button type="button" onClick={() => setAdding(false)} className="mt-2 text-[12.5px] font-medium text-fg-600 hover:text-ink">
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAdding(true)}
+                    className="flex h-[34px] items-center gap-[7px] rounded-md border border-border-strong bg-bg-card px-[13px] text-[13px] font-semibold text-ink shadow-xs transition-colors hover:border-border-hover hover:bg-bg-card-hover"
+                  >
+                    <UserPlus className="size-[14px]" aria-hidden="true" />
+                    Add people
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {tab === "files" && (
+          <div className="flex-1 overflow-y-auto">
+            <FilesList container={container} containerLabel={containerLabel} />
           </div>
         )}
 
-        {tab === "files" && <FilesList container={container} containerLabel={containerLabel} />}
-
-        {tab === "pins" && <PinsList container={container} containerLabel={containerLabel} me={me} isAdmin={isAdmin} initialPins={initialPins} />}
+        {tab === "pins" && (
+          <div className="flex-1 overflow-y-auto">
+            <PinsList container={container} containerLabel={containerLabel} me={me} isAdmin={isAdmin} initialPins={initialPins} />
+          </div>
+        )}
       </div>
     </aside>
   );

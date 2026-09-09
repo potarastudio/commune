@@ -58,9 +58,15 @@ export default async function SettingsPage() {
 
         <section className="mx-auto w-full max-w-lg border-t border-border px-6 py-8">
           <h2 className="text-[16px] font-semibold tracking-tight">Notifications</h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">Direct messages and mentions can reach you even when Commune isn&apos;t in front.</p>
+          <p className="mt-1 text-[13px] text-muted-foreground">Direct messages and mentions can reach you even when Commune isn&apos;t in front, or isn&apos;t open at all.</p>
           <div className="mt-4">
-            <NotificationSettings dndStart={profile.dnd_start} dndEnd={profile.dnd_end} timezone={profile.timezone} />
+            <NotificationSettings
+              dndStart={profile.dnd_start}
+              dndEnd={profile.dnd_end}
+              timezone={profile.timezone}
+              email={profile.email}
+              emailDigest={profile.email_digest}
+            />
           </div>
         </section>
 

@@ -354,6 +354,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mention_digest_log: {
+        Row: {
+          mention_id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          mention_id: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          mention_id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mention_digest_log_mention_id_fkey"
+            columns: ["mention_id"]
+            isOneToOne: false
+            referencedRelation: "mentions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mention_digest_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentions: {
         Row: {
           created_at: string
@@ -514,8 +547,10 @@ export type Database = {
           dnd_end: string | null
           dnd_start: string | null
           email: string
+          email_digest: boolean
           handle: string
           id: string
+          last_seen_at: string | null
           onboarded_at: string | null
           role: string
           status_emoji: string | null
@@ -531,8 +566,10 @@ export type Database = {
           dnd_end?: string | null
           dnd_start?: string | null
           email: string
+          email_digest?: boolean
           handle: string
           id: string
+          last_seen_at?: string | null
           onboarded_at?: string | null
           role?: string
           status_emoji?: string | null
@@ -548,8 +585,10 @@ export type Database = {
           dnd_end?: string | null
           dnd_start?: string | null
           email?: string
+          email_digest?: boolean
           handle?: string
           id?: string
+          last_seen_at?: string | null
           onboarded_at?: string | null
           role?: string
           status_emoji?: string | null
@@ -755,6 +794,31 @@ export type Database = {
         Args: { p_channel_id?: string; p_conversation_id?: string }
         Returns: undefined
       }
+      pending_mention_digest: {
+        Args: {
+          p_max_age?: string
+          p_min_age?: string
+          p_offline_after?: string
+        }
+        Returns: {
+          author_name: string
+          channel_id: string
+          channel_name: string
+          content_text: string
+          conversation_id: string
+          created_at: string
+          display_name: string
+          dnd_end: string
+          dnd_start: string
+          email: string
+          kind: string
+          mention_id: string
+          message_id: string
+          parent_id: string
+          timezone: string
+          user_id: string
+        }[]
+      }
       search_messages: {
         Args: {
           p_after?: string
@@ -789,6 +853,7 @@ export type Database = {
         }
       }
       tiptap_to_text: { Args: { p_node: Json }; Returns: string }
+      touch_last_seen: { Args: never; Returns: undefined }
       update_message: {
         Args: { p_content: Json; p_content_text?: string; p_message_id: string }
         Returns: {

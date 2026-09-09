@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 import { publicEnv } from "@/lib/env";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/auth/error", "/auth/dev-login"];
+// /api/cron authenticates with its own shared secret (no user session).
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/auth/error", "/auth/dev-login", "/api/cron"];
 
 /** Refreshes the Supabase session cookie and gates the authenticated shell. */
 export async function updateSession(request: NextRequest) {

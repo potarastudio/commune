@@ -71,6 +71,24 @@ Playwright smoke (§8): signs in through the local-only `/auth/dev-login` route,
 pnpm test:e2e
 ```
 
+## Mention digest
+
+When someone has been away from Commune for a while, @mentions they have not read after 15 minutes are emailed to them (Settings → Notifications can turn it off). Postgres decides who is due (`pending_mention_digest()`), the app sends via Resend (`app/api/cron/digest`), and `mention_digest_log` guarantees each mention is emailed once. Quiet hours and muted channels are respected; `@here` never emails.
+
+Vercel Hobby only runs cron once a day, so the trigger is `pg_cron` inside Supabase calling the app every 5 minutes. The job reads its URL and secret from Supabase Vault and does nothing until both exist:
+
+1. Generate a secret: `openssl rand -hex 32`.
+2. Add it to Vercel as `CRON_SECRET` (Production) and redeploy.
+3. Store both values in Vault, once, from the CLI (replace the secret):
+
+   ```bash
+   pnpm supabase db query --linked "select vault.create_secret('https://commune-tan.vercel.app/api/cron/digest', 'commune_digest_url'); select vault.create_secret('<the secret>', 'commune_cron_secret');"
+   ```
+
+4. Watch it run: `pnpm supabase db query --linked "select status, return_message, start_time from cron.job_run_details order by start_time desc limit 5"`.
+
+Dry run without sending: `curl -H "Authorization: Bearer $CRON_SECRET" "$NEXT_PUBLIC_APP_URL/api/cron/digest?dry=1"`.
+
 ## Schema notes
 
 - Migrations live in `supabase/migrations/` and are the only way the schema changes.

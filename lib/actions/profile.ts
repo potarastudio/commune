@@ -86,3 +86,29 @@ export async function saveDndAction(input: { dnd_start: string | null; dnd_end: 
   }
   return { ok: true };
 }
+
+/** Heartbeat from an open, visible tab; feeds "away" detection for the mention digest. */
+export async function touchPresenceAction(): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("touch_last_seen");
+  if (error) console.error("touchPresenceAction", { code: error.code, message: error.message });
+}
+
+/** Whether missed mentions are emailed while away (Settings → Notifications). */
+export async function saveEmailDigestAction(input: { enabled: boolean }): Promise<ProfileFormResult> {
+  const parsed = z.object({ enabled: z.boolean() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "You're signed out." };
+
+  const { error } = await supabase.from("profiles").update({ email_digest: parsed.data.enabled }).eq("id", user.id);
+  if (error) {
+    console.error("saveEmailDigestAction", { code: error.code, message: error.message });
+    return { ok: false, error: "Couldn't save that. Try again." };
+  }
+  return { ok: true };
+}

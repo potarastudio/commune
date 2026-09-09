@@ -19,6 +19,8 @@ const serverSchema = publicSchema.extend({
   RESEND_API_KEY: z.string().min(1),
   VAPID_PUBLIC_KEY: z.string().min(1),
   VAPID_PRIVATE_KEY: z.string().min(1),
+  // Shared with the pg_cron job that triggers the mention digest. Optional: unset = digest off.
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;

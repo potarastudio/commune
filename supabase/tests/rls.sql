@@ -10,7 +10,7 @@ do $$ begin
 end $$;
 set local search_path = public, extensions;
 
-select plan(52);
+select plan(54);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as superuser)
@@ -267,6 +267,13 @@ reset role;
 select pg_temp.login('10000000-0000-4000-8000-000000000003');
 select is((select count(*) from public.pins where message_id = '30000000-0000-4000-8000-000000000001'), 0::bigint,
   'non-member cannot see pins in a private channel');
+
+-- Mention digest internals are service-role only.
+select throws_ok(
+  $$ select * from public.pending_mention_digest() $$, '42501',
+  null, 'members cannot run pending_mention_digest');
+select is((select count(*) from public.mention_digest_log), 0::bigint,
+  'members see nothing in mention_digest_log');
 
 reset role;
 select * from finish();

@@ -14,8 +14,8 @@ export function TypingIndicator({ people }: { people: { id: string; name: string
         <>
           <span className="flex items-end gap-[2.5px]" aria-hidden="true">
             <span className="typing-dot size-1 rounded-full bg-tertiary" />
-            <span className="typing-dot size-1 rounded-full bg-tertiary [animation-delay:150ms]" />
-            <span className="typing-dot size-1 rounded-full bg-tertiary [animation-delay:300ms]" />
+            <span className="typing-dot size-1 rounded-full bg-tertiary" />
+            <span className="typing-dot size-1 rounded-full bg-tertiary" />
           </span>
           {text}
         </>

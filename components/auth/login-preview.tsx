@@ -74,8 +74,8 @@ export function LoginPreview() {
       <div className="flex items-center gap-[9px] rounded-[10px] border border-white/10 bg-white/4 px-[12px] py-[10px] text-[12.5px] text-white/55">
         <span className="flex items-end gap-[2.5px]">
           <span className="typing-dot block size-[4px] rounded-full bg-presence" />
-          <span className="typing-dot block size-[4px] rounded-full bg-presence [animation-delay:150ms]" />
-          <span className="typing-dot block size-[4px] rounded-full bg-presence [animation-delay:300ms]" />
+          <span className="typing-dot block size-[4px] rounded-full bg-presence" />
+          <span className="typing-dot block size-[4px] rounded-full bg-presence" />
         </span>
         Sari is typing…
       </div>

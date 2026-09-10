@@ -404,19 +404,49 @@
   0% { background-color: var(--accent-surface); }
   100% { background-color: transparent; }
 }
-.message-flash { animation: message-flash 2.5s ease-out; }
+.message-flash {
+  animation-name: message-flash;
+  animation-duration: 2.5s;
+  animation-timing-function: ease-out;
+}
 
 /* Typing indicator */
 @keyframes typing-bounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
   40% { transform: translateY(-3px); opacity: 1; }
 }
-.typing-dot { animation: typing-bounce 1.2s infinite ease-in-out; }
+/*
+  Longhands, and the stagger lives here too.
+  `.typing-dot` is unlayered so it beats Tailwind's utilities layer, which meant
+  the `animation` shorthand reset animation-delay to 0 and silently won over
+  `[animation-delay:150ms]` on the markup. All three dots then bounced in
+  unison instead of travelling. Keeping the whole animation in one place means
+  no utility has to survive a shorthand to make it work.
+*/
+.typing-dot {
+  animation-name: typing-bounce;
+  animation-duration: 1.2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 150ms; }
+.typing-dot:nth-child(3) { animation-delay: 300ms; }
 
 /* Spinners (sending, uploading, reconnecting) */
 @keyframes commune-spin { to { transform: rotate(360deg); } }
-.commune-spin { animation: commune-spin 700ms linear infinite; }
+.commune-spin {
+  animation-name: commune-spin;
+  animation-duration: 700ms;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
 
 /* Skeletons */
 @keyframes commune-pulse { 50% { opacity: 0.45; } }
-.commune-pulse { animation: commune-pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+/* Longhands so a per-element [animation-delay:*] survives — see .typing-dot. */
+.commune-pulse {
+  animation-name: commune-pulse;
+  animation-duration: 1.6s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  animation-iteration-count: infinite;
+}

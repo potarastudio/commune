@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type ComponentType } from "re
 import { toast } from "sonner";
 import { joinHuddleAction, leaveHuddleAction, startHuddleAction } from "@/lib/actions/huddles";
 import type { Container } from "@/lib/queries/messages";
+import { playHuddleSound } from "@/lib/audio/sounds";
 import { useHuddleStore, type HuddleSession } from "@/lib/store/huddle";
 import { humanError } from "@/lib/utils/human-error";
 
@@ -49,6 +50,7 @@ export function HuddleProvider({ children }: { children: React.ReactNode }) {
     const current = useHuddleStore.getState().session;
     if (!current || leaving.current) return;
     leaving.current = true;
+    playHuddleSound("left");
     clear();
     // The stage has nothing left to show once the room is gone; the dock just
     // disappears in place.

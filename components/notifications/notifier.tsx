@@ -5,6 +5,8 @@ import { AtSign, MessageSquareText } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { installAudioUnlock, playMessageSound } from "@/lib/audio/sounds";
+import { inDoNotDisturb } from "@/lib/push/dnd";
 import { subscribeWithAuth } from "@/lib/realtime/messages";
 import { fetchMessageById, type MessageRow } from "@/lib/queries/messages";
 import { unreadKeys } from "@/lib/queries/unreads";
@@ -18,7 +20,9 @@ type MentionRow = { message_id: string; user_id: string | null; kind: "user" | "
  * you are looking at something else, and an unread count in the tab title.
  * Push handles the case where the window isn't in front (see public/sw.js).
  */
-export function Notifier({ meId, mutedChannelIds }: { meId: string; mutedChannelIds: string[] }) {
+type Dnd = { dnd_start: string | null; dnd_end: string | null; timezone: string };
+
+export function Notifier({ meId, mutedChannelIds, dnd }: { meId: string; mutedChannelIds: string[]; dnd: Dnd }) {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -26,6 +30,11 @@ export function Notifier({ meId, mutedChannelIds }: { meId: string; mutedChannel
   pathRef.current = pathname;
   const muted = useRef(new Set(mutedChannelIds));
   muted.current = new Set(mutedChannelIds);
+  const dndRef = useRef(dnd);
+  dndRef.current = dnd;
+
+  // Browsers only allow sound after a gesture; the first click or key unlocks it.
+  useEffect(() => installAudioUnlock(), []);
   const seen = useRef(new Set<string>());
 
   // Tab title: "(3) Commune" from the unread map already kept for the sidebar.
@@ -70,6 +79,9 @@ export function Notifier({ meId, mutedChannelIds }: { meId: string; mutedChannel
       const href = m.channel_id
         ? `/channel/${m.channel_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`
         : `/dm/${m.conversation_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`;
+      // The toast still shows during Do Not Disturb, as it always has; only the
+      // sound respects the quiet hours, since a sound is the intrusion.
+      if (!inDoNotDisturb(dndRef.current)) playMessageSound();
       toast(reason === "dm" ? who : `${who} mentioned you${where}`, {
         // The icon fills the design's 26px leading tile (see components/ui/sonner.tsx).
         icon:

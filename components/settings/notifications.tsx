@@ -10,6 +10,7 @@ import { saveDndAction, saveEmailDigestAction } from "@/lib/actions/profile";
 import type { NotificationLevel } from "@/lib/queries/channels";
 import { disablePush, enablePush, getPushState, type PushState } from "@/lib/push/client";
 import { humanError } from "@/lib/utils/human-error";
+import { SoundRow } from "./sound-row";
 
 /** The design's settings row: label + note on the left, one control on the right. No iconography. */
 const ROW = "flex flex-wrap items-center gap-4 px-4 py-[14px]";
@@ -222,6 +223,7 @@ export function NotificationSettings({
   return (
     <div className="overflow-hidden rounded-[12px] border border-border bg-bg-card shadow-xs">
       <div className="divide-y divide-border-subtle">
+        <SoundRow />
         <div className={ROW}>
           <span className="min-w-[180px] flex-1">
             <span className={LABEL}>Browser notifications</span>

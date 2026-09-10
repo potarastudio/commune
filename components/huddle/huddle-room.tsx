@@ -4,6 +4,7 @@ import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
 import { toast } from "sonner";
 import type { HuddleSession } from "@/lib/store/huddle";
 import { HuddleDock } from "./huddle-dock";
+import { HuddleSounds } from "./huddle-sounds";
 import { HuddleStageSlot } from "./huddle-stage-slot";
 
 /**
@@ -50,6 +51,7 @@ export default function HuddleRoom({
       className="contents"
     >
       <RoomAudioRenderer />
+      <HuddleSounds />
       {onStage ? (
         <HuddleStageSlot session={session} onLeave={onLeave} />
       ) : (

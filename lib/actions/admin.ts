@@ -9,7 +9,7 @@ type Result = { ok: true } | { ok: false; error: string };
 /** Admin: promote or demote a member. The last admin cannot demote themselves. */
 export async function setRoleAction(input: { userId: string; role: "admin" | "member" }): Promise<Result> {
   const parsed = z.object({ userId: z.string().uuid(), role: z.enum(["admin", "member"]) }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Couldn't read that." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
 
   const supabase = await createSupabaseServerClient();
   const {

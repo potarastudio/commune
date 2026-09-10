@@ -23,7 +23,7 @@ export async function createChannelAction(input: {
   const parsed = z
     .object({ name: z.string().min(1).max(60), description: z.string().max(1000).optional(), isPrivate: z.boolean() })
     .safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Check the channel name.", field: "name" };
+  if (!parsed.success) return { ok: false, error: "Enter a channel name of 40 characters or fewer.", field: "name" };
   const name = normaliseChannelName(parsed.data.name);
   if (!CHANNEL_NAME_RE.test(name)) return { ok: false, error: "Use lowercase letters, numbers and dashes.", field: "name" };
 
@@ -43,7 +43,7 @@ export async function createChannelAction(input: {
 
 export async function joinChannelAction(input: { channelId: string }): Promise<Result> {
   const parsed = z.object({ channelId: uuid }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Unknown channel." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -60,7 +60,7 @@ export async function joinChannelAction(input: { channelId: string }): Promise<R
 
 export async function leaveChannelAction(input: { channelId: string }): Promise<Result> {
   const parsed = z.object({ channelId: uuid }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Unknown channel." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -84,7 +84,7 @@ export async function updateChannelAction(input: { channelId: string; topic?: st
       description: z.string().max(1000, "Keep the description under 1000 characters.").nullable().optional(),
     })
     .safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Couldn't read that." };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "That didn't go through. Reload the page and try again." };
 
   const patch: { topic?: string | null; description?: string | null } = {};
   if (parsed.data.topic !== undefined) patch.topic = parsed.data.topic?.trim() || null;
@@ -115,7 +115,7 @@ export async function addChannelMembersAction(input: { channelId: string; userId
 
 export async function setNotificationLevelAction(input: { channelId: string; level: "all" | "mentions" | "muted" }): Promise<Result> {
   const parsed = z.object({ channelId: uuid, level: z.enum(["all", "mentions", "muted"]) }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Unknown setting." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -136,7 +136,7 @@ export async function setNotificationLevelAction(input: { channelId: string; lev
 /** Admin: archive (read-only, hidden from sidebars) or bring back a channel. #general is protected in SQL. */
 export async function setChannelArchivedAction(input: { channelId: string; archived: boolean }): Promise<Result> {
   const parsed = z.object({ channelId: uuid, archived: z.boolean() }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Couldn't read that." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

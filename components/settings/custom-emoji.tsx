@@ -11,6 +11,7 @@ import { deleteCustomEmojiAction } from "@/lib/actions/custom-emoji";
 import { customEmojiKeys, uploadCustomEmoji, useCustomEmoji, type CustomEmoji } from "@/lib/queries/custom-emoji";
 import { useProfileMap } from "@/lib/queries/profiles";
 import { CUSTOM_EMOJI_TYPES, emojiNameFromFile, emojiNameProblem } from "@/lib/utils/custom-emoji";
+import { humanError } from "@/lib/utils/human-error";
 
 /** Settings → Custom emoji (§5 Phase 3). Anyone adds; the person who added one, or an admin, removes it. */
 export function CustomEmojiSettings({ meId, isAdmin }: { meId: string; isAdmin: boolean }) {
@@ -40,7 +41,7 @@ export function CustomEmojiSettings({ meId, isAdmin }: { meId: string; isAdmin: 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      toast.error("Choose an image first.");
+      toast.error("Choose an image first");
       return;
     }
     const problem = emojiNameProblem(name);
@@ -55,7 +56,7 @@ export function CustomEmojiSettings({ meId, isAdmin }: { meId: string; isAdmin: 
       toast.success(`:${created.name}: added`, { description: "Type it in a message, or find it under Potara in the emoji picker." });
       reset();
     } catch (err) {
-      toast.error("Couldn't add that emoji", { description: err instanceof Error ? err.message : undefined });
+      toast.error("Couldn't add that emoji", { description: humanError(err, "Try again in a moment.") });
     } finally {
       setBusy(false);
     }

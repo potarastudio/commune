@@ -46,11 +46,11 @@ export async function sendMessageAction(input: {
   attachments?: unknown;
 }): Promise<Result<MessageRow>> {
   const parsed = z.object({ container: containerSchema, content: tiptapDoc, attachments: attachmentsSchema }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That message couldn't be read." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
 
   const content = parsed.data.content as Parameters<typeof toContentText>[0] & Record<string, unknown>;
   if (isEmptyDoc(content) && parsed.data.attachments.length === 0) return { ok: false, error: "Message is empty." };
-  if (JSON.stringify(content).length > 40_000) return { ok: false, error: "Message is too long." };
+  if (JSON.stringify(content).length > 40_000) return { ok: false, error: "That message is too long to send. Try splitting it into a couple of messages." };
 
   try {
     const supabase = await createSupabaseServerClient();
@@ -84,7 +84,7 @@ export async function sendReplyAction(input: {
       attachments: attachmentsSchema,
     })
     .safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That reply couldn't be read." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
 
   const content = parsed.data.content as Parameters<typeof toContentText>[0] & Record<string, unknown>;
   if (isEmptyDoc(content) && parsed.data.attachments.length === 0) return { ok: false, error: "Reply is empty." };
@@ -109,7 +109,7 @@ export async function sendReplyAction(input: {
 
 export async function toggleReactionAction(input: { messageId: string; emoji: string; remove: boolean }): Promise<Result> {
   const parsed = z.object({ messageId: uuid, emoji: z.string().min(1).max(64), remove: z.boolean() }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That reaction couldn't be read." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
 
   try {
     const supabase = await createSupabaseServerClient();
@@ -128,7 +128,7 @@ export async function toggleReactionAction(input: { messageId: string; emoji: st
 
 export async function deleteMessageAction(input: { messageId: string }): Promise<Result> {
   const parsed = z.object({ messageId: uuid }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That message couldn't be read." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   try {
     const supabase = await createSupabaseServerClient();
     await softDeleteMessage(supabase, parsed.data.messageId);
@@ -140,7 +140,7 @@ export async function deleteMessageAction(input: { messageId: string }): Promise
 
 export async function markReadAction(input: { container: Container }): Promise<Result> {
   const parsed = z.object({ container: containerSchema }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Unknown container." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   try {
     const supabase = await createSupabaseServerClient();
     await markRead(supabase, parsed.data.container);
@@ -152,9 +152,9 @@ export async function markReadAction(input: { container: Container }): Promise<R
 
 export async function editMessageAction(input: { messageId: string; content: unknown }): Promise<Result<MessageRow>> {
   const parsed = z.object({ messageId: uuid, content: tiptapDoc }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That edit couldn't be read." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const content = parsed.data.content as Parameters<typeof toContentText>[0] & Record<string, unknown>;
-  if (JSON.stringify(content).length > 40_000) return { ok: false, error: "Message is too long." };
+  if (JSON.stringify(content).length > 40_000) return { ok: false, error: "That message is too long to send. Try splitting it into a couple of messages." };
   try {
     const supabase = await createSupabaseServerClient();
     const row = await editMessage(supabase, { messageId: parsed.data.messageId, content, contentText: toContentText(content) });
@@ -174,7 +174,7 @@ async function currentUserId() {
 
 export async function togglePinAction(input: { messageId: string; pinned: boolean }): Promise<Result> {
   const parsed = z.object({ messageId: uuid, pinned: z.boolean() }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That message couldn't be read." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   try {
     const { supabase, userId } = await currentUserId();
     if (!userId) return { ok: false, error: "You're signed out." };
@@ -187,7 +187,7 @@ export async function togglePinAction(input: { messageId: string; pinned: boolea
 
 export async function toggleSaveAction(input: { messageId: string; saved: boolean }): Promise<Result> {
   const parsed = z.object({ messageId: uuid, saved: z.boolean() }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That message couldn't be read." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   try {
     const { supabase, userId } = await currentUserId();
     if (!userId) return { ok: false, error: "You're signed out." };

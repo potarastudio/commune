@@ -47,7 +47,7 @@ export function StatusEditor({ profile, onDone }: { profile: Profile; onDone: ()
     startTransition(async () => {
       const cleaned = text.trim();
       if (!emoji && !cleaned) {
-        toast.error("Add an emoji or a few words first.");
+        toast.error("Add an emoji or a few words first");
         return;
       }
       finish(await setStatusAction({ emoji, text: cleaned || null, expiresAt: statusExpiresAt(expiry, new Date(), profile.timezone) }), "Status set");

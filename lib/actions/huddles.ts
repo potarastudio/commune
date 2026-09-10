@@ -23,7 +23,7 @@ async function me() {
 /** Start a huddle in a container, or return the one already running (§5 Phase 2). */
 export async function startHuddleAction(input: { container: Container }): Promise<Result<ActiveHuddle>> {
   const parsed = z.object({ container: containerSchema }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Unknown place for a huddle." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const { supabase, userId } = await me();
   if (!userId) return { ok: false, error: "You're signed out." };
   const container = parsed.data.container;
@@ -58,7 +58,7 @@ export async function startHuddleAction(input: { container: Container }): Promis
 /** Record that I joined (a fresh row per join; earlier rows for me are closed). */
 export async function joinHuddleAction(input: { huddleId: string }): Promise<Result<ActiveHuddle>> {
   const parsed = z.object({ huddleId: uuid }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Unknown huddle." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const { supabase, userId } = await me();
   if (!userId) return { ok: false, error: "You're signed out." };
 
@@ -76,7 +76,7 @@ export async function joinHuddleAction(input: { huddleId: string }): Promise<Res
 /** Close my participant rows; end the huddle when I was the last one in it. */
 export async function leaveHuddleAction(input: { huddleId: string }): Promise<Result<{ ended: boolean }>> {
   const parsed = z.object({ huddleId: uuid }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Unknown huddle." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const { supabase, userId } = await me();
   if (!userId) return { ok: false, error: "You're signed out." };
   return finishLeave(supabase, parsed.data.huddleId, userId);
@@ -87,7 +87,7 @@ async function finishLeave(supabase: Awaited<ReturnType<typeof me>>["supabase"],
   const { error } = await supabase.from("huddle_participants").update({ left_at: now }).eq("huddle_id", huddleId).eq("user_id", userId).is("left_at", null);
   if (error) {
     console.error("leaveHuddleAction", { code: error.code, message: error.message });
-    return { ok: false, error: "Couldn't leave cleanly." };
+    return { ok: false, error: "You have left, but it may take a moment to clear for everyone else." };
   }
   const { count } = await supabase.from("huddle_participants").select("user_id", { count: "exact", head: true }).eq("huddle_id", huddleId).is("left_at", null);
   if ((count ?? 0) > 0) return { ok: true, data: { ended: false } };

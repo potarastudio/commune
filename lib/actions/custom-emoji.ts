@@ -15,7 +15,7 @@ type Result = { ok: true } | { ok: false; error: string };
  */
 export async function deleteCustomEmojiAction(input: { name: string }): Promise<Result> {
   const parsed = z.object({ name: z.string().regex(EMOJI_NAME_RE) }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That emoji couldn't be read." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
 
   const supabase = await createSupabaseServerClient();
   const { data: row, error: selectError } = await supabase.from("custom_emoji").select("storage_path").eq("name", parsed.data.name).maybeSingle();

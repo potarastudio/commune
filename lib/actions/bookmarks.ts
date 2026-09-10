@@ -69,7 +69,7 @@ export async function updateBookmarkAction(input: { id: string; title: string; u
 
 export async function removeBookmarkAction(input: { id: string }): Promise<Result> {
   const parsed = z.object({ id: uuid }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Couldn't read that." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const supabase = await createSupabaseServerClient();
   const { error, count } = await supabase.from("channel_bookmarks").delete({ count: "exact" }).eq("id", parsed.data.id);
   if (error) {

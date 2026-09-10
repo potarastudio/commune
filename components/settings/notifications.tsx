@@ -9,6 +9,7 @@ import { setNotificationLevelAction } from "@/lib/actions/channels";
 import { saveDndAction, saveEmailDigestAction } from "@/lib/actions/profile";
 import type { NotificationLevel } from "@/lib/queries/channels";
 import { disablePush, enablePush, getPushState, type PushState } from "@/lib/push/client";
+import { humanError } from "@/lib/utils/human-error";
 
 /** The design's settings row: label + note on the left, one control on the right. No iconography. */
 const ROW = "flex flex-wrap items-center gap-4 px-4 py-[14px]";
@@ -185,7 +186,7 @@ export function NotificationSettings({
       else if (next === "denied") toast.error("Notifications are blocked for this site", { description: "Allow them in the browser's site settings, then try again." });
       else if (state === "on") toast.success("Browser notifications are off");
     } catch (err) {
-      toast.error("Couldn't change notifications", { description: err instanceof Error ? err.message : undefined });
+      toast.error("Couldn't change notifications", { description: humanError(err, "Try again in a moment.") });
     } finally {
       setBusy(false);
     }
@@ -245,7 +246,7 @@ export function NotificationSettings({
             <span className={LABEL}>Email digest</span>
             <span className={NOTE}>
               {digest
-                ? `Unread mentions go to ${email} once you've been away 15 minutes. Quiet hours apply.`
+                ? `Unread mentions go to ${email} once you've been away 15 minutes. Do Not Disturb applies.`
                 : "Off. Mentions you miss while away stay in Activity only."}
             </span>
           </span>
@@ -256,7 +257,7 @@ export function NotificationSettings({
           <span className="block">
             <span className={LABEL}>Do Not Disturb</span>
             <span className={NOTE}>
-              {dndOn ? `No notifications between ${start} and ${end}` : "Set quiet hours to pause notifications"} ·{" "}
+              {dndOn ? `No notifications between ${start} and ${end}` : "Set hours to pause notifications"} ·{" "}
               {timezone.replace(/_/g, " ")}
             </span>
           </span>

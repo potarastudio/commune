@@ -45,14 +45,14 @@ export async function inviteAction(input: { email: string }): Promise<InviteResu
 /** Admin: remove an address that hasn't signed in yet. Existing members are not affected. */
 export async function revokeInviteAction(input: { email: string }): Promise<{ ok: true } | { ok: false; error: string }> {
   const parsed = z.object({ email: z.string().trim().toLowerCase().email() }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Unknown address." };
+  if (!parsed.success) return { ok: false, error: "That does not look like an email address." };
 
   const { supabase, me } = await adminContext();
   if (!me) return { ok: false, error: "You're signed out." };
   if (me.role !== "admin") return { ok: false, error: "Only admins can manage invites." };
 
   const { data: existing } = await supabase.from("profiles").select("id").eq("email", parsed.data.email).maybeSingle();
-  if (existing) return { ok: false, error: "That person has already joined. Removing members comes with admin tools in Phase 3." };
+  if (existing) return { ok: false, error: "They have already joined, so there is no invite to revoke. Change their role or remove them from Settings." };
 
   const { error } = await supabase.from("allowed_emails").delete().eq("email", parsed.data.email);
   if (error) {

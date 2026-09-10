@@ -54,7 +54,7 @@ export async function scheduleMessageAction(input: { container: { kind: "channel
 
 export async function cancelScheduledAction(input: { id: string }): Promise<Result> {
   const parsed = z.object({ id: uuid }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Couldn't read that." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const supabase = await createSupabaseServerClient();
   const { error, count } = await supabase.from("scheduled_messages").delete({ count: "exact" }).eq("id", parsed.data.id).is("sent_message_id", null);
   if (error) {
@@ -86,7 +86,7 @@ export async function createReminderAction(input: { messageId: string; remindAt:
 
 export async function cancelReminderAction(input: { id: string }): Promise<Result> {
   const parsed = z.object({ id: uuid }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Couldn't read that." };
+  if (!parsed.success) return { ok: false, error: "That didn't go through. Reload the page and try again." };
   const supabase = await createSupabaseServerClient();
   const { error, count } = await supabase.from("reminders").delete({ count: "exact" }).eq("id", parsed.data.id).is("delivered_at", null);
   if (error) {

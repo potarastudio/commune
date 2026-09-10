@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { joinHuddleAction, leaveHuddleAction, startHuddleAction } from "@/lib/actions/huddles";
 import type { Container } from "@/lib/queries/messages";
 import { useHuddleStore, type HuddleSession } from "@/lib/store/huddle";
+import { humanError } from "@/lib/utils/human-error";
 
 type HuddleRoomProps = {
   session: HuddleSession;
@@ -119,7 +120,7 @@ export async function enterHuddle(input: { container: Container; label: string; 
     if (!joined.ok) throw new Error(joined.error);
 
     const res = await fetch(`/api/livekit/token?huddle=${huddleId}`, { cache: "no-store" });
-    if (!res.ok) throw new Error((await res.json().catch(() => ({ error: "Couldn't get a token." }))).error ?? "Couldn't get a token.");
+    if (!res.ok) throw new Error((await res.json().catch(() => ({ error: "Couldn't connect you to the huddle." }))).error ?? "Couldn't connect you to the huddle.");
     const { token, url, room } = (await res.json()) as { token: string; url: string; room: string };
 
     const session: HuddleSession = { huddleId, room, token, url, container: input.container, label: input.label, href: input.href };
@@ -127,7 +128,7 @@ export async function enterHuddle(input: { container: Container; label: string; 
     return true;
   } catch (err) {
     store.setConnecting(false);
-    toast.error("Couldn't join the huddle", { description: err instanceof Error ? err.message : undefined });
+    toast.error("Couldn't join the huddle", { description: humanError(err, "Check your connection and try again.") });
     return false;
   }
 }

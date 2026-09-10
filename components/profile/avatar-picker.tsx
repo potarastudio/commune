@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uploadAvatar } from "@/lib/queries/avatar";
+import { humanError } from "@/lib/utils/human-error";
 
 /**
  * Photo block (§6, Settings design): a 64px round avatar with the name and the
@@ -46,7 +47,7 @@ export function AvatarPicker({
     try {
       onChange(await uploadAvatar(userId, file));
     } catch (err) {
-      toast.error("Couldn't upload that image", { description: err instanceof Error ? err.message : undefined });
+      toast.error("Couldn't upload that photo", { description: humanError(err, "Try again in a moment.") });
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";

@@ -290,7 +290,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                     <div className={ROW}>
                       <span className="min-w-[180px] flex-1">
                         <span className={ROW_LABEL}>Google account</span>
-                        <span className={ROW_NOTE}>Connected — Google is the only way into Commune.</span>
+                        <span className={ROW_NOTE}>Sign in with Google, or ask for a one-time link by email.</span>
                       </span>
                       <span className="flex h-[34px] shrink-0 items-center gap-[7px] rounded-[8px] border border-border bg-bg-chip px-[11px] text-[12.5px] font-semibold text-fg-600">
                         <Check className="size-[13px] text-presence" aria-hidden="true" />

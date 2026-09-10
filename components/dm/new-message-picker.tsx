@@ -43,7 +43,7 @@ export function NewMessagePicker({ people, meId }: { people: Profile[]; meId: st
     setPicked((cur) => {
       if (cur.some((x) => x.id === p.id)) return cur.filter((x) => x.id !== p.id);
       if (cur.length >= MAX_OTHERS) {
-        toast.error("Group messages are limited to 8 people.");
+        toast.error("Group messages are limited to 8 people");
         return cur;
       }
       return [...cur, p];
@@ -172,7 +172,7 @@ export function NewMessagePicker({ people, meId }: { people: Profile[]; meId: st
         >
           {pending ? "Opening…" : picked.length > 1 ? `Start group with ${picked.length} people` : "Start conversation"}
         </Button>
-        <span className="text-[12px] text-muted-foreground">Existing conversations with the same people are reused.</span>
+        <span className="text-[12px] text-muted-foreground">If you already have a conversation with these people, this opens it.</span>
       </div>
     </div>
   );

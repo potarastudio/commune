@@ -37,7 +37,7 @@ export function EditHistory({ messageId, editedAt }: { messageId: string; edited
               <Skeleton className="h-3 w-3/5" />
             </div>
           )}
-          {data && data.length === 0 && <p className="px-4 py-5 text-[13px] text-fg-600">No earlier versions are recorded for this message.</p>}
+          {data && data.length === 0 && <p className="px-4 py-5 text-[13px] text-fg-600">This message has no earlier versions.</p>}
           {data && data.length > 0 && (
             <ol className="divide-y divide-border">
               {data.map((v, i) => (

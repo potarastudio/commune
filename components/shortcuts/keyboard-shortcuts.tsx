@@ -63,7 +63,7 @@ export function KeyboardShortcuts({ items }: { items: NavItem[] }) {
     for (const c of targets) clearUnread(queryClient, c);
     const results = await Promise.all(targets.map((container) => markReadAction({ container })));
     if (results.some((r) => !r.ok)) {
-      toast.error("Couldn't mark everything as read");
+      toast.error("Couldn't mark everything as read", { description: "Try again in a moment." });
       void queryClient.invalidateQueries({ queryKey: unreadKeys.all });
     } else toast.success(targets.length === 1 ? "Marked 1 conversation as read" : `Marked ${targets.length} conversations as read`);
   }, [items, queryClient]);

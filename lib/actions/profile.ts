@@ -33,7 +33,7 @@ export async function saveProfileAction(input: unknown): Promise<ProfileFormResu
   try {
     Intl.DateTimeFormat(undefined, { timeZone: parsed.data.timezone });
   } catch {
-    return { ok: false, error: "That timezone isn't recognised." };
+    return { ok: false, error: "That time zone isn't recognised." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -83,7 +83,7 @@ export async function saveDndAction(input: { dnd_start: string | null; dnd_end: 
   const { error } = await supabase.from("profiles").update({ dnd_start: parsed.data.dnd_start, dnd_end: parsed.data.dnd_end }).eq("id", user.id);
   if (error) {
     console.error("saveDndAction", { code: error.code, message: error.message });
-    return { ok: false, error: "Couldn't save quiet hours. Try again." };
+    return { ok: false, error: "Couldn't save Do Not Disturb. Try again." };
   }
   return { ok: true };
 }

@@ -308,7 +308,7 @@ export function ProfileForm({ profile, mode }: { profile: Profile; mode: "welcom
               </select>
               <ChevronDown className="pointer-events-none absolute right-[12px] size-[15px] text-muted-foreground" aria-hidden="true" />
             </div>
-            <p className="mt-[6px] text-[12px] text-muted-foreground">Message times are shown in your timezone.</p>
+            <p className="mt-[6px] text-[12px] text-muted-foreground">Message times are shown in your time zone.</p>
           </div>
         </div>
 
@@ -400,7 +400,7 @@ export function ProfileForm({ profile, mode }: { profile: Profile; mode: "welcom
                   />
                 </Row>
 
-                <Row htmlFor="timezone" label="Time zone" note="Message times are shown in your timezone.">
+                <Row htmlFor="timezone" label="Time zone" note="Message times are shown in your time zone.">
                   {timezoneSelect}
                 </Row>
 

@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { getDownloadUrl, useSignedUrls } from "@/lib/queries/attachments";
 import type { AttachmentRow } from "@/lib/queries/messages";
 import { fileKind, formatBytes, type FileKind } from "@/lib/utils/files";
+import { humanError } from "@/lib/utils/human-error";
 
 /** Optimistic messages carry a local object URL until the server row arrives. */
 export type AttachmentView = AttachmentRow & { preview_url?: string };
@@ -29,7 +30,7 @@ export function DownloadButton({ attachment, className }: { attachment: Attachme
       const url = await getDownloadUrl(attachment.storage_path, attachment.file_name ?? "file");
       window.location.assign(url);
     } catch (err) {
-      toast.error("Couldn't download that file", { description: err instanceof Error ? err.message : undefined });
+      toast.error("Couldn't download that file", { description: humanError(err, "Check your connection and try again.") });
     } finally {
       setBusy(false);
     }

@@ -2,21 +2,24 @@
 
 import { ArrowLeft, Headphones } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { leaveHuddleAction } from "@/lib/actions/huddles";
-import { HuddleStage } from "@/components/huddle/huddle-stage";
+import { useParams } from "next/navigation";
+import { HuddleStageOutlet } from "@/components/huddle/huddle-stage-slot";
 import { useHuddleStore } from "@/lib/store/huddle";
 
 /**
  * Full-screen huddle view (§3). The connection lives in HuddleProvider in the
  * app shell, so this page only reads the session; opening it without one
  * (a shared link, a reload, the huddle having ended) shows the ended summary.
+ *
+ * With a session this renders nothing but an empty slot. The stage itself is
+ * rendered by the provider and portalled in here, because it needs the live
+ * room and the provider is the only thing that holds it. The outlet uses
+ * `display: contents`, so the stage sits in <main> exactly as it did when this
+ * page rendered it directly.
  */
 export default function HuddlePage() {
   const { roomId } = useParams<{ roomId: string }>();
-  const router = useRouter();
   const session = useHuddleStore((s) => s.session);
-  const clear = useHuddleStore((s) => s.clear);
 
   if (!session || session.huddleId !== roomId) {
     return (
@@ -45,12 +48,5 @@ export default function HuddlePage() {
     );
   }
 
-  const leave = () => {
-    const current = session;
-    clear();
-    void leaveHuddleAction({ huddleId: current.huddleId });
-    router.push(current.href);
-  };
-
-  return <HuddleStage session={session} onLeave={leave} />;
+  return <HuddleStageOutlet />;
 }

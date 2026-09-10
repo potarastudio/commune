@@ -2,6 +2,7 @@
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useProfileMap } from "@/lib/queries/profiles";
+import { useHydrated } from "@/lib/utils/use-hydrated";
 import { describeExpiry, isStatusActive } from "@/lib/utils/status";
 
 /**
@@ -21,8 +22,10 @@ export function UserStatus({
   variant?: "inline" | "chip";
   className?: string;
 }) {
+  const hydrated = useHydrated();
   const p = useProfileMap().get(userId);
-  if (!p || !isStatusActive(p)) return null;
+  // Profiles are fetched in the browser, so the server has no status to draw.
+  if (!hydrated || !p || !isStatusActive(p)) return null;
   const until = describeExpiry(p.status_expires_at, p.timezone);
   const label = [p.status_text, until].filter(Boolean).join(" · ");
 

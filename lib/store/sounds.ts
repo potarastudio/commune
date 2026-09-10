@@ -13,7 +13,9 @@ import { persist } from "zustand/middleware";
  * never needs to know the choice. A profile column would also mean a
  * migration, a type regen and RLS for a cosmetic per-device setting.
  */
-export const SOUND_NAMES = ["ping", "chime", "knock", "pop", "none"] as const;
+// Order is the picker's order. Sampled sounds sit after the tones; None stays
+// last because it is the off switch, not a sound.
+export const SOUND_NAMES = ["ping", "chime", "knock", "pop", "lawan", "none"] as const;
 export type SoundName = (typeof SOUND_NAMES)[number];
 
 export const SOUND_LABELS: Record<SoundName, string> = {
@@ -21,6 +23,7 @@ export const SOUND_LABELS: Record<SoundName, string> = {
   chime: "Chime",
   knock: "Knock",
   pop: "Pop",
+  lawan: "Saya akan lawan",
   none: "None",
 };
 

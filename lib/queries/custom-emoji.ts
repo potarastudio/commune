@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { setCustomEmojiForComposer } from "@/lib/composer/emoji";
+import { setCustomEmojiForComposer } from "@/lib/composer/emoji-store";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { CUSTOM_EMOJI_MAX_BYTES, CUSTOM_EMOJI_TYPES, emojiNameProblem } from "@/lib/utils/custom-emoji";
 

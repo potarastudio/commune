@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { loadEmoji } from "@/lib/composer/emoji";
+import { loadEmoji } from "@/lib/composer/emoji-data";
 import { useCustomEmoji } from "@/lib/queries/custom-emoji";
 
 type PickerModule = typeof import("@emoji-mart/react");

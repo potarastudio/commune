@@ -2,7 +2,7 @@
 
 import { forwardRef } from "react";
 import type { SuggestionProps } from "@tiptap/suggestion";
-import type { EmojiItem } from "@/lib/composer/emoji";
+import type { EmojiItem } from "@/lib/composer/emoji-store";
 import { SuggestionList, type SuggestionListRef } from "./suggestion-list";
 
 export const EmojiList = forwardRef<SuggestionListRef, SuggestionProps<EmojiItem>>(function EmojiList(props, ref) {

@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         <section>
           <h2>What Commune is</h2>
           <p>
-            Commune is the private team chat used by Potara Studio, a design agency in Jakarta. It is only for the studio&apos;s own people. You can
+            Commune is the private team chat used by Potara Studio, a design agency in Purwokerto. It is only for the studio&apos;s own people. You can
             sign in only if a Potara admin has added your email address to the invite list.
           </p>
         </section>

@@ -56,7 +56,7 @@ export default async function LoginPage({
           <span className="text-[14.5px] font-semibold tracking-[-0.015em] text-white">Commune</span>
         </div>
         <LoginPreview />
-        <p className="text-[12px] text-white/40">Potara Studio · Jakarta</p>
+        <p className="text-[12px] text-white/40">Potara Studio · Purwokerto</p>
       </section>
 
       <section className="flex items-center justify-center bg-bg-main px-[28px] py-[40px]">

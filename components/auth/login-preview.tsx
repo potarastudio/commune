@@ -9,22 +9,22 @@
  */
 const lines = [
   {
-    name: "Hakim",
-    handle: "hakim",
+    name: "Angga",
+    handle: "angga",
     time: "09:12",
     text: "Welcome to Commune. This is where we talk now.",
     reactions: ["🎉 3", "👀 2"],
   },
   {
-    name: "Sari",
-    handle: "sari",
+    name: "David",
+    handle: "david",
     time: "09:14",
     text: "Uploaded v3 of the Bluebird homepage. Hero is tighter, CTA moved above the fold.",
     replies: 4,
   },
   {
-    name: "Raka",
-    handle: "raka",
+    name: "Alfin",
+    handle: "alfin",
     time: "09:15",
     text: "Someone brought martabak. Kitchen. Go now.",
     reactions: ["🔥 5"],
@@ -77,7 +77,7 @@ export function LoginPreview() {
           <span className="typing-dot block size-[4px] rounded-full bg-presence" />
           <span className="typing-dot block size-[4px] rounded-full bg-presence" />
         </span>
-        Sari is typing…
+        David is typing…
       </div>
     </div>
   );

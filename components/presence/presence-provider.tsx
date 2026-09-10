@@ -24,6 +24,13 @@ export function PresenceProvider({ meId }: { meId: string }) {
  * Persists "last seen" while the tab is visible so the mention digest knows
  * who is away. Realtime presence is per-connection and gone the moment the
  * tab closes; this survives it.
+ *
+ * The first beat is deferred a tick on purpose. touchPresenceAction is a server
+ * action, and calling one inside the hydration commit makes Next's router
+ * re-render while React is still hydrating, which throws "Rendered more hooks
+ * than during the previous render" and drops the whole page onto the global
+ * error screen. Nothing depends on the heartbeat landing immediately — it is a
+ * once-a-minute timestamp — so it waits until hydration is done.
  */
 function useLastSeenHeartbeat() {
   useEffect(() => {
@@ -39,9 +46,11 @@ function useLastSeenHeartbeat() {
       timer = null;
     };
     const onVisibility = () => (document.visibilityState === "visible" ? start() : stop());
-    onVisibility();
+
+    const kickoff = setTimeout(onVisibility, 0);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
+      clearTimeout(kickoff);
       document.removeEventListener("visibilitychange", onVisibility);
       stop();
     };

@@ -36,6 +36,13 @@ import { UserMenu } from "./user-menu";
 /* ── The 64px rail ────────────────────────────────────────────────────────────
    Near-black in both themes (--rail), so it never inherits the page surface.  */
 
+/**
+ * Icon-only, per the design: every rail item wraps its caption in
+ * `<sc-if value="{{ railLabels }}">`, and railLabels defaults to false in all
+ * twelve design files. The caption visible in the static handoff is a
+ * placeholder hint, not the default state. The 44px box stays either way, so
+ * the icon simply centres and the tooltip carries the name.
+ */
 const RAIL_ITEM =
   "relative flex min-h-[44px] w-[44px] flex-col items-center justify-center gap-[3px] rounded-lg py-[7px] transition-colors";
 const RAIL_ICON_BUTTON =
@@ -96,26 +103,36 @@ export function WorkspaceRail({
       <span className="mt-[12px] mb-[8px] h-px w-[24px] shrink-0 bg-white/10" aria-hidden="true" />
 
       <ul className="flex w-full flex-col items-center gap-[6px]">
-        {items.map(({ href, label, Icon, active, badge }) => (
-          <li key={href}>
-            <Link
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={`${RAIL_ITEM} ${active ? "bg-white/10 text-white" : "text-white/55 hover:bg-white/[0.06] hover:text-white"}`}
-            >
-              <Icon className="size-[17px] shrink-0" aria-hidden="true" />
-              <span className="text-[10px] font-medium tracking-[0.01em]">{label}</span>
-              {badge > 0 && (
-                <span
-                  className="absolute top-[4px] right-[6px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-full border-2 border-rail bg-primary px-[3px] text-[9.5px] font-bold text-white tabular-nums"
-                  aria-label={`${badge} conversation${badge === 1 ? "" : "s"} with unread mentions`}
-                >
-                  {badge > 9 ? "9+" : badge}
-                </span>
-              )}
-            </Link>
-          </li>
-        ))}
+        {items.map(({ href, label, Icon, active, badge }) => {
+          // The parent's aria-label would otherwise swallow the badge's own, so
+          // the count is folded into one name rather than announced separately.
+          const count = badge > 0 ? `${badge} conversation${badge === 1 ? "" : "s"} with unread mentions` : null;
+          return (
+            <li key={href}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    aria-label={count ? `${label}, ${count}` : label}
+                    className={`${RAIL_ITEM} ${active ? "bg-white/10 text-white" : "text-white/55 hover:bg-white/[0.06] hover:text-white"}`}
+                  >
+                    <Icon className="size-[17px] shrink-0" aria-hidden="true" />
+                    {badge > 0 && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute top-[4px] right-[6px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-full border-2 border-rail bg-primary px-[3px] text-[9.5px] font-bold text-white tabular-nums"
+                      >
+                        {badge > 9 ? "9+" : badge}
+                      </span>
+                    )}
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">{label}</TooltipContent>
+              </Tooltip>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="mt-auto flex flex-col items-center gap-[8px] pt-[12px]">

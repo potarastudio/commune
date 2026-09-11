@@ -10,7 +10,7 @@ This file is the source of truth for the project. Read it fully before making ch
 
 **Goal:** replace Slack for daily use by a 10–15 person team: channels, DMs, threads, reactions, file sharing, search, mentions, notifications, and huddles (audio/video with screen share).
 
-**Non-goals for now:** mobile apps, desktop app, multi-workspace, third-party integrations/bots, message retention policies, enterprise admin. Do not build these unless asked.
+**Non-goals for now:** mobile apps, multi-workspace, third-party integrations/bots, message retention policies, enterprise admin. Do not build these unless asked. (A desktop app was a non-goal until 2026-09-11; see §11.)
 
 **Quality bar:** it should feel as fast and polished as Slack for the features it has. Fewer features done well beats many features done half-way. The founder is a UI/UX designer — visual craft matters and will be reviewed closely.
 
@@ -75,6 +75,7 @@ supabase/
   functions/               # Edge Functions (unfurl, notify)
 types/
   database.ts              # Generated: `pnpm supabase gen types typescript`
+desktop/                   # Electron shell for Mac and Windows (§11); its own package
 ```
 
 Rules:
@@ -320,3 +321,17 @@ For huddles locally, use a LiveKit Cloud dev project (free tier) — do not self
 ## 10. Definition of done for Phase 1
 
 The whole Potara team has used Commune instead of Slack for text chat for one full working week without needing to open Slack for anything except huddles. Until that is true, Phase 1 is not done.
+
+---
+
+## 11. Desktop app (Mac and Windows)
+
+`desktop/` is an Electron shell around the hosted site, decided on 2026-09-11. It is its own package with its own lockfile; the web workspace's lint and typecheck exclude it.
+
+Rules:
+- **The shell never bundles the app.** It loads `commune.potarastudio.com` (or `localhost:3001` with `COMMUNE_DEV=1`). Anything the app does, it does on the site.
+- **The web app must keep working in a plain browser.** Desktop-only behaviour is gated on `isDesktopApp()` from `lib/desktop.ts`, which is the only place the page touches `window.communeDesktop`. Today that is: system notifications in place of push, following a notification click, and the Settings copy for it.
+- **Sign-in goes through the system browser.** Google refuses embedded browsers. `/desktop/handoff` parks the refresh token under a one-shot id in `desktop_handoffs` (service-role only, two-minute expiry) and opens `commune://auth?handoff=<id>`; `/api/desktop/session` claims it. Never put a token in the deep link.
+- **Verify with `pnpm smoke` in `desktop/`** against the dev server before shipping the shell; it covers sign-in, badge, notifications, screen share, close-to-hide and external links. Packaged builds: `pnpm dist:mac`, `pnpm dist:win`, `pnpm release` (see `desktop/README.md`).
+
+Mobile remains a non-goal.

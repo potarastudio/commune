@@ -20,6 +20,8 @@ const eslintConfig = [
       "next-env.d.ts",
       // Reference only: the .dc.html handoff from Claude Design and its runtime.
       "design/**",
+      // Its own package with its own toolchain (Electron main process, CommonJS).
+      "desktop/**",
     ],
   },
 ];

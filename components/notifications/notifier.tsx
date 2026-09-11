@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { installAudioUnlock, playMessageSound } from "@/lib/audio/sounds";
+import { desktopBridge } from "@/lib/desktop";
 import { inDoNotDisturb } from "@/lib/push/dnd";
 import { subscribeWithAuth } from "@/lib/realtime/messages";
 import { fetchMessageById, type MessageRow } from "@/lib/queries/messages";
@@ -35,6 +36,10 @@ export function Notifier({ meId, mutedChannelIds, dnd }: { meId: string; mutedCh
 
   // Browsers only allow sound after a gesture; the first click or key unlocks it.
   useEffect(() => installAudioUnlock(), []);
+
+  // In the desktop app a notification click asks the page to navigate, so the
+  // realtime connection and any huddle survive it.
+  useEffect(() => desktopBridge()?.onNavigate((url) => router.push(url)), [router]);
   const seen = useRef(new Set<string>());
 
   // Tab title: "(3) Commune" from the unread map already kept for the sidebar.
@@ -81,7 +86,12 @@ export function Notifier({ meId, mutedChannelIds, dnd }: { meId: string; mutedCh
         : `/dm/${m.conversation_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`;
       // The toast still shows during Do Not Disturb, as it always has; only the
       // sound respects the quiet hours, since a sound is the intrusion.
-      if (!inDoNotDisturb(dndRef.current)) playMessageSound();
+      const quiet = inDoNotDisturb(dndRef.current);
+      if (!quiet) playMessageSound();
+      // The desktop app has no push: it is told directly, and shows the
+      // notification only while its window is not focused, like the service
+      // worker defers to a focused tab. Same quiet hours as push.
+      if (!quiet) void desktopBridge()?.notify({ title: reason === "dm" ? who : `${who} mentioned you${where}`, body: m.content_text.slice(0, 120) || "Sent a file", url: href, tag: m.conversation_id ?? m.channel_id ?? undefined });
       toast(reason === "dm" ? who : `${who} mentioned you${where}`, {
         // The icon fills the design's 26px leading tile (see components/ui/sonner.tsx).
         icon:

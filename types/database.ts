@@ -284,6 +284,38 @@ export type Database = {
           },
         ]
       }
+      desktop_handoffs: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "desktop_handoffs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       huddle_participants: {
         Row: {
           huddle_id: string
@@ -912,6 +944,7 @@ export type Database = {
       can_read_channel: { Args: { p_channel_id: string }; Returns: boolean }
       can_read_message: { Args: { p_message_id: string }; Returns: boolean }
       can_write_message: { Args: { p_message_id: string }; Returns: boolean }
+      claim_desktop_handoff: { Args: { p_id: string }; Returns: string }
       create_channel: {
         Args: { p_description?: string; p_is_private?: boolean; p_name: string }
         Returns: {

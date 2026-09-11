@@ -52,3 +52,6 @@ playwright-report/
 # keep the env template
 !.env.example
 .vercel
+
+# desktop shell (its own package; see desktop/.gitignore for build output)
+desktop/node_modules/

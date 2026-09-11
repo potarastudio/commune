@@ -4,7 +4,10 @@ import type { Database } from "@/types/database";
 import { publicEnv } from "@/lib/env";
 
 // /api/cron authenticates with its own shared secret (no user session).
-const PUBLIC_PATHS = ["/login", "/privacy", "/auth/callback", "/auth/error", "/auth/dev-login", "/api/cron"];
+// /api/desktop/session is how the desktop app *obtains* a session, so it must
+// be reachable without one. /desktop/handoff is deliberately not public: it
+// needs the browser's session cookie, and the redirect to /login is the point.
+const PUBLIC_PATHS = ["/login", "/privacy", "/auth/callback", "/auth/error", "/auth/dev-login", "/api/cron", "/api/desktop/session"];
 
 /** Refreshes the Supabase session cookie and gates the authenticated shell. */
 export async function updateSession(request: NextRequest) {

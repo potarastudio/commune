@@ -226,9 +226,10 @@ export function NotificationSettings({
         <SoundRow />
         <div className={ROW}>
           <span className="min-w-[180px] flex-1">
-            <span className={LABEL}>Browser notifications</span>
+            <span className={LABEL}>{state === "desktop" ? "Desktop notifications" : "Browser notifications"}</span>
             <span className={NOTE}>
               {state === "loading" && "Checking…"}
+              {state === "desktop" && "On. The desktop app notifies you about direct messages and mentions while it is running and not in front."}
               {state === "unsupported" && "This browser can't show push notifications."}
               {state === "denied" && "Blocked in the browser. Allow notifications for this site to turn them on."}
               {state === "off" && "Get a notification for direct messages and mentions when Commune isn't in front."}
@@ -236,8 +237,8 @@ export function NotificationSettings({
             </span>
           </span>
           <Switch
-            checked={state === "on"}
-            disabled={busy || state === "loading" || state === "unsupported" || state === "denied"}
+            checked={state === "on" || state === "desktop"}
+            disabled={busy || state === "loading" || state === "unsupported" || state === "denied" || state === "desktop"}
             label="Browser notifications"
             onClick={() => void toggle()}
           />

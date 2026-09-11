@@ -1,6 +1,5 @@
 "use client";
 
-import { differenceInCalendarDays, format, isToday, isYesterday } from "date-fns";
 import { ChevronDown, Hash, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -14,14 +13,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { MessageAuthor } from "@/lib/queries/messages";
 import { cn } from "@/lib/utils";
+import { daysAgo, formatMessageTime, formatShortDate, formatWeekdayShort } from "@/lib/utils/time";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
-/** Times are shown in the viewer's timezone (§6), so the rows render on the client. */
-function when(iso: string) {
-  const d = new Date(iso);
-  if (isToday(d)) return `Today ${format(d, "HH:mm")}`;
-  if (isYesterday(d)) return `Yesterday ${format(d, "HH:mm")}`;
-  if (differenceInCalendarDays(new Date(), d) < 7) return format(d, "EEE HH:mm");
-  return format(d, "d MMM");
+/** "Today 21:07", "Yesterday 09:15", "Thu 14:07" within the week, then "10 Sep", in the viewer's zone (§6). */
+function when(iso: string, tz: string, now = new Date()) {
+  const ago = daysAgo(iso, tz, now);
+  if (ago === 0) return `Today ${formatMessageTime(iso, tz)}`;
+  if (ago === 1) return `Yesterday ${formatMessageTime(iso, tz)}`;
+  if (ago < 7) return `${formatWeekdayShort(iso, tz)} ${formatMessageTime(iso, tz)}`;
+  return formatShortDate(iso, tz, now);
 }
 
 export type SearchResultRow = {
@@ -82,6 +83,7 @@ export function SearchResults({
   /** Set when the server capped the page and a wider one can be asked for. */
   moreHref: string | null;
 }) {
+  const tz = useViewerTimezone();
   const [facet, setFacet] = useState<FacetId>("all");
   const [sort, setSort] = useState<SortId>("relevance");
 
@@ -179,8 +181,9 @@ export function SearchResults({
                         {r.where.label}
                       </span>
                       {r.inThread && <span className="text-[12px] text-muted-foreground">in a thread</span>}
-                      <time dateTime={r.createdAt} className="text-[12px] tabular-nums text-muted-foreground">
-                        {when(r.createdAt)}
+                      {/* "Today" depends on the moment; keep the server's word through hydration. */}
+                      <time dateTime={r.createdAt} className="text-[12px] tabular-nums text-muted-foreground" suppressHydrationWarning>
+                        {when(r.createdAt, tz)}
                       </time>
                     </div>
                     <p className="mt-[3px] text-[13.5px] leading-[1.55] text-body [text-wrap:pretty]">{r.snippet}</p>

@@ -11,6 +11,7 @@ import { getMyConversations } from "@/lib/queries/conversations";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { toUnreadMap } from "@/lib/utils/unreads";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ViewerTimezoneProvider } from "@/lib/viewer-timezone";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createSupabaseServerClient();
@@ -29,6 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const unreads = toUnreadMap(unreadRows);
 
   return (
+    <ViewerTimezoneProvider timezone={profile.timezone}>
     <HuddleProvider>
     {/* Between 900px and 768px the channel column drops out (see Sidebar) and the
         conversation takes the width; below 768px the page scrolls sideways instead. */}
@@ -55,5 +57,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
     </div>
     </HuddleProvider>
+    </ViewerTimezoneProvider>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, isToday, isYesterday } from "date-fns";
 import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -12,12 +11,15 @@ import { markReadAction } from "@/lib/actions/messages";
 import type { Container, MessageAuthor } from "@/lib/queries/messages";
 import { clearUnread, fetchUnreadMap, unreadKeys, type UnreadMap } from "@/lib/queries/unreads";
 import { cn } from "@/lib/utils";
+import { daysAgo, formatMessageTime, formatShortDate } from "@/lib/utils/time";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
-function when(iso: string) {
-  const d = new Date(iso);
-  if (isToday(d)) return format(d, "HH:mm");
-  if (isYesterday(d)) return `Yesterday ${format(d, "HH:mm")}`;
-  return format(d, "d MMM, HH:mm");
+/** "21:07" today, "Yesterday 09:15", then "10 Sep, 14:07", in the viewer's zone. */
+function when(iso: string, tz: string, now = new Date()) {
+  const ago = daysAgo(iso, tz, now);
+  if (ago === 0) return formatMessageTime(iso, tz);
+  if (ago === 1) return `Yesterday ${formatMessageTime(iso, tz)}`;
+  return `${formatShortDate(iso, tz, now)}, ${formatMessageTime(iso, tz)}`;
 }
 
 /**
@@ -52,6 +54,7 @@ export function ActivityItem({
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const tz = useViewerTimezone();
   const name = person?.display_name ?? "Someone";
   return (
     <li className="group/item flex items-start border-b border-border-subtle transition-colors hover:bg-bg-hover">
@@ -77,7 +80,7 @@ export function ActivityItem({
           <div className="flex flex-wrap items-baseline gap-1.5 text-[13.5px] text-fg-400">
             {eyebrow}
             <time dateTime={createdAt} className="shrink-0 text-[12px] tabular-nums text-muted-foreground">
-              {timeLabel ?? when(createdAt)}
+              {timeLabel ?? when(createdAt, tz)}
             </time>
           </div>
           <div className="mt-[5px] text-[13.5px] leading-[1.55] text-body [text-wrap:pretty] [&>p]:inline">{children}</div>

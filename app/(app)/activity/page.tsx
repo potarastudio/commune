@@ -16,6 +16,7 @@ import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/utils/render";
+import { formatDayLabel, formatMessageTime, safeTimeZone } from "@/lib/utils/time";
 
 export const metadata: Metadata = { title: "Activity" };
 
@@ -30,18 +31,9 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "threads", label: "Threads" },
 ];
 
-/** Times and day breaks follow the viewer's timezone (§6), resolved on the server. */
-const dayKey = (iso: string, tz: string) =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: tz, dateStyle: "short" }).format(new Date(iso));
-const clock = (iso: string, tz: string) =>
-  new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
-
-function dayLabel(iso: string, tz: string, now: Date) {
-  const key = dayKey(iso, tz);
-  if (key === dayKey(now.toISOString(), tz)) return "Today";
-  if (key === dayKey(new Date(now.getTime() - 86_400_000).toISOString(), tz)) return "Yesterday";
-  return new Intl.DateTimeFormat("en-GB", { timeZone: tz, weekday: "long", day: "numeric", month: "long" }).format(new Date(iso));
-}
+/** Times and day breaks follow the viewer's timezone (§6), resolved on the server with the shared helpers. */
+const clock = (iso: string, tz: string) => formatMessageTime(iso, tz);
+const dayLabel = (iso: string, tz: string, now: Date) => formatDayLabel(iso, tz, now);
 
 type Container = { channel: { id: string; name: string } | null; conversation: { id: string } | null };
 
@@ -73,7 +65,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
     fetchUpcomingReminders(supabase),
   ]);
 
-  const tz = profile.timezone || "Asia/Jakarta";
+  const tz = safeTimeZone(profile.timezone);
   const now = new Date();
 
   type Row = { key: string; at: string; thread: boolean; node: React.ReactNode };

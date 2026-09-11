@@ -32,6 +32,7 @@ import {
 } from "@/lib/queries/use-messages";
 import { formatMessageTime } from "@/lib/utils/time";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
 /** Scrolled more than this from the bottom counts as "reading back". */
 const AWAY_FROM_BOTTOM = 240;
@@ -60,6 +61,7 @@ export function MessagePane({
   startBody: string;
   readOnlyNotice?: React.ReactNode;
 }) {
+  const tz = useViewerTimezone();
   const queryClient = useQueryClient();
   const highlightId = useSearchParams().get("message");
   const { messages, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(container, initialPage);
@@ -176,7 +178,7 @@ export function MessagePane({
         {unread > 0 && readMarker && (
           <div className="flex shrink-0 items-center gap-2.5 border-b border-accent-surface-border bg-accent-surface px-6 py-2">
             <span className="text-[12.5px] font-semibold text-accent-foreground">
-              {unread} new {unread === 1 ? "message" : "messages"} since {formatMessageTime(readMarker)}
+              {unread} new {unread === 1 ? "message" : "messages"} since {formatMessageTime(readMarker, tz)}
             </span>
             <button
               type="button"

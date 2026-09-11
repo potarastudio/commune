@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, isToday, isYesterday } from "date-fns";
 import { Bookmark, Check, Hash } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -14,12 +13,15 @@ import { fetchSaved, messageKeys, type SavedMessage } from "@/lib/queries/messag
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/utils/render";
+import { daysAgo, formatMessageTime, formatShortDate } from "@/lib/utils/time";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
-function when(iso: string) {
-  const d = new Date(iso);
-  if (isToday(d)) return `Today ${format(d, "HH:mm")}`;
-  if (isYesterday(d)) return `Yesterday ${format(d, "HH:mm")}`;
-  return format(d, "d MMM");
+/** "Today 21:07", "Yesterday 09:15", "10 Sep", in the viewer's zone. */
+function when(iso: string, tz: string, now = new Date()) {
+  const ago = daysAgo(iso, tz, now);
+  if (ago === 0) return `Today ${formatMessageTime(iso, tz)}`;
+  if (ago === 1) return `Yesterday ${formatMessageTime(iso, tz)}`;
+  return formatShortDate(iso, tz, now);
 }
 
 /**
@@ -41,6 +43,7 @@ const DONE_FLASH_MS = 320;
 
 /** Saved for later (§5 Phase 3): the user's private reading list, newest save first. */
 export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: SavedMessage[] }) {
+  const tz = useViewerTimezone();
   const queryClient = useQueryClient();
   const key = messageKeys.saved(meId);
   const { data: saved } = useQuery({
@@ -201,8 +204,9 @@ export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: 
                       <span>·</span>
                       <span className="font-semibold text-fg-400">{m.author?.display_name ?? "Someone"}</span>
                       <span>·</span>
-                      <time dateTime={saved_at} className="tabular-nums">
-                        {when(saved_at)}
+                      {/* "Today" depends on the moment; keep the server's word through hydration. */}
+                      <time dateTime={saved_at} className="tabular-nums" suppressHydrationWarning>
+                        {when(saved_at, tz)}
                       </time>
                       {m.parent_id && (
                         <>

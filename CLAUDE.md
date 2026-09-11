@@ -290,6 +290,7 @@ Ship each phase to Vercel and use it with the real team before starting the next
 - **LiveKit tokens** are minted in `app/api/livekit/token/route.ts` only after verifying the caller can read the channel/conversation the huddle belongs to. Never expose the LiveKit API secret to the client.
 - **Errors.** User-facing errors are toasts with plain language. Log the real error with context on the server.
 - **Env vars** are validated at boot with Zod in `lib/env.ts`. Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `RESEND_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_APP_URL`. Optional: `CRON_SECRET`; `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (all four, or large uploads stay off).
+- **Times.** Draw every time and date with the helpers in `lib/utils/time.ts`, passing the viewer's zone from `useViewerTimezone()` (client) or `safeTimeZone(profile.timezone)` (server). Never date-fns `format`/`isToday`/`isYesterday` or `toLocale*String` for display: they use the runtime's zone, and Vercel runs in UTC, so the server HTML comes out seven hours off Jakarta and hydration fails. Data from browser-only queries (the profile map) is gated on `useHydrated()`. Verify with `scripts/check-timezones.mts` against a `TZ=UTC` dev server.
 - Commit messages: Conventional Commits (`feat:`, `fix:`, `chore:`…). Small PRs, one feature each.
 
 ---

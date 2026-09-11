@@ -20,6 +20,8 @@ import type { NotificationLevel } from "@/lib/queries/channels";
 import type { Container, Message, MessageAuthor } from "@/lib/queries/messages";
 import { useThreadNav, type PanelTab } from "@/lib/utils/use-thread-nav";
 import { FilesList } from "./files-list";
+import { formatLongDate } from "@/lib/utils/time";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
 const overline = "text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground";
 
@@ -49,6 +51,7 @@ export function ContainerPanel({
   me: MessageAuthor;
   initialPins: Message[];
 }) {
+  const tz = useViewerTimezone();
   const router = useRouter();
   const { panelTab, showPanel, closePanel } = useThreadNav();
   const tabs: PanelTab[] = channel ? ["about", "members", "files", "pins"] : ["members", "files", "pins"];
@@ -148,7 +151,7 @@ export function ContainerPanel({
             <div className="border-b border-border-subtle py-[11px]">
               <span className={overline}>Created</span>
               <p className="mt-1 text-[13.5px] leading-[1.5] text-body">
-                {new Date(channel.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                {formatLongDate(channel.created_at, tz)}
               </p>
             </div>
 

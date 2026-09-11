@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ReplySummary } from "@/components/thread/reply-summary";
 import { DateDivider } from "./date-divider";
 import { MessageItem } from "./message-item";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
 /**
  * The design reserves one 22px line between the log and the composer, and the
@@ -78,6 +79,7 @@ export function MessageList({
   startBody: string;
   startIcon?: "channel" | "conversation";
 }) {
+  const tz = useViewerTimezone();
   const StartIcon = startIcon === "conversation" ? MessageCircle : Hash;
   const composerNotice = useContext(ComposerNoticeContext);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -222,11 +224,11 @@ export function MessageList({
 
         {messages.map((m, i) => {
           const prev = messages[i - 1];
-          const newDay = !prev || !sameDay(prev.created_at, m.created_at);
-          const grouped = !newDay && shouldGroup(prev, m) && !m.deleted_at;
+          const newDay = !prev || !sameDay(prev.created_at, m.created_at, tz);
+          const grouped = !newDay && shouldGroup(prev, m, tz) && !m.deleted_at;
           return (
             <div key={m.id}>
-              {newDay && <DateDivider label={formatDayLabel(m.created_at)} />}
+              {newDay && <DateDivider label={formatDayLabel(m.created_at, tz)} />}
               {m.id === firstUnreadId && <DateDivider label="New messages" tone="new" />}
               <MessageItem
                 message={m}

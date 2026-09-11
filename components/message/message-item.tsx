@@ -18,6 +18,7 @@ import { LinkPreviews } from "./link-previews";
 import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
 import { ReactionBar } from "./reaction-bar";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
 export function MessageItem({
   message,
@@ -54,11 +55,12 @@ export function MessageItem({
   replySummary?: React.ReactNode;
   inThread?: boolean;
 }) {
+  const tz = useViewerTimezone();
   const [editing, setEditing] = useState(false);
   const author = message.author;
   const name = author?.display_name ?? "Unknown";
   const deleted = message.deleted_at !== null;
-  const time = formatMessageTime(message.created_at);
+  const time = formatMessageTime(message.created_at, tz);
   const isMine = message.author_id === meId;
 
   // A direct @you tints the row with the accent (design decision 1: mentions are orange).
@@ -160,7 +162,7 @@ export function MessageItem({
                   {time}
                 </time>
               </TooltipTrigger>
-              <TooltipContent side="top">{formatFullTimestamp(message.created_at)}</TooltipContent>
+              <TooltipContent side="top">{formatFullTimestamp(message.created_at, tz)}</TooltipContent>
             </Tooltip>
           </div>
         )}

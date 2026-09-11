@@ -20,6 +20,7 @@ import {
 import { useAttachmentUploads } from "@/lib/queries/use-uploads";
 import { shouldGroup } from "@/lib/utils/time";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
 /** Right-hand thread panel: the design's 380px column. Opened via ?thread=<id>, closed with the X or Esc. */
 export function ThreadPanel({
@@ -37,6 +38,7 @@ export function ThreadPanel({
   isAdmin: boolean;
   canPost: boolean;
 }) {
+  const tz = useViewerTimezone();
   const { closeThread } = useThreadNav();
   const { data: thread, isPending, isError } = useThread(parentId);
   const keys = [messageKeys.container(container), messageKeys.thread(parentId)];
@@ -168,7 +170,7 @@ export function ThreadPanel({
               <MessageItem
                 key={m.id}
                 message={m}
-                grouped={shouldGroup(thread.replies[i - 1], m) && !m.deleted_at}
+                grouped={shouldGroup(thread.replies[i - 1], m, tz) && !m.deleted_at}
                 meId={me.id}
                 canDelete={m.author_id === me.id || isAdmin}
                 onToggleReaction={(emoji, active) => toggleReaction.mutate({ messageId: m.id, emoji, active })}

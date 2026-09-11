@@ -8,6 +8,12 @@
       "port": 3001
     },
     {
+      "name": "commune-utc",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["TZ=UTC", "pnpm", "dev"],
+      "port": 3001
+    },
+    {
       "name": "commune-hosted",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev:hosted"],

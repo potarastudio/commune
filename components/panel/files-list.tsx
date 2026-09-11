@@ -1,6 +1,5 @@
 "use client";
 
-import { format, isThisYear } from "date-fns";
 import { File, FileArchive, FileAudio, FileText, FileVideo, Paperclip } from "lucide-react";
 import Link from "next/link";
 import { DownloadButton } from "@/components/message/attachment-list";
@@ -9,16 +8,14 @@ import { useSignedUrls } from "@/lib/queries/attachments";
 import { useContainerFiles, type ContainerFile } from "@/lib/queries/files";
 import type { Container } from "@/lib/queries/messages";
 import { fileKind, formatBytes, type FileKind } from "@/lib/utils/files";
+import { formatShortDate } from "@/lib/utils/time";
+import { useViewerTimezone } from "@/lib/viewer-timezone";
 
 const ICONS: Record<Exclude<FileKind, "image">, typeof File> = { pdf: FileText, text: FileText, archive: FileArchive, video: FileVideo, audio: FileAudio, file: File };
 
-function when(iso: string) {
-  const d = new Date(iso);
-  return isThisYear(d) ? format(d, "d MMM") : format(d, "d MMM yyyy");
-}
-
 /** Every file shared here, newest first, with a jump to its message. Lives in the details panel's Files tab. */
 export function FilesList({ container, containerLabel }: { container: Container; containerLabel: string }) {
+  const tz = useViewerTimezone();
   const { data: files, isPending } = useContainerFiles(container);
   const images = (files ?? [])
     .filter((f) => fileKind(f.mime_type, f.file_name) === "image")
@@ -72,7 +69,7 @@ export function FilesList({ container, containerLabel }: { container: Container;
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-semibold text-ink">{f.file_name ?? "File"}</span>
                 <span className="mt-0.5 block truncate text-[11.5px] text-muted-foreground">
-                  {f.message.author?.display_name ?? "Someone"} · {when(f.message.created_at)} · {formatBytes(f.size_bytes)}
+                  {f.message.author?.display_name ?? "Someone"} · {formatShortDate(f.message.created_at, tz)} · {formatBytes(f.size_bytes)}
                 </span>
               </span>
             </Link>

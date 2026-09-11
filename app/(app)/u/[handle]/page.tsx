@@ -8,6 +8,7 @@ import { PresenceLabel } from "@/components/presence/online-dot";
 import { getCurrentProfile, getProfileByHandle, getVisibleChannelsFor } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { describeExpiry, isStatusActive, localTimeLabel } from "@/lib/utils/status";
+import { formatLongDate, safeTimeZone } from "@/lib/utils/time";
 
 type Params = Promise<{ handle: string }>;
 
@@ -35,7 +36,7 @@ export default async function ProfilePage({ params }: { params: Params }) {
   const status = isStatusActive(person) ? person : null;
   const until = status ? describeExpiry(status.status_expires_at, person.timezone) : null;
   const clock = localTimeLabel(person.timezone, me.timezone);
-  const joined = new Date(person.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const joined = formatLongDate(person.created_at, safeTimeZone(me.timezone));
   const shared = channels.filter((c) => c.mutual);
 
   return (

@@ -6,6 +6,8 @@ import { useFormStatus } from "react-dom";
 import { sendMagicLink, signInWithGoogle, type MagicLinkState } from "@/app/(auth)/login/actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { desktopBridge } from "@/lib/desktop";
+import { useHydrated } from "@/lib/utils/use-hydrated";
 import { GoogleIcon } from "./google-icon";
 
 /**
@@ -73,6 +75,19 @@ function GoogleButton({ blocked }: { blocked: boolean }) {
  */
 export function SignInForm({ next, expired = false }: { next: string; expired?: boolean }) {
   const [state, action, pending] = useActionState<MagicLinkState, FormData>(sendMagicLink, { status: "idle" });
+  // Google sign-in is PKCE: the client that starts it holds a one-time secret
+  // the callback needs. The desktop window cannot finish in the browser it
+  // opens, so inside the app every sign-in hands the whole page to the
+  // browser, where the flow starts and ends in one place and the handoff
+  // route brings the session back. Decided after hydration so the server and
+  // client render the same form.
+  const desktop = useHydrated() ? desktopBridge() : null;
+  const toBrowser = desktop
+    ? (e: React.FormEvent) => {
+        e.preventDefault();
+        void desktop.signIn();
+      }
+    : undefined;
   const [email, setEmail] = useState("");
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -104,10 +119,15 @@ export function SignInForm({ next, expired = false }: { next: string; expired?: 
 
   return (
     <>
-      <form action={signInWithGoogle} className="mt-[26px]">
+      <form action={signInWithGoogle} onSubmit={toBrowser} className="mt-[26px]">
         <input type="hidden" name="next" value={next} />
         <GoogleButton blocked={pending} />
       </form>
+      {desktop && (
+        <p className="mt-[10px] text-[12px] leading-[1.5] text-muted-foreground">
+          Sign-in opens in your browser and brings you straight back here.
+        </p>
+      )}
 
       <div aria-hidden="true" className="my-[22px] flex items-center gap-[12px]">
         <span className="h-px flex-1 bg-border" />
@@ -130,7 +150,7 @@ export function SignInForm({ next, expired = false }: { next: string; expired?: 
             once and expires in an hour.
           </p>
           <div className="mt-[11px] flex flex-wrap items-center gap-[8px]">
-            <form action={action}>
+            <form action={action} onSubmit={toBrowser}>
               <input type="hidden" name="email" value={sentTo} />
               <input type="hidden" name="next" value={next} />
               <Button
@@ -163,7 +183,7 @@ export function SignInForm({ next, expired = false }: { next: string; expired?: 
           </div>
         </div>
       ) : (
-        <form action={action}>
+        <form action={action} onSubmit={toBrowser}>
           <input type="hidden" name="next" value={next} />
           <label htmlFor="magic-email" className="mb-[7px] block text-[12.5px] font-semibold text-fg-400">
             Email address

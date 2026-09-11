@@ -50,10 +50,9 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    url.search = "";
-    return NextResponse.redirect(url);
+    const raw = request.nextUrl.searchParams.get("next") ?? "/";
+    const safe = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+    return NextResponse.redirect(new URL(safe, request.nextUrl.origin));
   }
 
   return response;

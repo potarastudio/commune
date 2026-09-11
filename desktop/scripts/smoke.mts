@@ -47,13 +47,18 @@ const note = (name: string, detail: string) => rows.push({ name, ok: null, detai
 
 // ---- a "system browser" that signs in and mints a handoff -----------------------
 
-async function mintHandoff(): Promise<string> {
+async function browserCookie(): Promise<string> {
   const login = await fetch(`${DEV}/auth/dev-login?email=hi@potarastudio.com`, { redirect: "manual" });
   const cookie = login.headers
     .getSetCookie()
     .map((c) => c.split(";")[0])
     .join("; ");
   if (!cookie.includes("auth-token")) throw new Error("dev-login set no session cookie; is the local stack seeded?");
+  return cookie;
+}
+
+async function mintHandoff(): Promise<string> {
+  const cookie = await browserCookie();
   const page = await fetch(`${DEV}/desktop/handoff`, { headers: { cookie }, redirect: "manual" });
   const html = await page.text();
   const id = /commune:\/\/auth\?handoff=([0-9a-f-]{36})/.exec(html)?.[1];
@@ -121,31 +126,20 @@ await win.waitForTimeout(1500);
   check("no Node in the page", !leak);
 }
 
-// 3. Google sign-in leaves the window for the browser, pointed at the handoff.
+// 3. Sign-in hands the login page to the browser. Google is PKCE, so the
+//    flow must start and finish in the same client; the window never starts it.
 {
   const before = (await opened()).length;
   await win.getByRole("button", { name: /google/i }).first().click();
-  await win.waitForTimeout(2500);
+  await win.waitForTimeout(2000);
   const links = await opened();
   const last = links[links.length - 1] ?? "";
-  check("Google opens in the system browser", links.length > before, last.slice(0, 60));
-  check("…via the auth server, not inside the window", /\/auth\/v1\/authorize/.test(last), "");
-  const deep = (s: string) => {
-    let p = s;
-    for (let i = 0; i < 4; i++) {
-      try {
-        const d = decodeURIComponent(p);
-        if (d === p) break;
-        p = d;
-      } catch {
-        break;
-      }
-    }
-    return p;
-  };
-  const redirect = deep(last).slice(Math.max(0, deep(last).indexOf("redirect_to")));
-  check("…and will land on the handoff route", redirect.includes("/desktop/handoff"), redirect.slice(0, 90));
-  check("the window stayed on Commune", new URL(win.url()).origin === DEV, new URL(win.url()).origin);
+  check("Google button opens the login page in the browser, pointed at the handoff", links.length > before && last === `${DEV}/login?next=%2Fdesktop%2Fhandoff`, last.slice(-45));
+  check("no OAuth was started from the window", !links.some((l) => l.includes("/auth/v1/authorize")));
+  check("the window stayed on /login", new URL(win.url()).pathname === "/login", new URL(win.url()).pathname);
+  const cookie = await browserCookie();
+  const r = await fetch(`${DEV}/login?next=%2Fdesktop%2Fhandoff`, { headers: { cookie }, redirect: "manual" });
+  check("a browser already signed in skips straight to the handoff", r.status === 307 && (r.headers.get("location") ?? "").endsWith("/desktop/handoff"), `${r.status} → ${r.headers.get("location")}`);
 }
 
 // 4. The deep link signs the window in.

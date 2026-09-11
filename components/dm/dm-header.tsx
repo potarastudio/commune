@@ -10,6 +10,7 @@ import { conversationLabel, type ConversationMember } from "@/lib/queries/conver
 import { useContainerFiles } from "@/lib/queries/files";
 import type { Container } from "@/lib/queries/messages";
 import { useProfileMap } from "@/lib/queries/profiles";
+import { useHydrated } from "@/lib/utils/use-hydrated";
 import { usePresenceStore } from "@/lib/store/presence";
 import { localTimeLabel } from "@/lib/utils/status";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
@@ -26,9 +27,10 @@ function viewerTimezone(): string {
 /**
  * Their wall clock, for the header's "Active now · 15:04 local". The design
  * carries it in both header variants regardless of the viewer's own zone, so
- * unlike `localTimeLabel` this does not drop out when the two match. It only
- * renders once their profile has loaded on the client, so there is nothing for
- * the server to disagree with.
+ * unlike `localTimeLabel` this does not drop out when the two match. It is
+ * drawn only after hydration: their profile comes from a browser-only query
+ * that can finish before this header hydrates, and the server never has it,
+ * so drawing it any earlier is a hydration mismatch.
  */
 function localClock(timezone: string, now = new Date()): string | null {
   try {
@@ -112,6 +114,7 @@ export function DmHeader({
 }) {
   const { showPanel } = useThreadNav();
   const profiles = useProfileMap();
+  const hydrated = useHydrated();
   const online = usePresenceStore((s) => s.online);
 
   const others = members.filter((m) => m.id !== meId);
@@ -124,7 +127,7 @@ export function DmHeader({
 
   let subline: string;
   if (single) {
-    const their = profiles.get(single.id);
+    const their = hydrated ? profiles.get(single.id) : undefined;
     // The design's sub-line is always two parts — "Active now · 15:04 local",
     // "Away · likely back after 16:00" — so their clock stays even when the
     // whole team shares one timezone.

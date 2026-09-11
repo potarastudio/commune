@@ -3,6 +3,7 @@
 import { formatDistanceToNowStrict } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfileMap } from "@/lib/queries/profiles";
+import { useHydrated } from "@/lib/utils/use-hydrated";
 
 /** "avatars · 4 replies · Last reply 2h ago" under a threaded parent (§5). */
 export function ReplySummary({
@@ -17,6 +18,9 @@ export function ReplySummary({
   onOpen: () => void;
 }) {
   const profiles = useProfileMap();
+  // Profiles load only in the browser; the server draws "?" placeholders, so
+  // the hydration render must too, and the faces arrive a frame later.
+  const hydrated = useHydrated();
   if (count === 0) return null;
 
   return (
@@ -31,7 +35,7 @@ export function ReplySummary({
     >
       <span className="flex">
         {participantIds.slice(0, 4).map((id, i) => {
-          const p = profiles.get(id);
+          const p = hydrated ? profiles.get(id) : undefined;
           return (
             <Avatar key={id} className={`size-[22px] rounded-full bg-bg-avatar ring-2 ring-bg-main ${i > 0 ? "-ml-1.5" : ""}`}>
               <AvatarImage src={p?.avatar_url ?? undefined} alt="" className="object-cover" />

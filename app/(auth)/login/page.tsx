@@ -1,5 +1,6 @@
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, Laptop } from "lucide-react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Image from "next/image";
 import { HashError } from "@/components/auth/hash-error";
 import { LoginPreview } from "@/components/auth/login-preview";
@@ -29,6 +30,12 @@ export default async function LoginPage({
 }) {
   const { next, error } = await searchParams;
   const err = error ? errorCopy[error] : undefined;
+  // The desktop app sends sign-in to the browser with this `next`. In the
+  // browser the page is otherwise identical to the one the person just left in
+  // the app, so it reads as a loop; say where it leads. The app window tags
+  // every request with CommuneDesktop, so it never shows the note to itself.
+  const inApp = ((await headers()).get("user-agent") ?? "").includes("CommuneDesktop");
+  const forDesktopApp = next === "/desktop/handoff" && !inApp;
 
   return (
     /*
@@ -69,6 +76,23 @@ export default async function LoginPage({
             Channels, threads and huddles for the studio. Use the Google account you were invited with, or get a
             one-time link by email.
           </p>
+
+          {forDesktopApp && (
+            <div
+              role="status"
+              className="mt-[22px] flex gap-[11px] rounded-[11px] border border-accent-surface-border bg-accent-surface px-[13px] py-[12px]"
+            >
+              <span className="mt-px grid size-[22px] shrink-0 place-items-center rounded-[7px] bg-primary text-white">
+                <Laptop className="size-[13px]" strokeWidth={1.75} aria-hidden="true" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-semibold text-accent-foreground">Signing in to the Commune app</span>
+                <span className="mt-[3px] block text-[12.5px] leading-[1.55] text-accent-foreground text-pretty">
+                  Sign in here once and you’ll be sent straight back to the app on this computer.
+                </span>
+              </span>
+            </div>
+          )}
 
           {err && (
             <div

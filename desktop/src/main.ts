@@ -50,12 +50,13 @@ if (!app.requestSingleInstanceLock()) {
   });
 }
 
-if (process.defaultApp && process.argv.length >= 2) {
-  // Running from source: register the scheme against this exact launch command.
-  app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);
-} else {
-  app.setAsDefaultProtocolClient(PROTOCOL);
-}
+// Only the installed app claims commune:// links. A run from source (`pnpm
+// dev`, `pnpm smoke`) is the bare Electron runtime, and on macOS registering
+// from it makes that runtime the handler for every commune:// link on the
+// machine: the browser's "Open Commune" then launches an empty Electron
+// window instead of the installed app. Dev runs never need the registration;
+// the smoke test delivers deep links with app.emit("open-url").
+if (app.isPackaged) app.setAsDefaultProtocolClient(PROTOCOL);
 
 // macOS delivers deep links here, on first launch and thereafter.
 app.on("open-url", (event, url) => {

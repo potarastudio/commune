@@ -14,6 +14,12 @@ is closed.
     pnpm dev            # against the web app on http://localhost:3001 (run `pnpm dev` in the repo root first)
     pnpm smoke          # boots the shell and checks sign-in, badge, notifications, screen share, links
 
+Runs from source never register the `commune://` scheme. On macOS that would
+make the bare Electron runtime the handler for every Commune link on the
+machine, and the installed app's sign-in would open an empty Electron window.
+Deep links are exercised by `pnpm smoke`, which delivers them directly, or by
+a packaged build.
+
 `COMMUNE_DEV=1` (set by `pnpm dev`) points the window at the local server,
 enables DevTools in the View menu, and uses our own screen-share picker instead
 of the macOS one so the flow can be exercised.

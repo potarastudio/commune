@@ -55,6 +55,11 @@ Notarization and publishing need:
 | `GH_TOKEN` | a GitHub token with `repo` scope, for the release upload |
 | `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD` | optional: a Windows code-signing certificate; without it SmartScreen shows a warning on first install |
 
+`pnpm release` creates and pushes the `v<version>` tag before building.
+GitHub refuses to publish a release whose tag does not exist yet, and
+electron-builder only discovers that after every upload has finished, so the
+tag has to come first.
+
 Updates: the installed app checks GitHub Releases fifteen seconds after launch
 and every six hours, downloads in the background, and installs on quit or when
 the person accepts the prompt. Bump `version` in `package.json` before

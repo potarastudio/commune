@@ -17,7 +17,7 @@
     "dist:mac": "pnpm build:main && electron-builder --mac",
     "dist:win": "pnpm build:main && electron-builder --win",
     "dist": "pnpm build:main && electron-builder --mac --win",
-    "release": "pnpm build:main && electron-builder --mac --win -c.mac.notarize=true --publish always",
+    "release": "pnpm build:main && (git tag v$npm_package_version 2>/dev/null; git push origin v$npm_package_version) && electron-builder --mac --win -c.mac.notarize=true --publish always",
     "smoke": "pnpm build:main && node --import tsx scripts/smoke.mts"
   },
   "devDependencies": {

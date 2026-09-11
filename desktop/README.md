@@ -25,10 +25,18 @@ whatever handles mail, so sign-in happens in the system browser:
 
 1. The window shows `/login?next=/desktop/handoff`.
 2. The Google button (or the emailed link) finishes in the browser, on
-   `/desktop/handoff`, which parks the session's refresh token under a random
-   id that expires in two minutes and opens `commune://auth?handoff=<id>`.
+   `/desktop/handoff`, which mints a one-time sign-in token for that user,
+   parks it under a random id that expires in two minutes, and opens
+   `commune://auth?handoff=<id>`.
 3. The app claims the id through `/api/desktop/session`, which deletes the row
-   and exchanges the token for cookies inside the window. The link works once.
+   and verifies the token into a session of the app's own, with cookies in the
+   window. The link works once; a repeat delivery to an app that is already
+   signed in is ignored rather than treated as a failure.
+
+The app must never share the browser's session. Supabase rotates refresh
+tokens and rejects one that comes back two rotations late, so an idle app
+sharing a busy browser's session gets signed out. The first version did
+exactly that; `../scripts/check-desktop-handoff.mts` now guards against it.
 
 ## Build
 

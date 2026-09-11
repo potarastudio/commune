@@ -333,7 +333,8 @@ The whole Potara team has used Commune instead of Slack for text chat for one fu
 Rules:
 - **The shell never bundles the app.** It loads `commune.potarastudio.com` (or `localhost:3001` with `COMMUNE_DEV=1`). Anything the app does, it does on the site.
 - **The web app must keep working in a plain browser.** Desktop-only behaviour is gated on `isDesktopApp()` from `lib/desktop.ts`, which is the only place the page touches `window.communeDesktop`. Today that is: system notifications in place of push, following a notification click, and the Settings copy for it.
-- **Sign-in goes through the system browser.** Google refuses embedded browsers. `/desktop/handoff` parks the refresh token under a one-shot id in `desktop_handoffs` (service-role only, two-minute expiry) and opens `commune://auth?handoff=<id>`; `/api/desktop/session` claims it. Never put a token in the deep link.
+- **Sign-in goes through the system browser.** Google refuses embedded browsers. `/desktop/handoff` mints a one-time sign-in token for the signed-in user (admin `generateLink`, no email sent), parks it under a one-shot id in `desktop_handoffs` (service-role only, two-minute expiry) and opens `commune://auth?handoff=<id>`; `/api/desktop/session` claims it and verifies it into a session of the app's own. Never put a token in the deep link.
+- **The app never shares the browser's session.** Supabase rotates refresh tokens and rejects one that comes back two rotations late, so two clients on one session will eventually sign one out. That is what happened on 2026-09-11 (`refresh_token_already_used` in the auth logs). `scripts/check-desktop-handoff.mts` guards it.
 - **Verify with `pnpm smoke` in `desktop/`** against the dev server before shipping the shell; it covers sign-in, badge, notifications, screen share, close-to-hide and external links. Packaged builds: `pnpm dist:mac`, `pnpm dist:win`, `pnpm release` (see `desktop/README.md`).
 
 Mobile remains a non-goal.

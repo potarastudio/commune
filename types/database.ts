@@ -292,21 +292,21 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
-          refresh_token: string
+          token_hash: string
           user_id: string
         }
         Insert: {
           created_at?: string
           expires_at?: string
           id?: string
-          refresh_token: string
+          token_hash: string
           user_id: string
         }
         Update: {
           created_at?: string
           expires_at?: string
           id?: string
-          refresh_token?: string
+          token_hash?: string
           user_id?: string
         }
         Relationships: [

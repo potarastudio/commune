@@ -8,38 +8,43 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
  * Google refuses to run its consent screen inside an embedded browser, and a
  * magic link opens in whatever handles mail, so the desktop app signs people
  * in through the system browser: it opens /login?next=/desktop/handoff, and
- * the ordinary Google or magic-link flow ends up here with a session cookie
- * set for this browser. That browser is not the app. This route carries the
- * session across.
+ * the ordinary Google or magic-link flow ends up here, signed in, in a
+ * browser that is not the app.
  *
- * It does not put the refresh token in the link. GoTrue keeps a rotated token
- * exchangeable for a while, so a token in a URL would be replayable. The
- * token is parked in desktop_handoffs under a random id that expires in two
- * minutes, the commune:// link carries only the id, and /api/desktop/session
- * claims the row — deleting it — on the way to exchanging the token. A link
- * works once. Custom-scheme links are dispatched by the OS and never touch
- * the network, so the id never leaves the machine either.
+ * This route does not hand that browser's session across. Supabase rotates a
+ * session's refresh token on every refresh and rejects one that comes back
+ * two rotations late, so two clients sharing a session will eventually sign
+ * one of them out (see migration 23). Instead it mints a one-time sign-in
+ * token for the same user, parks it in desktop_handoffs under a random id
+ * that expires in two minutes, and opens commune://auth?handoff=<id>. The
+ * app claims the id through /api/desktop/session and verifies the token into
+ * a session of its own. The browser's session is left exactly as it was.
  *
- * The page it renders is what the browser tab shows afterwards: a one-line
- * "back to the app" so the tab is not a dead end if the OS does not switch.
+ * Custom-scheme links are dispatched by the OS and never touch the network,
+ * and the claim deletes the row, so a link works once.
  */
 export async function GET(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
   const origin = new URL(request.url).origin;
-  if (!session?.refresh_token) {
+  const supabase = await createSupabaseServerClient();
+  // getUser, not getSession: the identity is checked with the auth server
+  // rather than trusted from the cookie.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) {
     return NextResponse.redirect(new URL("/login?next=%2Fdesktop%2Fhandoff", origin));
   }
 
+  // generateLink mints the token without sending any email.
   const admin = createSupabaseAdminClient();
-  const { data, error } = await admin
-    .from("desktop_handoffs")
-    .insert({ user_id: session.user.id, refresh_token: session.refresh_token })
-    .select("id")
-    .single();
+  const { data: link, error: linkError } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.email });
+  const tokenHash = link?.properties?.hashed_token;
+  if (linkError || !tokenHash) {
+    console.error("desktop handoff generateLink failed", { message: linkError?.message });
+    return NextResponse.redirect(new URL("/login?error=link", origin));
+  }
+
+  const { data, error } = await admin.from("desktop_handoffs").insert({ user_id: user.id, token_hash: tokenHash }).select("id").single();
   if (error || !data) {
     console.error("desktop handoff insert failed", { message: error?.message });
     return NextResponse.redirect(new URL("/login?error=link", origin));

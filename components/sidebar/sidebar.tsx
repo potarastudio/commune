@@ -1,4 +1,4 @@
-import { ChevronDown, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { JoinedChannel } from "@/lib/queries/channels";
@@ -32,7 +32,6 @@ export function Sidebar({
     <aside className="flex w-[272px] shrink-0 flex-col border-r border-border bg-bg-col max-[900px]:hidden">
       <div className="flex h-[56px] shrink-0 items-center gap-[6px] pr-[10px] pl-[16px]">
         <span className="min-w-0 truncate text-[15px] font-semibold tracking-[-0.015em] text-ink">Potara Studio</span>
-        <ChevronDown className="size-[14px] shrink-0 text-muted-foreground" aria-hidden="true" />
         <Tooltip>
           <TooltipTrigger asChild>
             <Link

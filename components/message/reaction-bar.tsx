@@ -2,6 +2,7 @@
 
 import { SmilePlus } from "lucide-react";
 import { useProfileMap } from "@/lib/queries/profiles";
+import { useHydrated } from "@/lib/utils/use-hydrated";
 import type { Reaction } from "@/lib/queries/messages";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Emoji } from "@/components/emoji/emoji";
@@ -18,12 +19,16 @@ export function ReactionBar({
   onToggle: (emoji: string, active: boolean) => void;
 }) {
   const profiles = useProfileMap();
+  // Names come from a browser-only query, so the server can only say "Someone".
+  // If the names land before this part of the page hydrates, using them at
+  // once would make the chip's label differ from the server's; wait a frame.
+  const hydrated = useHydrated();
   if (reactions.length === 0) return null;
 
   const groups = new Map<string, string[]>();
   for (const r of reactions) groups.set(r.emoji, [...(groups.get(r.emoji) ?? []), r.user_id]);
 
-  const nameOf = (id: string) => (id === meId ? "You" : (profiles.get(id)?.display_name ?? "Someone"));
+  const nameOf = (id: string) => (id === meId ? "You" : ((hydrated && profiles.get(id)?.display_name) || "Someone"));
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5">

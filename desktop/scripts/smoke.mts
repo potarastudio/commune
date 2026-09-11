@@ -104,7 +104,16 @@ const stderr: string[] = [];
 app.process().stderr?.on("data", (d: Buffer) => stderr.push(String(d)));
 const win: Page = await app.firstWindow({ timeout: 60_000 });
 const errors: string[] = [];
-win.on("pageerror", (e) => errors.push(e.message.split("\n")[0].slice(0, 100)));
+// Record where each error happened and the React diff, not just the first line:
+// "hydration failed" alone does not say which page or which text.
+win.on("pageerror", (e) => {
+  let where = "?";
+  try {
+    where = new URL(win.url()).pathname;
+  } catch {}
+  const diff = e.message.split("\n").filter((l) => /^\s*[+-] /.test(l)).slice(0, 4).join(" / ");
+  errors.push(`${where}: ${e.message.split("\n")[0].slice(0, 90)}${diff ? "  [" + diff.replace(/\s+/g, " ").slice(0, 220) + "]" : ""}`);
+});
 await win.waitForLoadState("networkidle");
 await win.waitForTimeout(1500);
 

@@ -47,7 +47,13 @@ export function ReplySummary({
       </span>
       {lastReplyAt && (
         <span className="truncate text-muted-foreground">
-          <span className="group-hover/replies:hidden">Last reply {formatDistanceToNowStrict(new Date(lastReplyAt), { addSuffix: true })}</span>
+          {/* "3 minutes ago" is worked out from the clock, once on the server and
+              again in the browser a moment later; the two can straddle a
+              boundary. React's escape hatch for exactly this: keep the server's
+              text through hydration rather than report it as a mismatch. */}
+          <span className="group-hover/replies:hidden" suppressHydrationWarning>
+            Last reply {formatDistanceToNowStrict(new Date(lastReplyAt), { addSuffix: true })}
+          </span>
           <span className="hidden group-hover/replies:inline">View thread</span>
         </span>
       )}

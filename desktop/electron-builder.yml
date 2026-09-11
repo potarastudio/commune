@@ -1,0 +1,70 @@
+# Packaging for Commune's desktop shell. Run from desktop/:
+#   pnpm pack         unpacked app in release/, for a quick local run
+#   pnpm dist:mac     signed .dmg and .zip (Developer ID found automatically)
+#   pnpm dist:win     NSIS installer; unsigned unless WIN_CSC_LINK/WIN_CSC_KEY_PASSWORD are set
+#   pnpm release      both, notarized, published to GitHub Releases for auto-update
+#                     (needs APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID, GH_TOKEN)
+appId: com.potarastudio.commune
+productName: Commune
+copyright: Copyright © 2026 Potara Studio
+artifactName: Commune-${version}-${os}-${arch}.${ext}
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**
+  - package.json
+
+# Images the running app loads by path: the tray and the Windows badge overlays.
+extraResources:
+  - { from: build/tray.png, to: tray.png }
+  - { from: build/tray@2x.png, to: tray@2x.png }
+  - { from: build/badges, to: badges }
+
+# Updates are pulled from the repo's GitHub Releases; the same feed for both platforms.
+publish:
+  provider: github
+  owner: potarastudio
+  repo: commune
+  releaseType: release
+
+protocols:
+  name: Commune
+  schemes: [commune]
+
+mac:
+  category: public.app-category.business
+  icon: build/icon.icns
+  target:
+    - { target: dmg, arch: [arm64, x64] }
+    - { target: zip, arch: [arm64, x64] }
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: Commune uses the microphone for huddles.
+    NSCameraUsageDescription: Commune uses the camera for huddles.
+  # Off here so a local build never stalls on missing Apple credentials;
+  # the release script turns it on.
+  notarize: false
+
+dmg:
+  icon: build/icon.icns
+  contents:
+    - { x: 140, y: 200 }
+    - { x: 400, y: 200, type: link, path: /Applications }
+
+win:
+  icon: build/icon.ico
+  target:
+    - { target: nsis, arch: [x64] }
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  shortcutName: Commune

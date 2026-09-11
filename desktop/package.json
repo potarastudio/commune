@@ -1,0 +1,35 @@
+{
+  "name": "commune-desktop",
+  "productName": "Commune",
+  "version": "1.0.0",
+  "description": "Commune for Mac and Windows",
+  "private": true,
+  "main": "dist/main.js",
+  "author": "Potara Studio <hi@potarastudio.com>",
+  "homepage": "https://commune.potarastudio.com",
+  "scripts": {
+    "build:main": "tsc -p tsconfig.json",
+    "dev": "pnpm build:main && COMMUNE_DEV=1 electron .",
+    "start": "pnpm build:main && electron .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "icons": "node --import tsx scripts/make-icons.mts",
+    "pack": "pnpm build:main && electron-builder --dir",
+    "dist:mac": "pnpm build:main && electron-builder --mac",
+    "dist:win": "pnpm build:main && electron-builder --win",
+    "dist": "pnpm build:main && electron-builder --mac --win",
+    "release": "pnpm build:main && electron-builder --mac --win -c.mac.notarize=true --publish always",
+    "smoke": "pnpm build:main && node --import tsx scripts/smoke.mts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
+    "sharp": "^0.34.0",
+    "tsx": "^4.23.0",
+    "typescript": "^5.7.0",
+    "@playwright/test": "^1.50.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}

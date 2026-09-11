@@ -1,0 +1,7 @@
+# Standalone package; not part of the web app's workspace.
+allowBuilds:
+  electron: true
+  sharp: true
+  esbuild: true
+  # Squirrel support pulled in by electron-builder; unused, we ship NSIS.
+  electron-winstaller: false

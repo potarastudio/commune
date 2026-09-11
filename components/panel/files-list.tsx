@@ -20,7 +20,9 @@ function when(iso: string) {
 /** Every file shared here, newest first, with a jump to its message. Lives in the details panel's Files tab. */
 export function FilesList({ container, containerLabel }: { container: Container; containerLabel: string }) {
   const { data: files, isPending } = useContainerFiles(container);
-  const images = (files ?? []).filter((f) => fileKind(f.mime_type, f.file_name) === "image").map((f) => f.storage_path);
+  const images = (files ?? [])
+    .filter((f) => fileKind(f.mime_type, f.file_name) === "image")
+    .map((f) => ({ storage_path: f.storage_path, provider: f.provider }));
   const { data: urls } = useSignedUrls(images);
   const base = container.kind === "channel" ? `/channel/${container.id}` : `/dm/${container.id}`;
 

@@ -108,3 +108,21 @@ Dry run without sending: `curl -H "Authorization: Bearer $CRON_SECRET" "$NEXT_PU
 - `insert_message()` is the write path for messages: it validates membership, derives `content_text` if the caller omits it, extracts mentions from the Tiptap JSON, links attachments, and optionally copies a thread reply into its channel.
 - `get_or_create_conversation()` dedupes DMs by member set; `get_unread_counts()` powers sidebar badges; `search_messages()` backs the search page.
 - The first account to sign in becomes admin; later accounts are members.
+
+
+## Large attachments (Cloudflare R2)
+
+Supabase's Free plan caps uploads at 50 MB. Files above that, up to 1 GB, go to
+a private R2 bucket when these are set (in `.env.local` and in Vercel):
+
+    R2_ACCOUNT_ID=
+    R2_ACCESS_KEY_ID=
+    R2_SECRET_ACCESS_KEY=
+    R2_BUCKET=commune-attachments
+
+The token needs Object Read and Write on that bucket only. The bucket needs a
+CORS policy allowing `PUT` and `GET` from `https://commune.potarastudio.com`
+(and `http://localhost:3001` for development) with the `content-type` header.
+The limit shown in the app is decided at build time from `R2_BUCKET`, so
+restart `pnpm dev` after adding the variables and redeploy after adding them
+to Vercel. Without them the app keeps the 50 MB limit and nothing else changes.

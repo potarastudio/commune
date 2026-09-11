@@ -53,6 +53,7 @@ function optimisticAttachments(vars: SendVars, messageId: string): Message["atta
     id: `${messageId}-att-${i}`,
     message_id: messageId,
     storage_path: a.storage_path,
+    provider: a.provider,
     file_name: a.file_name,
     mime_type: a.mime_type,
     size_bytes: a.size_bytes,

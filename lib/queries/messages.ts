@@ -42,6 +42,8 @@ export type MessagePage = { messages: Message[]; nextCursor: string | null };
 /** What the client sends after a successful upload; the row is created by insert_message. */
 export type AttachmentInput = {
   storage_path: string;
+  /** Which store holds the object; "supabase" up to 50 MB, "r2" above. */
+  provider: "supabase" | "r2";
   file_name: string;
   mime_type: string;
   size_bytes: number;

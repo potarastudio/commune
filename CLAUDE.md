@@ -30,6 +30,7 @@ This file is the source of truth for the project. Read it fully before making ch
 | Huddles | LiveKit Cloud | `@livekit/components-react`. Tokens minted server-side via a Route Handler |
 | Search | Postgres full-text search (`tsvector`) | No external search service |
 | Email | Resend | Invites, mention digests |
+| Large attachments | Cloudflare R2 | Files over 50 MB, via presigned URLs (`lib/r2.ts`). Optional: on when `R2_*` are set |
 | Push | Web Push API + service worker | Browser notifications only |
 | Hosting | Vercel | Preview deploys per PR |
 | Validation | Zod | Every Route Handler and Server Action validates input with Zod |
@@ -219,6 +220,7 @@ Write a helper `is_channel_member(channel_id)` and `is_conversation_member(conve
 - `attachments` — private, 50 MB per file limit (the Supabase Free plan ceiling; was 25 MB until 2026-09-11)
 - `avatars` — public
 - `emoji` — public
+- Cloudflare R2 bucket `commune-attachments` — private; attachments over 50 MB (up to 1 GB). Rows carry `provider` so reads know where to sign; R2 reads are signed server-side only after the row's own RLS select passes.
 
 ---
 
@@ -287,7 +289,7 @@ Ship each phase to Vercel and use it with the real team before starting the next
 - **Uploads** go direct to Supabase Storage from the browser with a signed upload URL; the message is inserted after the upload succeeds, referencing the path.
 - **LiveKit tokens** are minted in `app/api/livekit/token/route.ts` only after verifying the caller can read the channel/conversation the huddle belongs to. Never expose the LiveKit API secret to the client.
 - **Errors.** User-facing errors are toasts with plain language. Log the real error with context on the server.
-- **Env vars** are validated at boot with Zod in `lib/env.ts`. Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `RESEND_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_APP_URL`.
+- **Env vars** are validated at boot with Zod in `lib/env.ts`. Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `RESEND_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_APP_URL`. Optional: `CRON_SECRET`; `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (all four, or large uploads stay off).
 - Commit messages: Conventional Commits (`feat:`, `fix:`, `chore:`…). Small PRs, one feature each.
 
 ---

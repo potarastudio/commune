@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { uploadAttachment, type AttachmentInput } from "./attachments";
-import { MAX_ATTACHMENTS_PER_MESSAGE, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_LABEL, formatBytes } from "@/lib/utils/files";
+import { MAX_ATTACHMENTS_PER_MESSAGE, attachmentLimitBytes, attachmentLimitLabel, formatBytes } from "@/lib/utils/files";
 
 export type PendingUpload = {
   id: string;
   file: File;
   previewUrl: string | null;
   status: "uploading" | "done" | "error";
+  /** 0–1 while a large upload reports progress; absent for the small path, which cannot. */
+  progress?: number;
   error?: string;
   result?: AttachmentInput;
 };
@@ -29,18 +31,19 @@ export function useAttachmentUploads() {
       const incoming = Array.from(files);
       const room = MAX_ATTACHMENTS_PER_MESSAGE - uploadsRef.current.length;
       if (incoming.length > room) toast.error(`You can attach up to ${MAX_ATTACHMENTS_PER_MESSAGE} files per message.`);
+      const limit = attachmentLimitBytes();
       for (const file of incoming.slice(0, Math.max(room, 0))) {
-        if (file.size > MAX_ATTACHMENT_BYTES) {
-          toast.error(`${file.name} is ${formatBytes(file.size)}. Files need to be under ${MAX_ATTACHMENT_LABEL}.`);
+        if (file.size > limit) {
+          toast.error(`${file.name} is ${formatBytes(file.size)}. Files need to be under ${attachmentLimitLabel()}.`);
           continue;
         }
         const id = crypto.randomUUID();
         const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
         setUploads((list) => [...list, { id, file, previewUrl, status: "uploading" }]);
-        uploadAttachment(file)
-          .then((result) => update(id, { status: "done", result }))
+        uploadAttachment(file, (progress) => update(id, { progress }))
+          .then((result) => update(id, { status: "done", progress: undefined, result }))
           .catch((err: unknown) => {
-            update(id, { status: "error", error: err instanceof Error ? err.message : "Upload failed." });
+            update(id, { status: "error", progress: undefined, error: err instanceof Error ? err.message : "Upload failed." });
             toast.error(`Couldn't upload ${file.name}`, { description: err instanceof Error ? err.message : undefined });
           });
       }

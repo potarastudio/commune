@@ -43,6 +43,7 @@ export type Database = {
           id: string
           message_id: string
           mime_type: string | null
+          provider: string
           size_bytes: number | null
           storage_path: string
           width: number | null
@@ -54,6 +55,7 @@ export type Database = {
           id?: string
           message_id: string
           mime_type?: string | null
+          provider?: string
           size_bytes?: number | null
           storage_path: string
           width?: number | null
@@ -65,6 +67,7 @@ export type Database = {
           id?: string
           message_id?: string
           mime_type?: string | null
+          provider?: string
           size_bytes?: number | null
           storage_path?: string
           width?: number | null

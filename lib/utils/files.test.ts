@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fileKind, formatBytes, isImageMime, safeFileName, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_LABEL } from "./files";
+import { fileKind, formatBytes, isImageMime, safeFileName, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_LABEL, MAX_LARGE_ATTACHMENT_BYTES, MAX_LARGE_ATTACHMENT_LABEL, providerFor, attachmentLimitBytes, largeUploadsEnabled } from "./files";
 
 describe("formatBytes", () => {
   it("picks sensible units", () => {
@@ -40,5 +40,28 @@ describe("attachment limit", () => {
   it("is 50 MB, the Free-plan ceiling, and the label agrees", () => {
     expect(MAX_ATTACHMENT_BYTES).toBe(52428800);
     expect(MAX_ATTACHMENT_LABEL).toBe("50 MB");
+  });
+});
+
+describe("large attachments", () => {
+  it("is 1 GB, matching the column constraint, with a clean label", () => {
+    expect(MAX_LARGE_ATTACHMENT_BYTES).toBe(1073741824);
+    expect(MAX_LARGE_ATTACHMENT_LABEL).toBe("1 GB");
+  });
+
+  it("routes a file by size: at the Supabase cap stays, one byte over goes to R2", () => {
+    expect(providerFor(52428800)).toBe("supabase");
+    expect(providerFor(52428801)).toBe("r2");
+    expect(providerFor(0)).toBe("supabase");
+  });
+
+  it("the accepted limit follows the build flag", () => {
+    const prev = process.env.NEXT_PUBLIC_LARGE_UPLOADS;
+    process.env.NEXT_PUBLIC_LARGE_UPLOADS = "";
+    expect(largeUploadsEnabled()).toBe(false);
+    expect(attachmentLimitBytes()).toBe(52428800);
+    process.env.NEXT_PUBLIC_LARGE_UPLOADS = "1";
+    expect(attachmentLimitBytes()).toBe(1073741824);
+    process.env.NEXT_PUBLIC_LARGE_UPLOADS = prev;
   });
 });

@@ -2,7 +2,7 @@
 
 import { Upload } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
-import { MAX_ATTACHMENTS_PER_MESSAGE, MAX_ATTACHMENT_LABEL } from "@/lib/utils/files";
+import { MAX_ATTACHMENTS_PER_MESSAGE, attachmentLimitLabel } from "@/lib/utils/files";
 
 /** Whole-pane drag-and-drop target with an overlay while a file is over it. */
 export function DropZone({ label, onFiles, children }: { label: string; onFiles: (files: FileList) => void; children: React.ReactNode }) {
@@ -57,7 +57,7 @@ export function DropZone({ label, onFiles, children }: { label: string; onFiles:
               <Upload className="size-[21px]" aria-hidden="true" />
             </span>
             <p className="text-[16px] font-semibold tracking-[-0.02em] text-ink">Drop to upload to {label}</p>
-            <p className="text-[13px] text-fg-600">Up to {MAX_ATTACHMENTS_PER_MESSAGE} files, {MAX_ATTACHMENT_LABEL} each.</p>
+            <p className="text-[13px] text-fg-600">Up to {MAX_ATTACHMENTS_PER_MESSAGE} files, {attachmentLimitLabel()} each.</p>
           </div>
         </div>
       )}

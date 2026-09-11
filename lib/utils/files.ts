@@ -10,6 +10,34 @@
 export const MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
 /** "50 MB", for copy that states the limit. */
 export const MAX_ATTACHMENT_LABEL = formatBytes(MAX_ATTACHMENT_BYTES);
+
+/**
+ * Files above MAX_ATTACHMENT_BYTES go to Cloudflare R2 instead, when it is
+ * configured. 1 GB is Slack's limit and comfortably below R2's own; the
+ * column constraint in migration 22 enforces the same number.
+ */
+export const MAX_LARGE_ATTACHMENT_BYTES = 1024 * 1024 * 1024;
+export const MAX_LARGE_ATTACHMENT_LABEL = "1 GB";
+
+export type AttachmentProvider = "supabase" | "r2";
+
+/** Which store a file of this size belongs in. */
+export function providerFor(sizeBytes: number): AttachmentProvider {
+  return sizeBytes > MAX_ATTACHMENT_BYTES ? "r2" : "supabase";
+}
+
+/** True when the build was made with R2 configured; inlined by next.config.ts. */
+export function largeUploadsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_LARGE_UPLOADS === "1";
+}
+
+/** The limit this build accepts, and its label for copy. */
+export function attachmentLimitBytes(): number {
+  return largeUploadsEnabled() ? MAX_LARGE_ATTACHMENT_BYTES : MAX_ATTACHMENT_BYTES;
+}
+export function attachmentLimitLabel(): string {
+  return largeUploadsEnabled() ? MAX_LARGE_ATTACHMENT_LABEL : MAX_ATTACHMENT_LABEL;
+}
 export const MAX_ATTACHMENTS_PER_MESSAGE = 10;
 
 export function formatBytes(bytes: number | null | undefined): string {

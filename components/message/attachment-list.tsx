@@ -27,7 +27,7 @@ export function DownloadButton({ attachment, className }: { attachment: Attachme
   const download = async () => {
     setBusy(true);
     try {
-      const url = await getDownloadUrl(attachment.storage_path, attachment.file_name ?? "file");
+      const url = await getDownloadUrl(attachment);
       window.location.assign(url);
     } catch (err) {
       toast.error("Couldn't download that file", { description: humanError(err, "Check your connection and try again.") });
@@ -58,7 +58,7 @@ export function DownloadButton({ attachment, className }: { attachment: Attachme
 
 /** Images inline as 10px tiles, everything else as a card, both with a download action (§5). */
 export function AttachmentList({ attachments }: { attachments: AttachmentView[] }) {
-  const needsUrl = attachments.filter((a) => !a.preview_url).map((a) => a.storage_path);
+  const needsUrl = attachments.filter((a) => !a.preview_url).map((a) => ({ storage_path: a.storage_path, provider: a.provider }));
   const { data: urls } = useSignedUrls(needsUrl);
   if (attachments.length === 0) return null;
 

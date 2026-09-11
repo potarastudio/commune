@@ -49,9 +49,14 @@ export function PendingAttachments({
 
               {u.status === "uploading" && (
                 <span className="my-[7px] mb-[5px] block h-[5px] overflow-hidden rounded-full bg-bg-avatar">
-                  {/* The upload hook reports state, not bytes, so the fill spans the
-                      track and pulses — a fixed fraction would read as stalled. */}
-                  <span className="block h-[5px] w-full animate-pulse rounded-full bg-primary" />
+                  {/* Large uploads report bytes and get a real fill. The small path
+                      cannot, so its fill spans the track and pulses — a fixed
+                      fraction would read as stalled. */}
+                  {u.progress === undefined ? (
+                    <span className="block h-[5px] w-full animate-pulse rounded-full bg-primary" />
+                  ) : (
+                    <span className="block h-[5px] rounded-full bg-primary transition-[width]" style={{ width: `${Math.round(u.progress * 100)}%` }} />
+                  )}
                 </span>
               )}
 
@@ -61,7 +66,9 @@ export function PendingAttachments({
                 }`}
               >
                 {u.status === "uploading"
-                  ? `Uploading · ${formatBytes(u.file.size)}`
+                  ? u.progress === undefined
+                    ? `Uploading · ${formatBytes(u.file.size)}`
+                    : `Uploading · ${Math.round(u.progress * 100)}% of ${formatBytes(u.file.size)}`
                   : failed
                     ? (u.error ?? "Upload failed.")
                     : formatBytes(u.file.size)}

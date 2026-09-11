@@ -1,8 +1,9 @@
 "use server";
 
 import { z } from "zod";
+import { publicEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { DISPLAY_NAME_MAX, HANDLE_RE, TITLE_MAX, handleProblem } from "@/lib/utils/profile";
+import { DISPLAY_NAME_MAX, HANDLE_RE, TITLE_MAX, avatarUrlAllowed, handleProblem, isOwnAvatarUpload } from "@/lib/utils/profile";
 import { STATUS_TEXT_MAX } from "@/lib/utils/status";
 
 export type ProfileFormResult = { ok: true } | { ok: false; error: string; field?: "display_name" | "handle" | "title" };
@@ -42,8 +43,20 @@ export async function saveProfileAction(input: unknown): Promise<ProfileFormResu
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "You're signed out. Sign in and try again." };
 
-  if (parsed.data.avatar_url && !parsed.data.avatar_url.includes(`/avatars/${user.id}/`)) {
-    return { ok: false, error: "That avatar doesn't belong to you." };
+  // The forms send the avatar back even when it is unchanged, and first
+  // sign-in fills it with the Google photo, so anything that is not a fresh
+  // upload of theirs is checked against what the profile already has.
+  const avatar = parsed.data.avatar_url;
+  const supabaseUrl = publicEnv.NEXT_PUBLIC_SUPABASE_URL;
+  if (avatar && !isOwnAvatarUpload(avatar, user.id, supabaseUrl)) {
+    const { data: stored, error: readError } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
+    if (readError) {
+      console.error("saveProfileAction: read avatar", { code: readError.code, message: readError.message });
+      return { ok: false, error: "Couldn't save your profile. Try again." };
+    }
+    if (!avatarUrlAllowed(avatar, { current: stored?.avatar_url ?? null, userId: user.id, supabaseUrl })) {
+      return { ok: false, error: "That avatar doesn't belong to you." };
+    }
   }
 
   const { error } = await supabase

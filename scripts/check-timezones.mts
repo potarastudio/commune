@@ -90,7 +90,6 @@ const shift = (hhmm: string, hours: number) =>
   hhmm.replace(/\b(\d{2}):(\d{2})\b/g, (_, h, m) => `${String((Number(h) + hours + 24) % 24).padStart(2, "0")}:${m}`);
 
 const originalZone = q(`select timezone from profiles where email='${EMAIL}'`);
-const originalAvatar = q(`select coalesce(avatar_url, '') from profiles where email='${EMAIL}'`);
 q(`update profiles set timezone='Asia/Jakarta' where email='${EMAIL}'`);
 const browser = await chromium.launch();
 
@@ -129,10 +128,6 @@ try {
   ok("newest #general message is in Jakarta time", seen["America/New_York"]["channel"].includes(expected), `expected ${expected}`);
 
   // 4. Changing the zone in Settings moves every time.
-  // The local seed gives Hakim a DiceBear avatar, which saveProfileAction
-  // refuses ("That avatar doesn't belong to you"), so the form could not save
-  // at all. Clear it for this step; the finally block puts it back.
-  q(`update profiles set avatar_url=null where email='${EMAIL}'`);
   try {
     const ctx = await signedIn("America/New_York");
     const before = seen["Asia/Jakarta"]["channel"];
@@ -189,8 +184,7 @@ try {
   }
 } finally {
   await browser.close();
-  const sql = (v: string) => (v ? `'${v.replace(/'/g, "''")}'` : "null");
-  q(`update profiles set timezone=${sql(originalZone)}, avatar_url=${sql(originalAvatar)} where email='${EMAIL}'`);
+  q(`update profiles set timezone='${originalZone.replace(/'/g, "''")}' where email='${EMAIL}'`);
   console.log(rows.join("\n"));
 }
 

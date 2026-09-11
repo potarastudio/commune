@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { uploadAttachment, type AttachmentInput } from "./attachments";
-import { MAX_ATTACHMENTS_PER_MESSAGE, MAX_ATTACHMENT_BYTES, formatBytes } from "@/lib/utils/files";
+import { MAX_ATTACHMENTS_PER_MESSAGE, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_LABEL, formatBytes } from "@/lib/utils/files";
 
 export type PendingUpload = {
   id: string;
@@ -31,7 +31,7 @@ export function useAttachmentUploads() {
       if (incoming.length > room) toast.error(`You can attach up to ${MAX_ATTACHMENTS_PER_MESSAGE} files per message.`);
       for (const file of incoming.slice(0, Math.max(room, 0))) {
         if (file.size > MAX_ATTACHMENT_BYTES) {
-          toast.error(`${file.name} is ${formatBytes(file.size)}. Files need to be under 25 MB.`);
+          toast.error(`${file.name} is ${formatBytes(file.size)}. Files need to be under ${MAX_ATTACHMENT_LABEL}.`);
           continue;
         }
         const id = crypto.randomUUID();

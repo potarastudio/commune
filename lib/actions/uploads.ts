@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { MAX_ATTACHMENT_BYTES, safeFileName } from "@/lib/utils/files";
+import { MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_LABEL, safeFileName } from "@/lib/utils/files";
 
 type Result = { ok: true; path: string; token: string } | { ok: false; error: string };
 
@@ -17,7 +17,7 @@ export async function createUploadUrlAction(input: { fileName: string; mimeType:
     .object({
       fileName: z.string().min(1).max(255),
       mimeType: z.string().max(255),
-      size: z.number().int().nonnegative().max(MAX_ATTACHMENT_BYTES, "Files need to be under 25 MB."),
+      size: z.number().int().nonnegative().max(MAX_ATTACHMENT_BYTES, `Files need to be under ${MAX_ATTACHMENT_LABEL}.`),
     })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "That file can't be uploaded." };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fileKind, formatBytes, isImageMime, safeFileName } from "./files";
+import { fileKind, formatBytes, isImageMime, safeFileName, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_LABEL } from "./files";
 
 describe("formatBytes", () => {
   it("picks sensible units", () => {
@@ -33,5 +33,12 @@ describe("kinds", () => {
     expect(fileKind("application/octet-stream", "design.zip")).toBe("archive");
     expect(fileKind("text/csv", "data.csv")).toBe("text");
     expect(fileKind(null, "mystery")).toBe("file");
+  });
+});
+
+describe("attachment limit", () => {
+  it("is 50 MB, the Free-plan ceiling, and the label agrees", () => {
+    expect(MAX_ATTACHMENT_BYTES).toBe(52428800);
+    expect(MAX_ATTACHMENT_LABEL).toBe("50 MB");
   });
 });

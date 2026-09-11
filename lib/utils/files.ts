@@ -1,5 +1,15 @@
-/** Attachment rules shared by client and server. Bucket limit is 25 MB (§4). */
-export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+/**
+ * Attachment rules shared by client and server.
+ *
+ * The per-file limit is the one number every copy of it derives from: the
+ * client check, the server actions, the drop-zone copy, and (by hand, in the
+ * migration) the bucket and the column constraint. 50 MB is the ceiling the
+ * Supabase Free plan allows for any upload; raising it further means a paid
+ * plan first, then this constant and a migration.
+ */
+export const MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
+/** "50 MB", for copy that states the limit. */
+export const MAX_ATTACHMENT_LABEL = formatBytes(MAX_ATTACHMENT_BYTES);
 export const MAX_ATTACHMENTS_PER_MESSAGE = 10;
 
 export function formatBytes(bytes: number | null | undefined): string {

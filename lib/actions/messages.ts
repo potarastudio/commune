@@ -17,6 +17,7 @@ import {
   type MessageRow,
 } from "@/lib/queries/messages";
 import { isEmptyDoc, toContentText } from "@/lib/utils/tiptap";
+import { MAX_ATTACHMENT_BYTES } from "@/lib/utils/files";
 
 type Result<T = undefined> = { ok: true; message: T } | { ok: false; error: string };
 
@@ -27,7 +28,7 @@ const attachmentSchema = z.object({
   storage_path: z.string().min(1).max(500),
   file_name: z.string().min(1).max(255),
   mime_type: z.string().max(255),
-  size_bytes: z.number().int().nonnegative().max(26214400),
+  size_bytes: z.number().int().nonnegative().max(MAX_ATTACHMENT_BYTES),
   width: z.number().int().positive().nullable(),
   height: z.number().int().positive().nullable(),
 });

@@ -216,7 +216,7 @@ Write policies as SQL in the migration alongside the table. Principles:
 Write a helper `is_channel_member(channel_id)` and `is_conversation_member(conversation_id)` as `security definer` functions and use them in policies to avoid recursive policy checks.
 
 ### Storage buckets
-- `attachments` — private, 25 MB per file limit
+- `attachments` — private, 50 MB per file limit (the Supabase Free plan ceiling; was 25 MB until 2026-09-11)
 - `avatars` — public
 - `emoji` — public
 

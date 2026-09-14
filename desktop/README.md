@@ -20,9 +20,21 @@ machine, and the installed app's sign-in would open an empty Electron window.
 Deep links are exercised by `pnpm smoke`, which delivers them directly, or by
 a packaged build.
 
-`COMMUNE_DEV=1` (set by `pnpm dev`) points the window at the local server,
-enables DevTools in the View menu, and uses our own screen-share picker instead
-of the macOS one so the flow can be exercised.
+`COMMUNE_DEV=1` (set by `pnpm dev`) points the window at the local server and
+enables DevTools in the View menu.
+
+## Screen share
+
+Sharing opens Commune's own picker on every platform: each screen and window
+by name with a live thumbnail, a search, and "Share sound" on Windows, the only
+platform where Electron can capture system audio. Commune's own windows are
+left out, since sharing one mirrors the huddle back at everyone.
+
+The macOS system picker (`useSystemPicker`) was used on Macs until v1.0.1. It
+only offers "a window" or "the entire screen", which is why it was replaced.
+The trade-off is macOS's Screen Recording permission, which the system picker
+never needed: the first share asks for it, macOS wants the app reopened after
+it is granted, and until then the picker explains how to turn it on.
 
 ## Sign-in
 

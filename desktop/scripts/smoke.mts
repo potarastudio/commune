@@ -3,6 +3,8 @@
  * browser tab cannot: the sign-in handoff, the badge, notifications, the
  * screen-share picker, close-to-hide, and external links.
  *   pnpm smoke        (web app running on :3001, local Supabase seeded)
+ *   SMOKE_VERBOSE=1   prints each result as it happens, to see how far a crashed run got
+ *   SMOKE_SHOTS=<dir> saves a screenshot of the screen-share picker there
  *
  * shell.openExternal is stubbed so the run never opens your real browser;
  * what it would have opened is asserted instead.
@@ -42,8 +44,16 @@ async function evalRetry<T>(page: Page, fn: () => T | Promise<T>, tries = 4): Pr
   }
 }
 const rows: Row[] = [];
-const check = (name: string, ok: boolean, detail = "") => rows.push({ name, ok, detail });
-const note = (name: string, detail: string) => rows.push({ name, ok: null, detail });
+// SMOKE_VERBOSE=1 prints each row as it happens, which shows how far a crashed run got.
+const verbose = (row: Row) => process.env.SMOKE_VERBOSE && console.error(`${row.ok === null ? "·" : row.ok ? "✓" : "✗"} ${row.name}   ${row.detail}`);
+const check = (name: string, ok: boolean, detail = "") => {
+  rows.push({ name, ok, detail });
+  verbose(rows[rows.length - 1]);
+};
+const note = (name: string, detail: string) => {
+  rows.push({ name, ok: null, detail });
+  verbose(rows[rows.length - 1]);
+};
 
 // ---- a "system browser" that signs in and mints a handoff -----------------------
 
@@ -231,23 +241,79 @@ await win.waitForTimeout(1500);
       );
     };
   });
-  const pickerPromise = app.waitForEvent("window", { timeout: 20_000 }).catch(() => null);
-  await win.getByRole("button", { name: "Share screen" }).click();
-  const picker = await pickerPromise;
-  check("share opens the picker window", picker !== null, picker ? await picker.title() : "no window");
-  if (picker) {
+  type PickerWindow = { __renders?: number };
+  const openPicker = async (): Promise<Page | null> => {
+    const opened = app.waitForEvent("window", { timeout: 20_000 }).catch(() => null);
+    await win.getByRole("button", { name: "Share screen" }).click();
+    const picker = await opened;
+    if (!picker) return null;
     await picker.waitForLoadState("domcontentloaded");
-    const sources = await picker.locator("button.src").count();
-    if (sources > 0) {
-      // Choosing a source closes the picker mid-click; that is the expected outcome, not a failure.
-      await picker.locator("button.src").first().click({ noWaitAfter: true }).catch((e) => {
+    await picker.waitForFunction(() => ((window as unknown as PickerWindow).__renders ?? 0) > 0, undefined, { timeout: 20_000 }).catch(() => {});
+    return picker;
+  };
+  const gdm = () => win.evaluate(() => (window as unknown as { __gdm: string }).__gdm);
+
+  const picker = await openPicker();
+  check("share opens Commune's picker window", picker !== null, picker ? await picker.title() : "no window");
+  if (picker) {
+    const listed = await picker.getByRole("radio").count();
+    if (listed > 0) {
+      const screens = await picker.locator("#screens-grid .src").count();
+      const windows = await picker.locator("#windows-grid .src").count();
+      check("it lists screens and windows by name", screens > 0, `${screens} screen(s), ${windows} window(s)`);
+
+      const ownIds = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().map((w) => w.getMediaSourceId()));
+      const offered = await picker.locator(".src").evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id ?? ""));
+      check("Commune's own windows are not offered", !offered.some((id) => ownIds.includes(id)), `${ownIds.length} own window(s) left out`);
+      check("Share waits for a choice", await picker.locator("#share").isDisabled());
+
+      await picker.locator("#search").fill("zzzz no such window");
+      const noMatch = (await picker.locator("#no-match").isVisible()) && (await picker.locator("#list .src:visible").count()) === 0;
+      check("search narrows the list", noMatch, (await picker.locator("#no-match").textContent()) ?? "");
+      await picker.locator("#search").fill("");
+
+      // A refresh is a 3 s pause plus a fresh getSources, which alone takes a second or more.
+      const before = await picker.evaluate(() => (window as unknown as PickerWindow).__renders ?? 0);
+      await picker.waitForFunction((n) => ((window as unknown as PickerWindow).__renders ?? 0) > n, before, { timeout: 12_000 }).catch(() => {});
+      const after = await picker.evaluate(() => (window as unknown as PickerWindow).__renders ?? 0);
+      check("thumbnails refresh while it is open", after > before, `${before} → ${after} renders`);
+
+      await picker.locator("#screens-grid .src").first().click();
+      const armed = (await picker.locator("#share").isEnabled()) && (await picker.locator("#share").textContent()) === "Share screen";
+      check("choosing a screen arms Share", armed, (await picker.locator("#share").textContent()) ?? "");
+      if (process.env.SMOKE_SHOTS) await picker.screenshot({ path: path.join(process.env.SMOKE_SHOTS, "share-picker.png") });
+
+      // Escape is a change of mind: nothing is shared and the page stays error-free.
+      const closed = picker.waitForEvent("close", { timeout: 10_000 }).catch(() => null);
+      // The picker closes on keydown, before Playwright sends keyup; that is the expected outcome.
+      await picker.keyboard.press("Escape").catch((e) => {
         if (!/closed/i.test(String(e))) throw e;
       });
-      await win.getByRole("button", { name: "Stop sharing" }).waitFor({ timeout: 20_000 }).catch(() => {});
-      const sharing = (await win.getByRole("button", { name: "Stop sharing" }).count()) > 0;
-      check("picking a source starts sharing", sharing, `${sources} source(s) listed`);
+      await closed;
+      await pollUntil(async () => (await gdm()).startsWith("rejected"), 8000);
+      const cancelled = (await gdm()).startsWith("rejected") && (await win.getByRole("button", { name: "Stop sharing" }).count()) === 0;
+      check("Escape closes it without sharing", cancelled, await gdm());
+      await win.waitForTimeout(800);
+      const toasts = await win.locator("[data-sonner-toast]").allTextContents();
+      check("…and without an error toast", !toasts.some((t) => /couldn|blocked/i.test(t)), toasts.join(" | ") || "none");
+
+      const again = await openPicker();
+      if (again) {
+        await again.locator("#screens-grid .src").first().click();
+        // Sharing closes the picker mid-click; that is the expected outcome, not a failure.
+        await again.locator("#share").click({ noWaitAfter: true }).catch((e) => {
+          if (!/closed/i.test(String(e))) throw e;
+        });
+        await win.getByRole("button", { name: "Stop sharing" }).waitFor({ timeout: 20_000 }).catch(() => {});
+        const sharing = (await win.getByRole("button", { name: "Stop sharing" }).count()) > 0;
+        check("Share screen starts sharing", sharing, `${listed} source(s) listed`);
+        if (sharing) await win.getByRole("button", { name: "Stop sharing" }).click();
+      } else {
+        check("the picker opens a second time", false);
+      }
     } else {
-      note("screen sources", "none listed: macOS Screen Recording permission not granted to this Electron; the empty state showed");
+      const blocked = await picker.locator("#blocked").isVisible();
+      note("screen sources", blocked ? "none listed: Screen Recording is not granted to this Electron, and the picker explained how to allow it" : "none listed");
       await picker.getByRole("button", { name: "Cancel" }).click().catch(() => {});
     }
   }
@@ -283,6 +349,8 @@ await win.waitForTimeout(1500);
 
 check("no page errors during the run", errors.length === 0, errors.join(" | "));
 const noise = stderr.join("").split("\n").filter((l) => l.trim() && !/Secure coding|NSApplication|ApplePersistence|CoreText|IMK|WARNING:|p2p\/socket_manager|Failed to resolve address/.test(l));
+const rejection = noise.find((l) => /UnhandledPromiseRejection/.test(l));
+check("no unhandled rejections in the main process", !rejection, rejection?.slice(0, 160) ?? "");
 if (noise.length) note("main-process stderr", noise.slice(0, 4).join(" | ").slice(0, 300));
 
 await app.close();

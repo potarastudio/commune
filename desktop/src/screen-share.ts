@@ -1,113 +1,191 @@
-import { BrowserWindow, session, type DesktopCapturerSource, type desktopCapturer as DesktopCapturer } from "electron";
-import { IS_DEV } from "./config";
+import {
+  BrowserWindow,
+  screen,
+  session,
+  shell,
+  systemPreferences,
+  type DesktopCapturerSource,
+  type desktopCapturer as DesktopCapturer,
+  type Display,
+  type NativeImage,
+  type Streams,
+} from "electron";
+import { PICKER_HTML } from "./picker-page";
 
 /**
- * Screen share needs a picker. In a browser, getDisplayMedia opens the OS's
- * "share which screen or window?" dialog. Electron has no such dialog; it
- * hands the request to the app and expects a source back. Without a handler
- * the huddle's share button silently fails.
+ * Screen share needs a picker. In a browser, getDisplayMedia opens the
+ * browser's own "share which screen or window?" dialog. Electron has no such
+ * dialog; it hands the request to the app and expects a source back.
  *
- * This opens a small window listing every screen and window with a live
- * thumbnail, in the same dark surface as the huddle stage, and resolves the
- * request with whatever is clicked. Closing it cancels, which LiveKit reports
- * as the user changing their mind, exactly as a browser would.
+ * Commune draws its own, on every platform: every screen and every window by
+ * name, with live thumbnails, a search, and on Windows a "Share sound"
+ * option. Macs used the macOS system picker (`useSystemPicker`) until
+ * 2026-09-14, but that only offers "this window" or "the entire screen" and
+ * then asks you to point at one, and the team wanted to see what they can
+ * share, the way Slack and Zoom show it.
+ *
+ * The cost is macOS's Screen Recording permission, which the system picker
+ * never needed. When it is missing the picker says how to grant it, and that
+ * macOS wants Commune reopened afterwards.
  */
+
+const SCREEN_RECORDING_SETTINGS = "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture";
+/** How often thumbnails and the window list refresh while the picker is open. */
+const REFRESH_MS = 3000;
+
+type PickerItem = { id: string; kind: "screen" | "window"; name: string; detail: string; thumb: string; icon: string };
+type PickerState = { items: PickerItem[]; offerSound: boolean; permission: "granted" | "missing" };
+type Choice = { source: { id: string; name: string }; sound: boolean };
+
 export function installScreenSharePicker(getParent: () => BrowserWindow | null, capturer: typeof DesktopCapturer) {
-  // macOS 15 has a native picker that also avoids the monthly screen-recording
-  // nag; when it is available Electron uses it and never calls this handler.
-  // Dev forces our own picker so the flow can be exercised end to end.
-  const useSystemPicker = process.platform === "darwin" && !IS_DEV;
-  session.defaultSession.setDisplayMediaRequestHandler(
-    async (_request, callback) => {
-      const sources = await capturer.getSources({
-        types: ["screen", "window"],
-        thumbnailSize: { width: 320, height: 200 },
-        fetchWindowIcons: true,
-      });
-      const chosen = await pick(getParent(), sources);
-      if (!chosen) return callback({});
-      callback(process.platform === "win32" ? { video: chosen, audio: "loopback" } : { video: chosen });
-    },
-    { useSystemPicker },
-  );
+  session.defaultSession.setDisplayMediaRequestHandler(async (request, callback) => {
+    // Electron can only capture system sound on Windows.
+    const offerSound = process.platform === "win32" && request.audioRequested;
+    let choice: Choice | null = null;
+    try {
+      choice = await pick(getParent(), capturer, offerSound);
+    } catch (err) {
+      console.error("screen share picker", err);
+    }
+    // Deny with null. An empty object is not a refusal: Electron 44 throws "Video was
+    // requested, but no video stream was provided" and the page gets an AbortError
+    // instead of the NotAllowedError that means "changed their mind". The native
+    // check accepts null ("must be called with null or a valid object"); the
+    // TypeScript definition just doesn't say so.
+    if (!choice) return callback(null as unknown as Streams);
+    callback(choice.sound ? { video: choice.source, audio: "loopback" } : { video: choice.source });
+  });
 }
 
-function pick(parent: BrowserWindow | null, sources: DesktopCapturerSource[]): Promise<DesktopCapturerSource | null> {
+function pick(parent: BrowserWindow | null, capturer: typeof DesktopCapturer, offerSound: boolean): Promise<Choice | null> {
   return new Promise((resolve) => {
     const picker = new BrowserWindow({
       parent: parent ?? undefined,
       modal: Boolean(parent),
-      width: 720,
-      height: 520,
-      resizable: false,
+      width: 820,
+      height: 600,
+      minWidth: 640,
+      minHeight: 440,
       minimizable: false,
       maximizable: false,
+      fullscreenable: false,
+      show: false,
       title: "Share your screen",
-      backgroundColor: "#171717",
+      backgroundColor: "#121212",
       webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
     picker.setMenu(null);
 
+    // Every id the page has been shown, so a choice maps back to a source even after a refresh.
+    const names = new Map<string, string>();
     let settled = false;
-    const done = (s: DesktopCapturerSource | null) => {
+    const done = (choice: Choice | null) => {
       if (settled) return;
       settled = true;
-      resolve(s);
+      resolve(choice);
       if (!picker.isDestroyed()) picker.close();
     };
 
-    // The page posts the chosen id through the title; no preload needed for a one-shot picker.
     picker.webContents.on("page-title-updated", (event, title) => {
       event.preventDefault();
-      if (title.startsWith("pick:")) done(sources.find((s) => s.id === title.slice(5)) ?? null);
-      if (title === "cancel") done(null);
+      if (title === "cancel") return done(null);
+      if (title.startsWith("settings:")) {
+        void shell.openExternal(SCREEN_RECORDING_SETTINGS);
+        return;
+      }
+      if (title.startsWith("share:")) {
+        let asked: { id?: unknown; sound?: unknown } = {};
+        try {
+          asked = JSON.parse(title.slice("share:".length)) as typeof asked;
+        } catch {
+          return done(null);
+        }
+        const id = typeof asked.id === "string" ? asked.id : "";
+        const name = names.get(id);
+        done(name === undefined ? null : { source: { id, name }, sound: offerSound && asked.sound === true });
+      }
     });
+    picker.webContents.on("will-navigate", (event) => event.preventDefault());
+    picker.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
     picker.on("closed", () => done(null));
+    picker.once("ready-to-show", () => picker.show());
 
-    const items = sources
-      .map((s) => {
-        const thumb = s.thumbnail.toDataURL();
-        const icon = s.appIcon && !s.appIcon.isEmpty() ? s.appIcon.toDataURL() : "";
-        const kind = s.id.startsWith("screen:") ? "Screen" : "Window";
-        return `<button type="button" data-id="${escape(s.id)}" title="${escape(s.name)}">
-          <span class="thumb"><img src="${thumb}" alt=""></span>
-          <span class="meta">${icon ? `<img class="icon" src="${icon}" alt="">` : ""}<span class="name">${escape(s.name)}</span><span class="kind">${kind}</span></span>
-        </button>`;
-      })
-      .join("");
+    const push = async () => {
+      const state = await snapshot(capturer, offerSound);
+      for (const item of state.items) names.set(item.id, item.name);
+      if (settled || picker.isDestroyed()) return;
+      await picker.webContents.executeJavaScript(`window.render(${JSON.stringify(state)})`);
+    };
 
-    picker.loadURL(
-      "data:text/html;charset=utf-8," +
-        encodeURIComponent(`<!doctype html><html><head><meta charset="utf-8"><title>Share your screen</title>
-<style>
-  :root{color-scheme:dark}
-  body{margin:0;background:#171717;color:#ededed;font:13px/1.4 ui-sans-serif,system-ui,sans-serif;-webkit-user-select:none}
-  header{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 20px;border-bottom:1px solid #262626}
-  h1{margin:0;font-size:15.5px;font-weight:600;letter-spacing:-.015em}
-  .cancel{height:30px;padding:0 11px;border-radius:8px;border:1px solid #333;background:#1f1f1f;color:#ededed;font:inherit;font-weight:600;cursor:pointer}
-  .cancel:hover{background:#262626}
-  main{padding:16px 20px 20px;height:calc(100vh - 52px);overflow:auto;box-sizing:border-box}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  button.src{display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:10px;border:1px solid #262626;background:#1f1f1f;color:inherit;font:inherit;text-align:left;cursor:pointer}
-  button.src:hover,button.src:focus-visible{border-color:#f05710;outline:none;box-shadow:0 0 0 3px rgba(240,87,16,.25)}
-  .thumb{display:block;aspect-ratio:16/10;border-radius:6px;overflow:hidden;background:#0f0f0f}
-  .thumb img{display:block;width:100%;height:100%;object-fit:contain}
-  .meta{display:flex;align-items:center;gap:6px;min-width:0}
-  .icon{width:14px;height:14px;flex:none}
-  .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .kind{flex:none;font-size:11px;color:#9d9d9d}
-  .empty{color:#9d9d9d;padding:40px 0;text-align:center}
-</style></head><body>
-<header><h1>Share your screen</h1><button class="cancel" type="button" onclick="document.title='cancel'">Cancel</button></header>
-<main>${sources.length ? `<div class="grid">${items.replace(/<button type="button"/g, '<button class="src" type="button"')}</div>` : `<p class="empty">Nothing to share. Grant Screen Recording permission in System Settings, then try again.</p>`}</main>
-<script>
-  document.querySelectorAll('button.src').forEach(b => b.addEventListener('click', () => { document.title = 'pick:' + b.dataset.id; }));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.title = 'cancel'; });
-</script></body></html>`),
-    );
+    picker.webContents.once("did-finish-load", () => {
+      void (async () => {
+        try {
+          await push();
+        } catch (err) {
+          console.error("screen share picker: first list", err);
+        }
+        while (!settled) {
+          await new Promise((r) => setTimeout(r, REFRESH_MS));
+          if (settled || picker.isDestroyed()) break;
+          try {
+            await push();
+          } catch {
+            // The picker can close mid-refresh; the next loop check ends it.
+          }
+        }
+      })();
+    });
+
+    void picker.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(PICKER_HTML)}`);
   });
 }
 
-function escape(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
+async function snapshot(capturer: typeof DesktopCapturer, offerSound: boolean): Promise<PickerState> {
+  // Commune's own windows are left out, the picker included: sharing one only
+  // mirrors the huddle back at everyone in it.
+  const own = new Set(BrowserWindow.getAllWindows().map((w) => w.getMediaSourceId()));
+  const sources = await capturer.getSources({
+    types: ["screen", "window"],
+    thumbnailSize: { width: 400, height: 250 },
+    fetchWindowIcons: true,
+  });
+
+  const displays = screen.getAllDisplays();
+  const primary = screen.getPrimaryDisplay().id;
+  const screens = sources.filter((s) => s.id.startsWith("screen:"));
+  const items: PickerItem[] = screens.map((s, i) => ({
+    id: s.id,
+    kind: "screen",
+    ...screenLabel(s, i, screens.length, displays, primary),
+    thumb: dataUrl(s.thumbnail, "jpeg"),
+    icon: "",
+  }));
+  for (const s of sources) {
+    if (!s.id.startsWith("window:") || own.has(s.id) || !s.name.trim()) continue;
+    items.push({
+      id: s.id,
+      kind: "window",
+      name: s.name.trim(),
+      detail: "",
+      thumb: dataUrl(s.thumbnail, "jpeg"),
+      icon: s.appIcon ? dataUrl(s.appIcon, "png") : "",
+    });
+  }
+
+  const permission = process.platform === "darwin" && systemPreferences.getMediaAccessStatus("screen") !== "granted" ? "missing" : "granted";
+  return { items, offerSound, permission };
+}
+
+/** "Entire screen" when there is one; otherwise the display's own name, with "Main display" and its size. */
+function screenLabel(source: DesktopCapturerSource, index: number, count: number, displays: Display[], primary: number) {
+  const display = displays.find((d) => String(d.id) === source.display_id);
+  const size = display ? `${display.size.width} × ${display.size.height}` : "";
+  if (count === 1) return { name: "Entire screen", detail: size };
+  const name = display?.label?.trim() || source.name || `Screen ${index + 1}`;
+  return { name, detail: [display?.id === primary ? "Main display" : "", size].filter(Boolean).join(" · ") };
+}
+
+function dataUrl(image: NativeImage, format: "jpeg" | "png"): string {
+  if (image.isEmpty()) return "";
+  return format === "jpeg" ? `data:image/jpeg;base64,${image.toJPEG(80).toString("base64")}` : image.toDataURL();
 }

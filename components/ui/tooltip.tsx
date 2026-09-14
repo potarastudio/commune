@@ -34,10 +34,14 @@ function TooltipContent({
   className,
   sideOffset = 6,
   children,
+  container,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+}: React.ComponentProps<typeof TooltipPrimitive.Content> & {
+  /** Where to portal. Defaults to the body, which is invisible while another element is full screen. */
+  container?: HTMLElement | null
+}) {
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={container ?? undefined}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}

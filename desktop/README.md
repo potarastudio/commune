@@ -81,6 +81,18 @@ Notarization and publishing need:
 | `GH_TOKEN` | a GitHub token with `repo` scope, for the release upload |
 | `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD` | optional: a Windows code-signing certificate; without it SmartScreen shows a warning on first install |
 
+The simplest route is to save the Apple credentials to the keychain once.
+`notarytool` checks them with Apple before saving, so a wrong Apple ID or
+app-specific password fails in seconds instead of after a full build:
+
+    xcrun notarytool store-credentials commune-notary --apple-id <Apple ID email> --team-id <Team ID>
+
+Then release with the saved profile and the GitHub CLI's token. Leave
+`APPLE_ID` and `APPLE_APP_SPECIFIC_PASSWORD` unset: electron-builder prefers
+them over a profile.
+
+    APPLE_KEYCHAIN_PROFILE=commune-notary GH_TOKEN="$(gh auth token)" pnpm release
+
 `pnpm release` creates and pushes the `v<version>` tag before building.
 GitHub refuses to publish a release whose tag does not exist yet, and
 electron-builder only discovers that after every upload has finished, so the

@@ -21,7 +21,22 @@ Deep links are exercised by `pnpm smoke`, which delivers them directly, or by
 a packaged build.
 
 `COMMUNE_DEV=1` (set by `pnpm dev`) points the window at the local server and
-enables DevTools in the View menu.
+enables DevTools in the View menu. `COMMUNE_DEV_URL` moves that target when
+port 3001 is busy — `COMMUNE_DEV_URL=http://localhost:3005 pnpm smoke` runs
+against the `commune-3005` entry in `.claude/launch.json`.
+
+## Staying alive while hidden
+
+A chat window that is hidden still holds the realtime connection and rings for
+new messages, so `backgroundThrottling` is off; Chromium would otherwise freeze
+it after a few minutes in the background.
+
+macOS can still reclaim a renderer that has been hidden for hours. Chromium
+replaces it with an empty one, and the window comes back blank with its old
+title while the main process carries on none the wiser. Two guards catch that:
+`render-process-gone` reloads, and showing or focusing the window checks the
+page still has text on it and reloads if it does not. Both are rate limited, so
+a page that keeps failing is not reloaded in a loop. `pnpm smoke` covers both.
 
 ## Screen share
 

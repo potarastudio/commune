@@ -170,6 +170,10 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: true,
       spellcheck: true,
+      // A hidden chat window still has work to do: it holds the realtime
+      // connection and rings for new messages. Throttled timers would let
+      // Chromium freeze it after a few minutes in the background.
+      backgroundThrottling: false,
     },
   });
   trackWindowState(win);
@@ -214,7 +218,22 @@ function createWindow() {
     if (process.platform !== "darwin") win?.setTitle(count > 0 ? `(${count}) Commune` : "Commune");
   });
 
-  win.on("focus", () => win?.flashFrame(false));
+  win.on("focus", () => {
+    win?.flashFrame(false);
+    void healIfBlank("focused");
+  });
+
+  // Recovery: a window that comes back empty is worse than one that reloads.
+  win.webContents.on("render-process-gone", (_event, details) => {
+    if (details.reason === "clean-exit") return;
+    reloadPage(`the page process ${details.reason}`);
+  });
+  win.webContents.on("did-fail-load", (_event, code, description, _url, isMainFrame) => {
+    // -3 is a navigation the app itself replaced; anything else left the window empty.
+    if (!isMainFrame || code === -3) return;
+    setTimeout(() => reloadPage(`the page failed to load (${description})`), 4000);
+  });
+  win.on("show", () => void healIfBlank("shown"));
 
   // Closing the window keeps the app, and any huddle, alive in the dock or
   // tray until the user actually quits: the behaviour every chat app has.
@@ -228,6 +247,42 @@ function createWindow() {
   });
 
   void win.loadURL(`${APP_ORIGIN}/`);
+}
+
+
+/**
+ * Coming back to a blank window.
+ *
+ * A window left hidden for hours can lose its renderer: macOS reclaims the
+ * memory, Chromium puts an empty process in its place, and the window shows
+ * nothing at all while its title still says #general. The main process is
+ * fine, so nothing notices. These two guards do: reload when the renderer
+ * goes, and when the window is shown, make sure the page still has something
+ * on it.
+ */
+let reloadedAt = 0;
+
+function reloadPage(reason: string) {
+  if (!win || win.isDestroyed()) return;
+  // Never loop: a page that keeps failing is left alone for the next attempt.
+  if (Date.now() - reloadedAt < 8000) return;
+  reloadedAt = Date.now();
+  console.warn("reloading the window", { reason });
+  win.reload();
+}
+
+async function healIfBlank(reason: string) {
+  if (!win || win.isDestroyed() || win.webContents.isLoading()) return;
+  if (win.webContents.isCrashed()) {
+    reloadPage(`${reason}: the page process is gone`);
+    return;
+  }
+  // A page that cannot answer within two seconds is as good as blank.
+  const answer = await Promise.race([
+    win.webContents.executeJavaScript("!!document.body && document.body.innerText.trim().length > 0", true).catch(() => false),
+    new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2000)),
+  ]);
+  if (!answer) reloadPage(`${reason}: the page is blank`);
 }
 
 /** Windows and Linux have no dock; the tray is how a hidden app is reached. */

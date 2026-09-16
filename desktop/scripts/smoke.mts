@@ -3,6 +3,7 @@
  * browser tab cannot: the sign-in handoff, the badge, notifications, the
  * screen-share picker, close-to-hide, and external links.
  *   pnpm smoke        (web app running on :3001, local Supabase seeded)
+ *   COMMUNE_DEV_URL   point the shell and this run at another port, when 3001 is taken
  *   SMOKE_VERBOSE=1   prints each result as it happens, to see how far a crashed run got
  *   SMOKE_SHOTS=<dir> saves a screenshot of the screen-share picker there
  *
@@ -16,7 +17,7 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 
-const DEV = "http://localhost:3001";
+const DEV = process.env.COMMUNE_DEV_URL ?? "http://localhost:3001";
 const require = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -397,8 +398,52 @@ await win.waitForTimeout(1500);
   check("external link goes to the browser", links.length === before + 1 && links.at(-1)?.startsWith("https://example.com"), `${windows} window(s)`);
 }
 
+// 11. A window that loses its page comes back, rather than showing nothing.
+//     Hidden for hours, a renderer can be reclaimed by macOS; the window then
+//     sits blank with its old title.
+{
+  const pageText = () =>
+    app
+      .evaluate(async ({ BrowserWindow }) => {
+        const w = BrowserWindow.getAllWindows()[0];
+        if (!w || w.isDestroyed()) return "no window";
+        if (w.webContents.isCrashed()) return "crashed";
+        if (w.webContents.isLoading()) return "loading";
+        const text = (await w.webContents.executeJavaScript("document.body.innerText.trim().slice(0, 30)")) as string;
+        return text || "blank";
+      })
+      .catch((e: Error) => `unreachable: ${e.message.slice(0, 40)}`);
+  const recovered = async () => {
+    const text = await pageText();
+    return !["crashed", "blank", "loading", "no window"].includes(text) && !text.startsWith("unreachable");
+  };
+
+  // The event macOS's reclaim raises, rather than a real crash: killing the
+  // renderer breaks Playwright's own connection to it for the rest of the run.
+  await app.evaluate(({ BrowserWindow }) => {
+    const w = BrowserWindow.getAllWindows()[0];
+    w?.webContents.executeJavaScript("document.body.innerHTML = ''");
+    w?.webContents.emit("render-process-gone", {}, { reason: "crashed", exitCode: 133 });
+  });
+  check("a page process that dies is reloaded, not left blank", await pollUntil(recovered, 40_000), await pageText());
+
+  // Past the guard that stops a failing page reloading over and over.
+  await win.waitForTimeout(9000).catch(() => new Promise((r) => setTimeout(r, 9000)));
+
+  // Alive but empty, which is what a frozen page looks like when it is shown again.
+  await app
+    .evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript("document.body.innerHTML = ''"))
+    .catch(() => {});
+  await app.evaluate(({ BrowserWindow }) => {
+    const w = BrowserWindow.getAllWindows()[0];
+    w?.hide();
+    w?.show();
+  });
+  check("a window shown with an empty page reloads it", await pollUntil(recovered, 40_000), await pageText());
+}
+
 check("no page errors during the run", errors.length === 0, errors.join(" | "));
-const noise = stderr.join("").split("\n").filter((l) => l.trim() && !/Secure coding|NSApplication|ApplePersistence|CoreText|IMK|WARNING:|p2p\/socket_manager|Failed to resolve address/.test(l));
+const noise = stderr.join("").split("\n").filter((l) => l.trim() && !/Secure coding|NSApplication|ApplePersistence|CoreText|IMK|WARNING:|p2p\/socket_manager|Failed to resolve address|reloading the window/.test(l));
 const rejection = noise.find((l) => /UnhandledPromiseRejection/.test(l));
 check("no unhandled rejections in the main process", !rejection, rejection?.slice(0, 160) ?? "");
 if (noise.length) note("main-process stderr", noise.slice(0, 4).join(" | ").slice(0, 300));

@@ -10,7 +10,8 @@ import path from "node:path";
  * without touching production.
  */
 export const IS_DEV = Boolean(process.env.COMMUNE_DEV);
-export const APP_ORIGIN = IS_DEV ? "http://localhost:3001" : "https://commune.potarastudio.com";
+/** COMMUNE_DEV_URL moves the dev target when port 3001 is taken by another project. */
+export const APP_ORIGIN = IS_DEV ? (process.env.COMMUNE_DEV_URL ?? "http://localhost:3001") : "https://commune.potarastudio.com";
 
 /** The custom scheme the browser hands sign-in back through. */
 export const PROTOCOL = "commune";

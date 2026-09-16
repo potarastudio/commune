@@ -298,8 +298,10 @@ export default async function WelcomePage({
     const current = uniform && uniform !== "all" ? uniform : "mentions";
     // Quiet hours are stored as the DND window itself, so the design's
     // "quiet outside 09:00 – 18:00" reads back as (dnd_end … dnd_start).
+    // Off unless this person already chose quiet hours. It used to start on,
+    // so everyone who walked through setup went silent outside 09:00 – 18:00
+    // without deciding to, and nothing in the app said why.
     const quietOn = Boolean(profile.dnd_start && profile.dnd_end);
-    const quietUnset = !profile.dnd_start && !profile.dnd_end;
     const workStart = (profile.dnd_end ?? WORK_START).slice(0, 5);
     const workEnd = (profile.dnd_start ?? WORK_END).slice(0, 5);
     const scope = joined.length === 1 ? "the one channel you’re in" : `all ${joined.length} channels you’re in`;
@@ -376,7 +378,7 @@ export default async function WelcomePage({
                 type="checkbox"
                 name="quiet"
                 value="on"
-                defaultChecked={quietOn || quietUnset}
+                defaultChecked={quietOn}
                 className="peer size-full cursor-pointer appearance-none rounded-full border border-border-input bg-bg-chip transition-colors checked:border-accent-border checked:bg-primary"
               />
               <span

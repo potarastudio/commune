@@ -1,5 +1,6 @@
-// Dev check: a new teammate who signs in with Google can finish the welcome
-// screen, and the avatar rule still refuses someone else's upload.
+// Dev check: a new teammate who signs in with Google gets through the welcome
+// screen with the defaults it offers, and the avatar rule still refuses
+// someone else's upload.
 //   node --import tsx scripts/check-onboarding-avatar.mts   (dev server on 3001)
 //
 // First sign-in copies the Google photo onto the profile, and the profile
@@ -82,6 +83,18 @@ try {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   await page.goto(`${DEV}/auth/dev-login?email=${EMAIL}`, { waitUntil: "networkidle" });
+
+  // 2. Setup leaves quiet hours alone unless they are asked for. They used to
+  //    start on, which silenced every new person outside 09:00 - 18:00.
+  await page.goto(`${DEV}/welcome?step=notifications`, { waitUntil: "networkidle" });
+  const quiet = page.locator('input[name="quiet"]');
+  await quiet.waitFor({ timeout: 30_000 });
+  ok("the quiet hours toggle starts off for a new person", !(await quiet.isChecked()));
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.waitForURL(/step=profile/, { timeout: 30_000 }).catch(() => {});
+  const hours = q(`select coalesce(dnd_start::text,'none') || ' ' || coalesce(dnd_end::text,'none') from profiles where id='${uid}'`);
+  ok("…and finishing that step writes none", hours === "none none", hours);
+
   await page.goto(`${DEV}/welcome?step=profile`, { waitUntil: "networkidle" });
   const submit = page.getByRole("button", { name: "Start using Commune" });
   await submit.waitFor({ timeout: 30_000 });
@@ -96,7 +109,7 @@ try {
   ok("the page moves on from the welcome screen", !where.startsWith("/welcome"), where);
   ok("no avatar error is shown", !/doesn[’']t belong to you/.test(body));
 
-  // 2. The rule still refuses someone else's upload. Tamper with a real save on its way to the server.
+  // 3. The rule still refuses someone else's upload. Tamper with a real save on its way to the server.
   const foreign = `${SUPA}/storage/v1/object/public/avatars/${hakimId}/avatar.png`;
   let tampered = false;
   await page.route(`${DEV}/settings**`, async (route) => {
@@ -117,7 +130,7 @@ try {
   await page.unroute(`${DEV}/settings**`);
   await ctx.close();
 
-  // 3. Hakim, whose local seed avatar is a DiceBear URL, can save Settings again.
+  // 4. Hakim, whose local seed avatar is a DiceBear URL, can save Settings again.
   const hctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const hp = await hctx.newPage();
   await hp.goto(`${DEV}/auth/dev-login?email=${HAKIM}`, { waitUntil: "networkidle" });

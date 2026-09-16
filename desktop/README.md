@@ -113,6 +113,15 @@ GitHub refuses to publish a release whose tag does not exist yet, and
 electron-builder only discovers that after every upload has finished, so the
 tag has to come first.
 
+It then runs `pnpm manifests`, which publishes the update feed
+(`latest-mac.yml`, `latest.yml`) itself. electron-builder writes those last and
+its publisher has failed at that step on every release so far — it tries to
+create a release that already exists and stops with a 422 — so the apps landed
+and the feed did not, leaving installed apps with no idea an update existed.
+The step reads the artifacts in `release/`, advertises only files that are on
+the release byte for byte, and checks afterwards that both files are there. It
+is safe to run on its own if a release ever needs repairing.
+
 Updates: the installed app checks GitHub Releases fifteen seconds after launch
 and every six hours, downloads in the background, and installs on quit or when
 the person accepts the prompt. Bump `version` in `package.json` before

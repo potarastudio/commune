@@ -78,30 +78,34 @@ export async function notifyForMessage(messageId: string): Promise<void> {
       ? `${base}/channel/${m.channel_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`
       : `${base}/dm/${m.conversation_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`;
 
-    // Who might care.
-    const candidates = new Map<string, "dm" | "mention">();
+    // Who might care: everyone in a DM, everyone a mention names, and everyone
+    // whose channel is set to "All new messages" — the level a channel is
+    // joined with, which used to notify nobody.
+    const candidates = new Set<string>();
     if (m.conversation_id) {
       const { data: members } = await admin.from("conversation_members").select("user_id").eq("conversation_id", m.conversation_id);
-      for (const r of members ?? []) if (r.user_id !== m.author_id) candidates.set(r.user_id, "dm");
+      for (const r of members ?? []) if (r.user_id !== m.author_id) candidates.add(r.user_id);
     }
+
+    const levelOf = new Map<string, string>();
+    if (m.channel_id) {
+      const { data: members } = await admin.from("channel_members").select("user_id, notification_level").eq("channel_id", m.channel_id);
+      for (const r of members ?? []) {
+        levelOf.set(r.user_id, r.notification_level);
+        if (r.user_id !== m.author_id && r.notification_level === "all") candidates.add(r.user_id);
+      }
+    }
+
     const { data: mentions } = await admin.from("mentions").select("user_id, kind").eq("message_id", m.id);
-    const broadcast = (mentions ?? []).some((x) => x.kind === "channel" || x.kind === "here");
-    for (const x of mentions ?? []) if (x.user_id && x.user_id !== m.author_id) candidates.set(x.user_id, "mention");
-    if (broadcast && m.channel_id) {
-      const { data: members } = await admin.from("channel_members").select("user_id").eq("channel_id", m.channel_id);
-      for (const r of members ?? []) if (r.user_id !== m.author_id && !candidates.has(r.user_id)) candidates.set(r.user_id, "mention");
+    for (const x of mentions ?? []) if (x.user_id && x.user_id !== m.author_id) candidates.add(x.user_id);
+    // @channel and @here reach the whole channel, whatever each person's level.
+    if ((mentions ?? []).some((x) => x.kind === "channel" || x.kind === "here") && m.channel_id) {
+      for (const [userId] of levelOf) if (userId !== m.author_id) candidates.add(userId);
     }
     if (candidates.size === 0) return;
 
-    // Filter by level (channels only) and DND.
-    const ids = [...candidates.keys()];
-    const [{ data: profiles }, { data: levels }] = await Promise.all([
-      admin.from("profiles").select("id, timezone, dnd_start, dnd_end").in("id", ids),
-      m.channel_id
-        ? admin.from("channel_members").select("user_id, notification_level").eq("channel_id", m.channel_id).in("user_id", ids)
-        : Promise.resolve({ data: [] as { user_id: string; notification_level: string }[] }),
-    ]);
-    const levelOf = new Map((levels ?? []).map((l) => [l.user_id, l.notification_level]));
+    // A muted channel stays silent, and nobody is woken during their quiet hours.
+    const { data: profiles } = await admin.from("profiles").select("id, timezone, dnd_start, dnd_end").in("id", [...candidates]);
     const recipients = (profiles ?? [])
       .filter((p) => !inDoNotDisturb(p))
       .filter((p) => !m.channel_id || levelOf.get(p.id) !== "muted")

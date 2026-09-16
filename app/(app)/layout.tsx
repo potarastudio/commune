@@ -51,7 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <PresenceProvider meId={profile.id} />
         <Notifier
           meId={profile.id}
-          mutedChannelIds={channels.filter((c) => c.notification_level === "muted").map((c) => c.id)}
+          channels={channels.map((c) => ({ id: c.id, name: c.name, level: c.notification_level }))}
           dnd={{ dnd_start: profile.dnd_start, dnd_end: profile.dnd_end, timezone: profile.timezone }}
         />
       </div>

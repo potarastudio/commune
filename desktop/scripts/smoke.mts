@@ -207,6 +207,45 @@ await win.waitForTimeout(1500);
   check("notify() answers, and only shows when the window is not focused", shown === !focused, `focused=${focused} shown=${shown}`);
 }
 
+// 6b. A real message in a channel set to "All new messages" rings and announces
+//     itself while the window is in the background, which is the whole point of
+//     the app.
+{
+  // Somewhere other than the channel the message lands in: a message you are
+  // already reading, in front, is not worth interrupting yourself over.
+  const elsewhere = execFileSync("psql", [DB, "-Atq", "-c", "select id from channels where name = 'design'"], { encoding: "utf8" }).trim();
+  await win.goto(`${DEV}/channel/${elsewhere}`, { waitUntil: "networkidle" }).catch(() => {});
+  await win.waitForTimeout(2500);
+  // Chrome only allows sound after a gesture, and the spy has to outlive the navigation.
+  await win.mouse.click(5, 5).catch(() => {});
+  // A string, not a function: tsx would wrap a function's inner arrows in a __name helper the page lacks.
+  await win.evaluate(
+    `(function(){ window.__sounds = 0; var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+       ["createOscillator","createBufferSource"].forEach(function (m) { var o = AC.prototype[m];
+         AC.prototype[m] = function () { window.__sounds++; return o.apply(this, arguments); }; }); })()`,
+  );
+  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.blur());
+
+  const marker = `smoke notify ${Math.random().toString(36).slice(2, 8)}`;
+  const doc = `jsonb_build_object('type','doc','content',jsonb_build_array(jsonb_build_object('type','paragraph','content',jsonb_build_array(jsonb_build_object('type','text','text','${marker}')))))`;
+  execFileSync("psql", [DB, "-Atq", "-c",
+    `insert into messages (channel_id, author_id, content, content_text) select c.id, p.id, ${doc}, '${marker}' from channels c, profiles p where c.name = 'general' and p.email = 'sari@potara.studio'`]);
+
+  const rang = await pollUntil(async () => (await win.evaluate(() => (window as unknown as { __sounds?: number }).__sounds ?? 0)) > 0, 20_000);
+  const state = await win.evaluate(() => ({
+    sounds: (window as unknown as { __sounds?: number }).__sounds ?? 0,
+    path: location.pathname,
+    focus: document.hasFocus(),
+    toasts: document.querySelectorAll("[data-sonner-toast]").length,
+  }));
+  const toast = (await win.locator("[data-sonner-toast]").last().textContent().catch(() => "")) ?? "";
+  check("a message in a channel set to all messages rings", rang, JSON.stringify(state));
+  check("…and says who sent it and where", /sari/i.test(toast) && /general/i.test(toast), toast.slice(0, 60));
+  execFileSync("psql", [DB, "-Atq", "-c", `delete from messages where content_text = '${marker}'`]);
+  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.focus());
+  await win.waitForTimeout(1000);
+}
+
 // 7. A notification click navigates in-page.
 {
   const got = win.evaluate(

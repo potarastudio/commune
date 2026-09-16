@@ -9,7 +9,9 @@ import { setNotificationLevelAction } from "@/lib/actions/channels";
 import { saveDndAction, saveEmailDigestAction } from "@/lib/actions/profile";
 import type { NotificationLevel } from "@/lib/queries/channels";
 import { disablePush, enablePush, getPushState, type PushState } from "@/lib/push/client";
+import { inDoNotDisturb } from "@/lib/push/dnd";
 import { humanError } from "@/lib/utils/human-error";
+import { useHydrated } from "@/lib/utils/use-hydrated";
 import { SoundRow } from "./sound-row";
 
 /** The design's settings row: label + note on the left, one control on the right. No iconography. */
@@ -204,6 +206,10 @@ export function NotificationSettings({
     });
 
   const dndOn = Boolean(start && end);
+  // After hydration only: whether the clock says quiet depends on the moment,
+  // and the server rendered this a moment earlier.
+  const hydrated = useHydrated();
+  const quietNow = hydrated && dndOn && inDoNotDisturb({ dnd_start: start, dnd_end: end, timezone });
 
   const toggleDigest = () => {
     const next = !digest;
@@ -260,7 +266,7 @@ export function NotificationSettings({
           <span className="block">
             <span className={LABEL}>Do Not Disturb</span>
             <span className={NOTE}>
-              {dndOn ? `No notifications between ${start} and ${end}` : "Set hours to pause notifications"} ·{" "}
+              {quietNow ? `Quiet now — nothing rings until ${end}` : dndOn ? `No notifications between ${start} and ${end}` : "Set hours to pause notifications"} ·{" "}
               {timezone.replace(/_/g, " ")}
             </span>
           </span>

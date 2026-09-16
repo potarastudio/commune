@@ -1,6 +1,6 @@
 "use client";
 
-import { Keyboard, LogOut, Settings, SmilePlus } from "lucide-react";
+import { BellOff, Keyboard, LogOut, Settings, SmilePlus } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { signOut } from "@/app/(app)/actions";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { inDoNotDisturb } from "@/lib/push/dnd";
 import type { Profile } from "@/lib/queries/profile";
 import { useProfileMap } from "@/lib/queries/profiles";
 import { useUiStore } from "@/lib/store/ui";
@@ -28,6 +29,10 @@ export function UserMenu({ profile: initial }: { profile: Profile }) {
   const anchorRef = useRef<HTMLDivElement>(null);
   const profile = useProfileMap().get(initial.id) ?? initial;
   const status = isStatusActive(profile);
+  // Quiet hours silence the sound, the desktop notification and push, which is
+  // easy to forget you turned on. The menu only renders when it is opened, so
+  // reading the clock here cannot disagree with the server.
+  const quiet = inDoNotDisturb(profile);
 
   return (
     <Popover open={statusOpen} onOpenChange={setStatusOpen}>
@@ -68,6 +73,14 @@ export function UserMenu({ profile: initial }: { profile: Profile }) {
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {quiet && (
+          <DropdownMenuItem asChild>
+            <Link href="/settings?section=notifications">
+              <BellOff className="size-4" aria-hidden="true" />
+              Quiet until {(profile.dnd_end ?? "").slice(0, 5)}
+            </Link>
+          </DropdownMenuItem>
+        )}
         {/* Open after the menu has closed, so its dismiss events don't count as a click outside the editor. */}
         <DropdownMenuItem onSelect={() => setTimeout(() => setStatusOpen(true), 60)}>
           {status && profile.status_emoji ? (

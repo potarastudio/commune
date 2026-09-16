@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { installAudioUnlock, playMessageSound } from "@/lib/audio/sounds";
 import { desktopBridge } from "@/lib/desktop";
 import { inDoNotDisturb } from "@/lib/push/dnd";
+import type { NotificationLevel } from "@/lib/queries/channels";
+import { mentionAnnounces, reasonForMessage, type NotifyReason } from "@/lib/utils/notify-rules";
 import { subscribeWithAuth } from "@/lib/realtime/messages";
 import { fetchMessageById, type MessageRow } from "@/lib/queries/messages";
 import { unreadKeys } from "@/lib/queries/unreads";
@@ -22,15 +24,17 @@ type MentionRow = { message_id: string; user_id: string | null; kind: "user" | "
  * Push handles the case where the window isn't in front (see public/sw.js).
  */
 type Dnd = { dnd_start: string | null; dnd_end: string | null; timezone: string };
+/** The channels this person has joined, with the level Settings shows for each. */
+export type NotifierChannel = { id: string; name: string; level: NotificationLevel };
 
-export function Notifier({ meId, mutedChannelIds, dnd }: { meId: string; mutedChannelIds: string[]; dnd: Dnd }) {
+export function Notifier({ meId, channels, dnd }: { meId: string; channels: NotifierChannel[]; dnd: Dnd }) {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
   const pathRef = useRef(pathname);
   pathRef.current = pathname;
-  const muted = useRef(new Set(mutedChannelIds));
-  muted.current = new Set(mutedChannelIds);
+  const joined = useRef(new Map(channels.map((c) => [c.id, c])));
+  joined.current = new Map(channels.map((c) => [c.id, c]));
   const dndRef = useRef(dnd);
   dndRef.current = dnd;
 
@@ -71,16 +75,19 @@ export function Notifier({ meId, mutedChannelIds, dnd }: { meId: string; mutedCh
       return (row.channel_id && p === `/channel/${row.channel_id}`) || (row.conversation_id && p === `/dm/${row.conversation_id}`);
     };
 
-    const announce = async (messageId: string, reason: "dm" | "mention") => {
+    const levelOf = (channelId: string) => joined.current.get(channelId)?.level;
+
+    const announce = async (messageId: string, reason: NotifyReason) => {
       if (seen.current.has(messageId)) return;
       seen.current.add(messageId);
       const m = await fetchMessageById(supabase, messageId);
       if (!m || m.author_id === meId || m.deleted_at) return;
       if (viewing(m) && document.visibilityState === "visible" && document.hasFocus()) return;
-      if (m.channel_id && muted.current.has(m.channel_id)) return;
+      if (reason === "mention" ? !mentionAnnounces(m.channel_id, levelOf) : reasonForMessage(m, meId, levelOf) === null) return;
 
       const who = m.author?.display_name ?? "Someone";
-      const where = m.channel_id ? " in a channel" : "";
+      const where = m.channel_id ? ` in #${joined.current.get(m.channel_id)?.name ?? "channel"}` : "";
+      const title = reason === "dm" ? who : reason === "mention" ? `${who} mentioned you${where}` : `${who}${where}`;
       const href = m.channel_id
         ? `/channel/${m.channel_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`
         : `/dm/${m.conversation_id}?${m.parent_id ? `thread=${m.parent_id}` : `message=${m.id}`}`;
@@ -91,14 +98,14 @@ export function Notifier({ meId, mutedChannelIds, dnd }: { meId: string; mutedCh
       // The desktop app has no push: it is told directly, and shows the
       // notification only while its window is not focused, like the service
       // worker defers to a focused tab. Same quiet hours as push.
-      if (!quiet) void desktopBridge()?.notify({ title: reason === "dm" ? who : `${who} mentioned you${where}`, body: m.content_text.slice(0, 120) || "Sent a file", url: href, tag: m.conversation_id ?? m.channel_id ?? undefined });
-      toast(reason === "dm" ? who : `${who} mentioned you${where}`, {
+      if (!quiet) void desktopBridge()?.notify({ title, body: m.content_text.slice(0, 120) || "Sent a file", url: href, tag: m.conversation_id ?? m.channel_id ?? undefined });
+      toast(title, {
         // The icon fills the design's 26px leading tile (see components/ui/sonner.tsx).
         icon:
-          reason === "dm" ? (
-            <MessageSquareText className="size-[14px]" aria-hidden="true" />
-          ) : (
+          reason === "mention" ? (
             <AtSign className="size-[14px]" aria-hidden="true" />
+          ) : (
+            <MessageSquareText className="size-[14px]" aria-hidden="true" />
           ),
         description: m.content_text.slice(0, 120) || "Sent a file",
         action: { label: "Open", onClick: () => router.push(href) },
@@ -113,7 +120,8 @@ export function Notifier({ meId, mutedChannelIds, dnd }: { meId: string; mutedCh
         channel
           .on<MessageRow>("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
             const row = payload.new;
-            if (row.conversation_id && row.author_id !== meId) void announce(row.id, "dm");
+            const reason = reasonForMessage(row, meId, levelOf);
+            if (reason) void announce(row.id, reason);
           })
           .on<MentionRow>("postgres_changes", { event: "INSERT", schema: "public", table: "mentions" }, (payload) => {
             const row = payload.new;

@@ -1,4 +1,4 @@
-import { Pencil } from "lucide-react";
+import { MessageSquarePlus } from "lucide-react";
 import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { JoinedChannel } from "@/lib/queries/channels";
@@ -39,7 +39,9 @@ export function Sidebar({
               aria-label="New message"
               className="ml-auto grid size-[28px] shrink-0 place-items-center rounded-md text-fg-600 transition-colors hover:bg-bg-avatar hover:text-ink"
             >
-              <Pencil className="size-[16px]" aria-hidden="true" />
+              {/* A bubble with a plus, not a pencil: the pencil means "edit" everywhere
+                  else in the app, and this starts a new direct message. */}
+              <MessageSquarePlus className="size-[17px]" aria-hidden="true" />
             </Link>
           </TooltipTrigger>
           <TooltipContent side="bottom">New message</TooltipContent>

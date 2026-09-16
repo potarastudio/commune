@@ -1,6 +1,7 @@
 import { CircleAlert, Laptop } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import { HashError } from "@/components/auth/hash-error";
 import { LoginPreview } from "@/components/auth/login-preview";
@@ -36,6 +37,11 @@ export default async function LoginPage({
   // every request with CommuneDesktop, so it never shows the note to itself.
   const inApp = ((await headers()).get("user-agent") ?? "").includes("CommuneDesktop");
   const forDesktopApp = next === "/desktop/handoff" && !inApp;
+  // The app sent this browser here to sign in. Start Google at once, so the
+  // browser opens on the account chooser instead of asking for the same click
+  // again. Not when something went wrong: that page has to be readable, and
+  // redirecting back into Google would loop.
+  if (forDesktopApp && !error) redirect(`/auth/google?next=${encodeURIComponent(next)}`);
 
   return (
     /*

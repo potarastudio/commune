@@ -153,12 +153,23 @@ await win.waitForTimeout(1500);
   await win.waitForTimeout(2000);
   const links = await opened();
   const last = links[links.length - 1] ?? "";
-  check("Google button opens the login page in the browser, pointed at the handoff", links.length > before && last === `${DEV}/login?next=%2Fdesktop%2Fhandoff`, last.slice(-45));
+  check("Google button opens sign-in in the browser, pointed at the handoff", links.length > before && last === `${DEV}/auth/google?next=%2Fdesktop%2Fhandoff`, last.slice(-45));
   check("no OAuth was started from the window", !links.some((l) => l.includes("/auth/v1/authorize")));
   check("the window stayed on /login", new URL(win.url()).pathname === "/login", new URL(win.url()).pathname);
   const cookie = await browserCookie();
-  const r = await fetch(`${DEV}/login?next=%2Fdesktop%2Fhandoff`, { headers: { cookie }, redirect: "manual" });
-  check("a browser already signed in skips straight to the handoff", r.status === 307 && (r.headers.get("location") ?? "").endsWith("/desktop/handoff"), `${r.status} → ${r.headers.get("location")}`);
+  const signedInHop = await fetch(`${DEV}/auth/google?next=%2Fdesktop%2Fhandoff`, { headers: { cookie }, redirect: "manual" });
+  check(
+    "a browser already signed in skips straight to the handoff",
+    signedInHop.status === 307 && (signedInHop.headers.get("location") ?? "").endsWith("/desktop/handoff"),
+    `${signedInHop.status} → ${signedInHop.headers.get("location")}`,
+  );
+  const fresh = await fetch(`${DEV}/auth/google?next=%2Fdesktop%2Fhandoff`, { redirect: "manual" });
+  // Supabase's authorize endpoint is the first hop; it forwards to Google's account chooser.
+  const toGoogle = fresh.headers.get("location") ?? "";
+  check("a signed-out browser starts Google sign-in, not Commune's login page", fresh.status === 307 && toGoogle.includes("/auth/v1/authorize?provider=google"), toGoogle.slice(0, 52));
+  // Apps installed before this route existed still open /login; it forwards them.
+  const old = await fetch(`${DEV}/login?next=%2Fdesktop%2Fhandoff`, { redirect: "manual" });
+  check("the older app's login link forwards to Google too", old.status === 307 && (old.headers.get("location") ?? "").includes("/auth/google"), `${old.status} → ${old.headers.get("location")}`);
 }
 
 // 4. The deep link signs the window in.

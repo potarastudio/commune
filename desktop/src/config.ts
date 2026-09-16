@@ -18,9 +18,13 @@ export const PROTOCOL = "commune";
 /** What a navigation may stay inside the window for. Everything else opens in the browser. */
 export const ALLOWED_ORIGINS = new Set([APP_ORIGIN]);
 
-/** The sign-in page, told to finish on the handoff route instead of in the browser. */
+/**
+ * Where the browser is sent to sign in. It starts Google at once and finishes
+ * on the handoff route, which hands the session back to the app. A browser
+ * already signed in skips Google and goes straight to the handoff.
+ */
 export const HANDOFF_PATH = "/desktop/handoff";
-export const LOGIN_PATH = `/login?next=${encodeURIComponent(HANDOFF_PATH)}`;
+export const LOGIN_PATH = `/auth/google?next=${encodeURIComponent(HANDOFF_PATH)}`;
 
 /**
  * The shell's own version. app.getVersion() reports Electron's version when

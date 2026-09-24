@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+  Capacitor refuses to start without a local index.html, even though the app
+  loads the hosted site (server.url in capacitor.config.ts). This page is that
+  placeholder; it is not shown in normal use.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Commune</title>
+    <style>
+      :root {
+        --ground: #ffffff;
+        --ink: #171717;
+        --muted: #737373;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ground: #171717;
+          --ink: #fafafa;
+          --muted: #a3a3a3;
+        }
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: grid;
+        place-items: center;
+        padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+        box-sizing: border-box;
+        background: var(--ground);
+        color: var(--ink);
+        font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 17px;
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Commune needs a connection</h1>
+      <p>Check your internet connection, then open Commune again.</p>
+    </main>
+  </body>
+</html>

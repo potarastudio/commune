@@ -1,0 +1,29 @@
+node_modules/
+
+# The native projects under ios/ and android/ are tracked. Their build output
+# is not (the platforms' own .gitignore files cover the same ground).
+
+# iOS
+ios/DerivedData/
+ios/App/build/
+ios/App/output/
+xcuserdata/
+*.xcuserstate
+
+# Android
+android/.gradle/
+android/.kotlin/
+android/.idea/
+android/build/
+android/app/build/*
+!android/app/build/.npmkeep
+android/app/release/
+android/local.properties
+*.apk
+*.aab
+
+# Signing keys never belong in the repo.
+*.jks
+*.keystore
+*.p12
+*.mobileprovision

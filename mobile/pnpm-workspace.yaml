@@ -1,0 +1,5 @@
+# Standalone package; not part of the web app's workspace.
+allowBuilds:
+  # Image work for `pnpm assets`: our own source art script and @capacitor/assets
+  # (which pins an older sharp). Both fetch a prebuilt libvips.
+  sharp: true

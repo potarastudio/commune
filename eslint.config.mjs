@@ -22,6 +22,8 @@ const eslintConfig = [
       "design/**",
       // Its own package with its own toolchain (Electron main process, CommonJS).
       "desktop/**",
+      // Its own package too (Capacitor shell for iOS and Android).
+      "mobile/**",
     ],
   },
 ];

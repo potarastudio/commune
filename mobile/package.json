@@ -1,0 +1,37 @@
+{
+  "name": "commune-mobile",
+  "version": "1.0.0",
+  "description": "Commune for iPhone and Android",
+  "private": true,
+  "author": "Potara Studio <hi@potarastudio.com>",
+  "homepage": "https://commune.potarastudio.com",
+  "scripts": {
+    "sync": "cap sync",
+    "dev:ios": "COMMUNE_MOBILE_URL=${COMMUNE_MOBILE_URL:-http://localhost:3001} cap run ios",
+    "dev:android": "ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk} COMMUNE_MOBILE_URL=${COMMUNE_MOBILE_URL:-http://10.0.2.2:3001} cap run android",
+    "open:ios": "cap sync ios && cap open ios",
+    "open:android": "cap sync android && cap open android",
+    "build:android": "cap sync android && cd android && ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk} ./gradlew assembleDebug",
+    "assets": "node scripts/make-assets.mjs && capacitor-assets generate --ios --android --assetPath assets",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/push-notifications": "^8.1.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2",
+    "@types/node": "^22.10.0",
+    "sharp": "^0.34.5",
+    "typescript": "^5.9.3"
+  }
+}

@@ -55,3 +55,6 @@ playwright-report/
 
 # desktop shell (its own package; see desktop/.gitignore for build output)
 desktop/node_modules/
+
+# mobile shell (its own package; see mobile/.gitignore for build output)
+mobile/node_modules/

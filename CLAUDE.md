@@ -10,7 +10,7 @@ This file is the source of truth for the project. Read it fully before making ch
 
 **Goal:** replace Slack for daily use by a 10–15 person team: channels, DMs, threads, reactions, file sharing, search, mentions, notifications, and huddles (audio/video with screen share).
 
-**Non-goals for now:** mobile apps, multi-workspace, third-party integrations/bots, message retention policies, enterprise admin. Do not build these unless asked. (A desktop app was a non-goal until 2026-09-11; see §11.)
+**Non-goals for now:** multi-workspace, third-party integrations/bots, message retention policies, enterprise admin. Do not build these unless asked. (A desktop app was a non-goal until 2026-09-11, see §11; phone apps until 2026-09-24, see §12.)
 
 **Quality bar:** it should feel as fast and polished as Slack for the features it has. Fewer features done well beats many features done half-way. The founder is a UI/UX designer — visual craft matters and will be reviewed closely.
 
@@ -63,6 +63,7 @@ components/
   thread/
   huddle/
   search/
+  mobile/                  # The phone interface: shell, tab bar, screens, sheets (§12)
 lib/
   supabase/                # client.ts (browser), server.ts (RSC/route), admin.ts (service role)
   queries/                 # TanStack hooks: useMessages, useChannels, ...
@@ -77,6 +78,7 @@ supabase/
 types/
   database.ts              # Generated: `pnpm supabase gen types typescript`
 desktop/                   # Electron shell for Mac and Windows (§11); its own package
+mobile/                    # Capacitor shell for iOS and Android (§12); its own package
 ```
 
 Rules:
@@ -289,7 +291,7 @@ Ship each phase to Vercel and use it with the real team before starting the next
 - **Uploads** go direct to Supabase Storage from the browser with a signed upload URL; the message is inserted after the upload succeeds, referencing the path.
 - **LiveKit tokens** are minted in `app/api/livekit/token/route.ts` only after verifying the caller can read the channel/conversation the huddle belongs to. Never expose the LiveKit API secret to the client.
 - **Errors.** User-facing errors are toasts with plain language. Log the real error with context on the server.
-- **Env vars** are validated at boot with Zod in `lib/env.ts`. Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `RESEND_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_APP_URL`. Optional: `CRON_SECRET`; `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (all four, or large uploads stay off).
+- **Env vars** are validated at boot with Zod in `lib/env.ts`. Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `RESEND_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_APP_URL`. Optional: `CRON_SECRET`; `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (all four, or large uploads stay off); `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY` (+ `APNS_BUNDLE_ID`, `APNS_PRODUCTION`) for iPhone push and `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY` for Android push (each set whole, or that platform gets no push).
 - **Times.** Draw every time and date with the helpers in `lib/utils/time.ts`, passing the viewer's zone from `useViewerTimezone()` (client) or `safeTimeZone(profile.timezone)` (server). Never date-fns `format`/`isToday`/`isYesterday` or `toLocale*String` for display: they use the runtime's zone, and Vercel runs in UTC, so the server HTML comes out seven hours off Jakarta and hydration fails. Data from browser-only queries (the profile map) is gated on `useHydrated()`. Verify with `scripts/check-timezones.mts` against a `TZ=UTC` dev server.
 - Commit messages: Conventional Commits (`feat:`, `fix:`, `chore:`…). Small PRs, one feature each.
 
@@ -340,4 +342,21 @@ Rules:
 - **A hidden window must survive and come back.** `backgroundThrottling` is off, because the page holds the realtime connection and rings for new messages while hidden. macOS can still reclaim a renderer left hidden for hours, and the window then comes back blank with its old title, so `render-process-gone` reloads and showing or focusing the window reloads a page with no text on it. Both are rate limited against reload loops.
 - **Verify with `pnpm smoke` in `desktop/`** against the dev server before shipping the shell; it covers sign-in, badge, notifications, screen share, close-to-hide and external links. Packaged builds: `pnpm dist:mac`, `pnpm dist:win`, `pnpm release` (see `desktop/README.md`). The release publishes its own update feed through `pnpm manifests`, because electron-builder's publisher drops `latest*.yml` when the release already exists, and an update nobody is told about reaches nobody.
 
-Mobile remains a non-goal.
+The phone apps are §12.
+
+---
+
+## 12. Phone interface and apps (iOS and Android)
+
+Phones get their own interface, decided on 2026-09-24 from the Claude Design project's `Commune Mobile *` files (copies in `design/`). `mobile/` wraps it in a Capacitor app for iOS and Android, the way `desktop/` wraps the site in Electron.
+
+Rules:
+- **The shell is chosen on the server, from the user agent.** `isPhoneUserAgent()` in `lib/mobile.ts`: iPhones, Android phones and the app (`CommuneMobile/<version>`) get the phone shell; iPads, Android tablets and desktops keep the desktop one. Server code asks `isMobileRequest()` (`lib/mobile-server.ts`), client code `useIsMobile()`. Never switch shells on viewport width at runtime: the server HTML must already be the right one.
+- **Five tab stacks and four surfaces** (`lib/mobile.ts`, pure and unit tested). The URL stays the source of truth; each tab remembers where it got to. Move with `useMobileNav()` or `MobileLink` so the push and pop animations, the iOS edge swipe and Android's back button stay in step with browser history. Search, new message and huddles are surfaces: they close rather than pop.
+- **One screen at a time.** A thread (`?thread=`) and a conversation's details (`?panel=`) are pushed screens on the phone, not side panels. No hover: long-press opens a message's or channel's sheet, swipe right replies, swipe left on a DM marks it read.
+- **The app never bundles the site.** `mobile/` loads `commune.potarastudio.com`, or a dev server with `COMMUNE_MOBILE_URL`. Its own package and lockfile; the web workspace's lint and typecheck exclude it.
+- **The page reaches native code only through `lib/native.ts`** (`window.Capacitor.Plugins`, every call guarded). In a browser it all does nothing. Links, notification taps, the keyboard and the status bar are `NativeBridge` in the root layout, because they matter before sign-in.
+- **Sign-in reuses the desktop handoff (§11).** Google refuses web views, so the app opens `/auth/google?next=/desktop/handoff` in the system browser sheet; the magic link in the app is sent with the same `next`. `commune://auth?handoff=<id>` comes back and is claimed once, cold launch included (`App.getLaunchUrl()`, deduplicated for the session so a reload never re-claims it).
+- **Push inside the app is APNs and FCM, not web push.** The app files its token in `device_tokens` through `/api/push/device`; `lib/push/native.ts` sends alongside web push from the same fan-out, under the same notification rules and Do Not Disturb.
+- **Keep LiveKit out of shared imports.** Screen headers render `MobileHuddleBarOutlet` from `huddle-bar-slot.tsx`; the bar and the huddle screen (`components/mobile/huddle.tsx`) load only with the room.
+- **Verify** with `node --import tsx scripts/check-mobile.mts` against the dev server: every phone screen in light and dark (screenshots saved), no console or hydration errors, and the navigation model. The native apps: `pnpm dev:ios` / `pnpm dev:android` in `mobile/`; see `mobile/README.md` for release builds.

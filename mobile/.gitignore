@@ -7,6 +7,7 @@ node_modules/
 ios/DerivedData/
 ios/App/build/
 ios/App/output/
+build/
 xcuserdata/
 *.xcuserstate
 

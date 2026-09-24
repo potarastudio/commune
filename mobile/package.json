@@ -12,6 +12,7 @@
     "open:ios": "cap sync ios && cap open ios",
     "open:android": "cap sync android && cap open android",
     "build:android": "cap sync android && cd android && ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk} ./gradlew assembleDebug",
+    "testflight": "sh scripts/testflight.sh",
     "assets": "node scripts/make-assets.mjs && capacitor-assets generate --ios --android --assetPath assets",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

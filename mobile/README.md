@@ -154,26 +154,36 @@ Nothing below is needed for the simulator or emulator.
 
 | what | for | where |
 |---|---|---|
-| Apple development team | running on an iPhone; archives | Xcode › App target › Signing & Capabilities › Team (`DEVELOPMENT_TEAM`). Signing is automatic |
+| Apple development team | running on an iPhone; archives | Set: `DEVELOPMENT_TEAM = 7R59U6AY8A` in the Xcode project. Signing is automatic, through the Apple account signed in to Xcode › Settings › Accounts |
 | Push on iOS | APNs registration | Already declared: `App/App.entitlements` has `aps-environment` (development; distribution builds get production from their profile). Automatic signing turns Push on for the App ID once a team is set. Sending needs an APNs auth key (.p8) from the Apple Developer account |
 | Firebase project | push on Android | Add an Android app `com.potarastudio.commune`, put its `google-services.json` in `android/app/`. The build applies the google-services plugin only when that file exists. Sending goes through FCM with a service account |
 | Play Console, App Store Connect | distribution | see below |
 
-The web app's notifications today are Web Push through the service worker,
-which the in-app web views do not offer. Native push needs the page to
-register through the PushNotifications plugin and the server to send through
-APNs and FCM. That is web app and server work; the shell side is in place.
+Web Push through the service worker does not reach the app's web views, so
+inside the app the page registers through the PushNotifications plugin
+(`lib/push/client.ts`) and files its token with the server, which sends
+through APNs and FCM (`lib/push/native.ts`) once the `APNS_*` and `FCM_*`
+variables are set on Vercel. A TestFlight or App Store build talks to APNs
+production, so set `APNS_PRODUCTION=true` there.
 
 ## Release builds
 
 Bump the version in three places: `package.json` (the user agent), Xcode's
-`MARKETING_VERSION` and `CURRENT_PROJECT_VERSION`, and `versionName` and
-`versionCode` in `android/app/build.gradle`.
+`MARKETING_VERSION`, and `versionName` and `versionCode` in
+`android/app/build.gradle`.
 
-iOS:
+iOS goes to TestFlight in one command:
 
-    pnpm open:ios       # syncs production first
-    # Xcode: pick the team, Product › Archive, then Distribute App › App Store Connect
+    pnpm testflight
+
+It syncs production, archives a Release build whose build number is the UTC
+minute (so every upload is new), and uploads it with the options in
+`ios/ExportOptions.plist`. Automatic signing makes or reuses the Apple
+Distribution certificate and App Store profile. The app record has to exist
+in App Store Connect first (bundle ID `com.potarastudio.commune`), or the
+upload stops at "Error Downloading App Information". Archives and logs land
+in `build/testflight/<build>/`. Apple then processes the build, usually within
+half an hour, and it appears under TestFlight.
 
 Android needs an upload key, kept out of the repo (`.gitignore` refuses
 `*.jks` and `*.keystore`):

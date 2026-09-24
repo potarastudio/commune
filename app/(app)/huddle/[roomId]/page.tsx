@@ -4,6 +4,8 @@ import { ArrowLeft, Headphones } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { HuddleStageOutlet } from "@/components/huddle/huddle-stage-slot";
+import { MobileHuddleSummary } from "@/components/mobile/huddle-summary";
+import { useIsMobile } from "@/lib/mobile-context";
 import { useHuddleStore } from "@/lib/store/huddle";
 
 /**
@@ -20,6 +22,10 @@ import { useHuddleStore } from "@/lib/store/huddle";
 export default function HuddlePage() {
   const { roomId } = useParams<{ roomId: string }>();
   const session = useHuddleStore((s) => s.session);
+  const mobile = useIsMobile();
+
+  // The phone: joining while it runs, the receipt once it is over.
+  if (mobile && (!session || session.huddleId !== roomId)) return <MobileHuddleSummary huddleId={roomId} />;
 
   if (!session || session.huddleId !== roomId) {
     return (

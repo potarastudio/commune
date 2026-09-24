@@ -38,6 +38,26 @@ describe("renderContent", () => {
     expect(out).toContain("@hakim");
   });
 
+  it("inert mode keeps links and mentions as text, for previews that are themselves links", () => {
+    const out = renderToStaticMarkup(
+      <>
+        {renderContent(
+          doc(
+            p(
+              t("site", [{ type: "link", attrs: { href: "https://potara.studio" } }]),
+              { type: "mention", attrs: { id: "00000000-0000-4000-8000-000000000001", label: "hakim" } },
+            ),
+          ),
+          { inert: true },
+        )}
+      </>,
+    );
+    expect(out).not.toContain("<a");
+    expect(out).not.toContain("<button");
+    expect(out).toContain("site");
+    expect(out).toContain("@hakim");
+  });
+
   it("renders lists, code blocks and hard breaks", () => {
     const out = html(
       doc(

@@ -26,11 +26,13 @@ type Props<T> = {
   heading: string;
   /** Width utility — w-[340px] for mentions, w-[332px] for emoji (design). */
   widthClass: string;
+  /** The phone's band: full width, 52px rows, no keyboard hints. */
+  mobile?: boolean;
 };
 
 /** Keyboard-navigable popup used by @mention and :emoji: autocomplete. */
 function SuggestionListInner<T>(
-  { items, command, renderItem, emptyLabel, label, heading, widthClass }: Props<T>,
+  { items, command, renderItem, emptyLabel, label, heading, widthClass, mobile = false }: Props<T>,
   ref: React.Ref<SuggestionListRef>,
 ) {
   const [index, setIndex] = useState(0);
@@ -57,6 +59,34 @@ function SuggestionListInner<T>(
       return false;
     },
   }));
+
+  if (mobile) {
+    return (
+      <div
+        role="listbox"
+        aria-label={label}
+        className="max-h-[216px] w-full overflow-y-auto border-t border-border bg-bg-card text-ink shadow-[0_-6px_18px_-8px_var(--shadow-tint-lg)]"
+      >
+        <p className="px-[14px] pt-[10px] pb-[6px] text-[11px] font-bold tracking-[0.06em] text-muted-foreground uppercase">{heading}</p>
+        {items.length === 0 && <div className="border-t border-border-subtle px-[14px] py-[14px] text-[14px] text-muted-foreground">{emptyLabel}</div>}
+        {items.map((item, i) => (
+          <button
+            key={i}
+            type="button"
+            role="option"
+            aria-selected={i === index}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => command(item)}
+            className={`flex min-h-[52px] w-full items-center gap-[11px] border-t border-border-subtle px-[14px] text-left ${
+              i === index ? "bg-accent-surface" : "active:bg-bg-subtle"
+            }`}
+          >
+            {renderItem(item, false)}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div

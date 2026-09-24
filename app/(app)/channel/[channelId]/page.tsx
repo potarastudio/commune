@@ -14,6 +14,9 @@ import { ContainerPanel } from "@/components/panel/container-panel";
 import { ThreadPanel } from "@/components/thread/thread-panel";
 import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
 import { Button } from "@/components/ui/button";
+import { ChannelScreenHeader } from "@/components/mobile/chat-headers";
+import { ThreadScreen } from "@/components/mobile/thread-screen";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { reconcileHuddle } from "@/lib/actions/huddles";
 import { getActiveHuddle } from "@/lib/queries/huddles";
 import { getChannel, getChannelMembers, getMembership } from "@/lib/queries/channel";
@@ -136,6 +139,77 @@ export default async function ChannelPage({ params, searchParams }: { params: Pa
   const startBody = intro
     ? `${intro.replace(/[.!?]+$/, "")}. Post the first thing — half-finished is fine.`
     : "Everything the channel has ever said is below.";
+
+  const readOnlyNotice = channel.is_archived ? (
+    <ReadOnlyNotice
+      icon={<Lock className="size-[16px]" />}
+      title={<>#{channel.name} is archived</>}
+      body="Everything here stays readable and searchable. Reopen it to post again."
+      action={profile.role === "admin" ? <UnarchiveButton channelId={channel.id} channelName={channel.name} /> : undefined}
+    />
+  ) : (
+    <ReadOnlyNotice
+      icon={<Eye className="size-[16px]" />}
+      title={<>You&rsquo;re previewing #{channel.name}</>}
+      body="Read anything you like. Join to post, and it lands in your channels."
+      action={<JoinLeaveButton channelId={channel.id} channelName={channel.name} joined={false} />}
+    />
+  );
+
+  // The phone: the channel, its thread and its details are separate pushed screens.
+  if (await isMobileRequest()) {
+    if (threadId) {
+      return (
+        <ThreadScreen
+          parentId={threadId}
+          container={container}
+          containerLabel={`#${channel.name}`}
+          me={me}
+          isAdmin={profile.role === "admin"}
+          canPost={canPost}
+        />
+      );
+    }
+    if (panelOpen) {
+      return (
+        <ContainerPanel
+          container={container}
+          containerLabel={`#${channel.name}`}
+          channel={channel}
+          members={members}
+          isMember={membership !== null}
+          isAdmin={profile.role === "admin"}
+          notificationLevel={(membership?.notification_level as "all" | "mentions" | "muted" | undefined) ?? null}
+          me={me}
+          initialPins={pins}
+        />
+      );
+    }
+    return (
+      <>
+        <ChannelScreenHeader
+          name={channel.name}
+          isPrivate={channel.is_private}
+          memberCount={members.length}
+          huddle={canPost ? <HuddleButton {...huddleProps} /> : undefined}
+        />
+        <ConnectionBanner />
+        {canPost && <HuddleBanner {...huddleProps} />}
+        <MessagePane
+          container={container}
+          me={me}
+          isAdmin={profile.role === "admin"}
+          canPost={canPost}
+          lastReadAt={membership?.last_read_at ?? null}
+          initialPage={firstPage}
+          placeholder={`Message #${channel.name}`}
+          startTitle={`This is the start of #${channel.name}`}
+          startBody={startBody}
+          readOnlyNotice={readOnlyNotice}
+        />
+      </>
+    );
+  }
 
   return (
     /* The panels are siblings of the channel column, not children of it: the

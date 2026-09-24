@@ -24,7 +24,8 @@ import { useHydrated } from "@/lib/utils/use-hydrated";
 const ROW = "flex flex-wrap items-center gap-4 px-4 py-[14px]";
 const LABEL = "block text-[13.5px] font-semibold text-ink";
 
-export function SoundRow() {
+export function SoundRow({ variant = "desktop" }: { variant?: "desktop" | "mobile" }) {
+  const mobile = variant === "mobile";
   const hydrated = useHydrated();
   const sound = useSoundStore((s) => s.sound);
   const setSound = useSoundStore((s) => s.setSound);
@@ -33,16 +34,22 @@ export function SoundRow() {
   const shown: SoundName = hydrated ? sound : "ping";
 
   return (
-    <div className={ROW}>
-      <span className="min-w-[180px] flex-1">
-        <span className={LABEL}>Sound</span>
+    <div
+      className={
+        mobile ? "flex min-h-[52px] items-center gap-[14px] border-t border-border-subtle px-[16px] py-[11px]" : ROW
+      }
+    >
+      <span className={mobile ? "min-w-0 flex-1" : "min-w-[180px] flex-1"}>
+        <span className={mobile ? "block text-[14.5px] font-medium text-ink" : LABEL}>Sound</span>
       </span>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
             aria-label={`Notification sound: ${SOUND_LABELS[shown]}`}
-            className="flex h-[34px] shrink-0 items-center gap-2 rounded-[8px] border border-border-input bg-bg-card px-[10px] text-[13px] font-medium text-ink shadow-xs transition-colors hover:bg-bg-card-hover"
+            className={`flex shrink-0 items-center gap-2 border border-border-input bg-bg-card font-medium text-ink shadow-xs transition-colors hover:bg-bg-card-hover ${
+              mobile ? "h-[40px] rounded-[10px] px-[12px] text-[14px]" : "h-[34px] rounded-[8px] px-[10px] text-[13px]"
+            }`}
           >
             {SOUND_LABELS[shown]}
             <ChevronDown className="size-[13px] text-muted-foreground" aria-hidden="true" />

@@ -4,6 +4,7 @@ import webpush from "web-push";
 import { publicEnv, serverEnv } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { inDoNotDisturb } from "./dnd";
+import { deliverNative, type NativePush } from "./native";
 
 /**
  * Web push fan-out for DMs and mentions (§5 Phase 2), run after a message is
@@ -24,8 +25,17 @@ function vapid() {
 
 type Payload = { title: string; body: string; url: string; tag: string };
 
-async function deliver(userIds: string[], payload: Payload) {
+/**
+ * Browsers get web push, phones running the app get APNs or FCM. The phone's
+ * wording can differ (design: Mobile System States → Push delivered): a
+ * lock screen shows the title and body only, so it leads with the channel.
+ */
+async function deliver(userIds: string[], payload: Payload, phone: NativePush = payload) {
   if (userIds.length === 0) return;
+  await Promise.all([deliverWeb(userIds, payload), deliverNative(userIds, phone)]);
+}
+
+async function deliverWeb(userIds: string[], payload: Payload) {
   vapid();
   const admin = createSupabaseAdminClient();
   const { data: subs, error } = await admin.from("push_subscriptions").select("id, endpoint, keys").in("user_id", userIds);
@@ -113,7 +123,28 @@ export async function notifyForMessage(messageId: string): Promise<void> {
     if (recipients.length === 0) return;
 
     const title = m.conversation_id ? authorName : `${authorName} in #${channelName ?? "channel"}`;
-    await deliver(recipients, { title, body: excerpt(m.content_text), url, tag: m.conversation_id ?? m.channel_id ?? m.id });
+    const tag = m.conversation_id ?? m.channel_id ?? m.id;
+    const text = excerpt(m.content_text);
+    const web = { title, body: text, url, tag };
+    if (m.conversation_id) {
+      await deliver(recipients, web);
+      return;
+    }
+    // On a phone a channel message leads with the channel and names who mentioned you.
+    const named = new Set((mentions ?? []).filter((x) => x.kind === "user" && x.user_id).map((x) => x.user_id as string));
+    const channelTitle = `#${channelName ?? "channel"}`;
+    await Promise.all([
+      deliver(
+        recipients.filter((id) => named.has(id)),
+        web,
+        { title: channelTitle, body: `${authorName} mentioned you: ${text}`, url, tag },
+      ),
+      deliver(
+        recipients.filter((id) => !named.has(id)),
+        web,
+        { title: channelTitle, body: `${authorName}: ${text}`, url, tag },
+      ),
+    ]);
   } catch (err) {
     console.error("notifyForMessage", { message: err instanceof Error ? err.message : String(err) });
   }

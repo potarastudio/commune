@@ -8,7 +8,10 @@ import type { ActiveHuddle } from "@/lib/queries/huddles";
 import type { Container } from "@/lib/queries/messages";
 import { useActiveHuddle } from "@/lib/queries/use-huddle";
 import { useHuddleStore } from "@/lib/store/huddle";
+import { useIsMobile } from "@/lib/mobile-context";
+import { cn } from "@/lib/utils";
 import { enterHuddle } from "./huddle-provider";
+import { useMobileNav } from "@/components/mobile/use-mobile-nav";
 
 type Props = { container: Container; label: string; href: string; initial: ActiveHuddle | null; meId: string };
 
@@ -40,18 +43,47 @@ function useRunningFor(startedAt: string | null): string | null {
 
 /** Header button: start a huddle here, or join the one that's running. */
 export function HuddleButton({ container, label, href, initial, meId }: Props) {
+  const mobile = useIsMobile();
   const huddle = useActiveHuddle(container, initial);
   const session = useHuddleStore((s) => s.session);
   const connecting = useHuddleStore((s) => s.connecting);
   const [busy, setBusy] = useState(false);
   const inThisOne = session?.huddleId === huddle?.id && Boolean(session);
   const someoneElseIn = huddle ? huddle.participants.some((p) => p.id !== meId) : false;
+  const nav = useMobileNav();
 
   const act = async () => {
     setBusy(true);
-    await enterHuddle({ container, label, href, huddleId: huddle?.id });
+    const ok = await enterHuddle({ container, label, href, huddleId: huddle?.id });
     setBusy(false);
+    // On the phone the huddle is a screen of its own; open it once you are in.
+    const id = useHuddleStore.getState().session?.huddleId;
+    if (mobile && ok && id) nav.push(`/huddle/${id}`);
   };
+
+  // The phone's header has room for icons only: a 44px headphones button, accent while a huddle is running.
+  if (mobile) {
+    return (
+      <button
+        type="button"
+        aria-label={inThisOne ? "In this huddle" : huddle ? (someoneElseIn ? "Join huddle" : "Rejoin huddle") : "Start huddle"}
+        disabled={busy || connecting}
+        onClick={() => (inThisOne && session ? nav.push(`/huddle/${session.huddleId}`) : void act())}
+        className={cn(
+          "relative grid size-[44px] shrink-0 place-items-center rounded-[10px] active:bg-bg-subtle disabled:opacity-100",
+          huddle ? "text-primary" : "text-fg-600",
+        )}
+      >
+        <Headphones className="size-[19px]" strokeWidth={1.75} aria-hidden="true" />
+        {(inThisOne || huddle) && (
+          <span
+            aria-hidden="true"
+            className={cn("absolute top-[10px] right-[9px] size-[8px] rounded-full border-2 border-bg-main", inThisOne ? "bg-presence" : "bg-primary")}
+          />
+        )}
+      </button>
+    );
+  }
 
   if (inThisOne) {
     return (
@@ -77,11 +109,13 @@ export function HuddleButton({ container, label, href, initial, meId }: Props) {
 
 /** "Sari started a huddle" with participant avatars and Join, under the header (§5). */
 export function HuddleBanner({ container, label, href, initial, meId }: Props) {
+  const mobile = useIsMobile();
   const huddle = useActiveHuddle(container, initial);
   const session = useHuddleStore((s) => s.session);
   const connecting = useHuddleStore((s) => s.connecting);
   const [busy, setBusy] = useState(false);
   const running = useRunningFor(huddle?.started_at ?? null);
+  const nav = useMobileNav();
   if (!huddle || session?.huddleId === huddle.id) return null;
 
   const count = huddle.participants.length;
@@ -89,7 +123,13 @@ export function HuddleBanner({ container, label, href, initial, meId }: Props) {
   const people = `${count} ${count === 1 ? "person" : "people"}`;
 
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-accent-surface-border bg-accent-surface px-5 py-[11px]" role="status">
+    <div
+      className={cn(
+        "flex shrink-0 flex-wrap items-center gap-3 border-b border-accent-surface-border bg-accent-surface py-[11px]",
+        mobile ? "px-[16px]" : "px-5",
+      )}
+      role="status"
+    >
       <span className="grid size-8 shrink-0 place-items-center rounded-md border border-accent-surface-border bg-bg-card text-accent-foreground">
         <Headphones className="size-4" aria-hidden="true" />
       </span>
@@ -110,12 +150,13 @@ export function HuddleBanner({ container, label, href, initial, meId }: Props) {
         </span>
         <button
           type="button"
-          className={ACCENT_BUTTON}
+          className={cn(ACCENT_BUTTON, mobile && "h-[40px] rounded-[10px] px-[14px]")}
           disabled={busy || connecting}
           onClick={async () => {
             setBusy(true);
-            await enterHuddle({ container, label, href, huddleId: huddle.id });
+            const ok = await enterHuddle({ container, label, href, huddleId: huddle.id });
             setBusy(false);
+            if (mobile && ok) nav.push(`/huddle/${huddle.id}`);
           }}
         >
           <Headphones className="size-[15px]" aria-hidden="true" />

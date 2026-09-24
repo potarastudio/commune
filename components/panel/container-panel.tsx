@@ -1,6 +1,8 @@
 "use client";
 
 import { Search, UserPlus, X } from "lucide-react";
+import { PushedHeader } from "@/components/mobile/screen-header";
+import { useIsMobile } from "@/lib/mobile-context";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -53,6 +55,7 @@ export function ContainerPanel({
 }) {
   const tz = useViewerTimezone();
   const router = useRouter();
+  const mobile = useIsMobile();
   const { panelTab, showPanel, closePanel } = useThreadNav();
   const tabs: PanelTab[] = channel ? ["about", "members", "files", "pins"] : ["members", "files", "pins"];
   const tab: PanelTab = panelTab && tabs.includes(panelTab) ? panelTab : tabs[0];
@@ -97,7 +100,14 @@ export function ContainerPanel({
   }, [members, memberQuery]);
 
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col border-l border-border bg-bg-main" aria-label={`${containerLabel} details`}>
+    <aside
+      className={mobile ? "pb-safe flex min-h-0 w-full flex-1 flex-col bg-bg-main" : "flex w-[340px] shrink-0 flex-col border-l border-border bg-bg-main"}
+      aria-label={`${containerLabel} details`}
+    >
+      {/* On the phone the details are a pushed screen: Back, not a close button. */}
+      {mobile ? (
+        <PushedHeader title={containerLabel} subtitle={subtitle} />
+      ) : (
       <header className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border pl-4 pr-3">
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[15px] font-semibold tracking-[-0.015em] text-ink">{containerLabel}</span>
@@ -117,8 +127,13 @@ export function ContainerPanel({
           <TooltipContent side="bottom">Close (Esc)</TooltipContent>
         </Tooltip>
       </header>
+      )}
 
-      <div role="tablist" aria-label="Details sections" className="flex shrink-0 items-center gap-0.5 border-b border-border px-3 py-2">
+      <div
+        role="tablist"
+        aria-label="Details sections"
+        className={`flex shrink-0 items-center border-b border-border ${mobile ? "gap-[6px] overflow-x-auto px-[16px] py-[10px]" : "gap-0.5 px-3 py-2"}`}
+      >
         {tabs.map((t) => (
           <button
             key={t}
@@ -126,8 +141,14 @@ export function ContainerPanel({
             type="button"
             aria-selected={tab === t}
             onClick={() => showPanel("details", t)}
-            className={`flex h-7 items-center rounded-[7px] border px-2.5 text-[12.5px] font-semibold transition-colors ${
-              tab === t ? "border-border-strong bg-bg-card text-ink shadow-xs" : "border-transparent text-fg-600 hover:text-ink"
+            className={`flex shrink-0 items-center border font-semibold transition-colors ${
+              mobile ? "h-[44px] rounded-[12px] px-[12px] text-[13px]" : "h-7 rounded-[7px] px-2.5 text-[12.5px]"
+            } ${
+              tab === t
+                ? "border-border-strong bg-bg-card text-ink shadow-xs"
+                : mobile
+                  ? "border-transparent bg-bg-chip text-fg-600"
+                  : "border-transparent text-fg-600 hover:text-ink"
             }`}
           >
             {labels[t]}

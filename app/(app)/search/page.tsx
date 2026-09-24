@@ -3,6 +3,8 @@ import { CircleAlert, Search } from "lucide-react";
 import { redirect } from "next/navigation";
 import { SearchForm, SearchTips } from "@/components/search/search-form";
 import { SearchResults, type SearchResultRow } from "@/components/search/search-results";
+import { SearchScreen, type MobileSearchChannel, type MobileSearchPerson } from "@/components/mobile/search-screen";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { messageHref } from "@/lib/queries/activity";
 import { conversationLabel, getMyConversations } from "@/lib/queries/conversations";
 import { getCurrentProfile } from "@/lib/queries/profile";
@@ -51,6 +53,65 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       }))
     : [];
   // A full page probably means there is more behind it; ask for a wider one.
+  const moreHrefForPhone =
+    found === limit && limit < MAX_RESULTS ? `/search?q=${encodeURIComponent(q)}&n=${Math.min(limit + PAGE_SIZE, MAX_RESULTS)}` : null;
+
+  // The phone's search also finds channels and people: it is the only switcher there is.
+  if (await isMobileRequest()) {
+    const dmWhere = (id: string | null) => {
+      const c = id ? conversations.find((x) => x.id === id) : undefined;
+      if (!c) return "a direct message";
+      if (c.members.length <= 1) return "your notes";
+      return c.members.length === 2 ? "your DM" : conversationLabel(c.members, profile.id, { short: true });
+    };
+    // Plain words only, and nothing PostgREST reads as filter syntax.
+    const word = parsed.terms.replace(/[^\p{L}\p{N} _.-]/gu, " ").trim();
+    const [channelRows, peopleRows] = word
+      ? await Promise.all([
+          supabase
+            .from("channels")
+            .select("id, name, is_private, topic, channel_members(count)")
+            .eq("is_archived", false)
+            .ilike("name", `%${word.replace(/\s+/g, "-")}%`)
+            .order("name")
+            .limit(6),
+          supabase
+            .from("profiles")
+            .select("id, handle, display_name, avatar_url, title")
+            .or(`display_name.ilike.%${word}%,handle.ilike.%${word}%`)
+            .order("display_name")
+            .limit(6),
+        ])
+      : [null, null];
+    const channels: MobileSearchChannel[] = (channelRows?.data ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      is_private: c.is_private,
+      topic: c.topic,
+      member_count: (c.channel_members as unknown as { count: number }[])[0]?.count ?? 0,
+    }));
+    const people: MobileSearchPerson[] = peopleRows?.data ?? [];
+    return (
+      <SearchScreen
+        query={q}
+        meId={profile.id}
+        messages={rows.map((r, i) => ({
+          id: r.id,
+          href: r.href,
+          author: r.author,
+          createdAt: r.createdAt,
+          // "Sari in #design"; a DM is already between you, so it only says which kind of place it was.
+          where: r.where.kind === "channel" ? `#${r.where.label}` : dmWhere(outcome?.ok ? (outcome.results[i]?.conversation?.id ?? null) : null),
+          snippet: r.snippet,
+        }))}
+        channels={channels}
+        people={people}
+        error={outcome && !outcome.ok ? outcome.unresolved : null}
+        moreHref={moreHrefForPhone}
+      />
+    );
+  }
+
   const moreHref =
     found === limit && limit < MAX_RESULTS
       ? `/search?q=${encodeURIComponent(q)}&n=${Math.min(limit + PAGE_SIZE, MAX_RESULTS)}`

@@ -1,11 +1,14 @@
 import { Hash } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ChannelsScreen } from "@/components/mobile/channels-screen";
 import { Button } from "@/components/ui/button";
 import { getGeneralChannelId } from "@/lib/queries/channel";
 import { getJoinedChannels } from "@/lib/queries/channels";
 import { getCurrentProfile } from "@/lib/queries/profile";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { toUnreadMap } from "@/lib/utils/unreads";
 
 /**
  * Home is #general, like a workspace's landing channel. With no #general and no
@@ -16,6 +19,18 @@ export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
+
+  // On a phone Home is the Channels tab's root: the list, not a channel (design: Mobile Navigation).
+  if (await isMobileRequest()) {
+    const [channels, unreadRows] = await Promise.all([
+      getJoinedChannels(supabase, profile.id),
+      supabase.rpc("get_unread_counts").then(({ data, error }) => {
+        if (error) throw new Error(error.message);
+        return data;
+      }),
+    ]);
+    return <ChannelsScreen meId={profile.id} workspace="Potara Studio" channels={channels} initialUnreads={toUnreadMap(unreadRows)} />;
+  }
 
   const general = await getGeneralChannelId(supabase);
   if (general) redirect(`/channel/${general}`);

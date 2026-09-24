@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Commune mobile — system states: loading, offline, reconnecting, notifications, empty and error." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #ffffff; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "cv11", "ss01", "calt"; }
+  a { color: #171717; text-decoration: none; }
+  a:hover { color: #b44309; }
+  @keyframes commune-spin { to { transform: rotate(360deg); } }
+  @keyframes commune-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  [data-commune] {
+    --bg-main:#ffffff; --bg-card:#ffffff; --bg-hover:#fafafa; --bg-col:#fafafa;
+    --bg-chip:#f6f6f6; --bg-subtle:#f5f5f5; --bg-avatar:#f0f0f0;
+    --border:#e9e9e9; --border-strong:#e2e2e2; --border-subtle:#ebebeb;
+    --border-input:#dcdcdc; --border-hover:#d0d0d0; --ink:#171717; --body:#262626;
+    --fg-400:#404040; --fg-600:#666666; --muted:#6b6b6b; --tertiary:#737373;
+    --presence:#3aa676; --accent:#f05710; --accent-border:#d9490a; --accent-fg:#8a3308;
+    --accent-surface:#fef3ec; --accent-surface-border:#f9c4a6; --accent-text:#b44309;
+    --danger:#b42318; --danger-surface:#fdf2f2; --avatar-ring:rgba(0,0,0,0.04);
+    --shadow-tint-sm:rgba(16,24,40,0.05); --shadow-tint-md:rgba(16,24,40,0.08); --shadow-tint-lg:rgba(16,24,40,0.1);
+    color-scheme: light;
+  }
+  [data-commune="dark"] {
+    --bg-main:#171717; --bg-card:#1f1f1f; --bg-hover:#1c1c1c; --bg-col:#0f0f0f;
+    --bg-chip:#1f1f1f; --bg-subtle:#212121; --bg-avatar:#262626;
+    --border:#262626; --border-strong:#2e2e2e; --border-subtle:#262626;
+    --border-input:#333333; --border-hover:#3d3d3d; --ink:#ededed; --body:#d6d6d6;
+    --fg-400:#a3a3a3; --fg-600:#9d9d9d; --muted:#9d9d9d; --tertiary:#8a8a8a;
+    --presence:#3fcb8c; --accent:#f05710; --accent-border:#d9490a; --accent-fg:#ffb48a;
+    --accent-surface:#2b1a11; --accent-surface-border:#4a2a14; --accent-text:#ff9a5e;
+    --danger:#f97066; --danger-surface:#2b1414; --avatar-ring:rgba(255,255,255,0.06);
+    --shadow-tint-sm:rgba(0,0,0,0.4); --shadow-tint-md:rgba(0,0,0,0.5); --shadow-tint-lg:rgba(0,0,0,0.6);
+    color-scheme: dark;
+  }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-send-horizontal" viewBox="0 0 24 24"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z"/><path d="M6 12h16"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></symbol>
+</defs></svg>
+
+<div data-commune="{{ theme }}" style="font-family:Inter, ui-sans-serif, system-ui, sans-serif; display:flex; height:100vh; flex-direction:column; overflow:hidden; background:var(--bg-main); color:var(--ink)">
+<div style="flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:8px; border-bottom:1px solid var(--border); background:var(--bg-col); padding:12px 16px">
+  <span style="margin-right:2px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Mobile · system</span>
+  <div role="group" aria-label="State" style="display:flex; flex-wrap:wrap; gap:4px">
+    <button type="button" onClick="{{ pickskeleton }}" aria-pressed="{{ isskeleton }}" style="{{ btnskeleton }}">Loading</button>
+    <button type="button" onClick="{{ pickoffline }}" aria-pressed="{{ isoffline }}" style="{{ btnoffline }}">Offline</button>
+    <button type="button" onClick="{{ pickreconnecting }}" aria-pressed="{{ isreconnecting }}" style="{{ btnreconnecting }}">Reconnecting</button>
+    <button type="button" onClick="{{ pickpushPermission }}" aria-pressed="{{ ispushPermission }}" style="{{ btnpushPermission }}">Permission priming</button>
+    <button type="button" onClick="{{ pickpushDelivered }}" aria-pressed="{{ ispushDelivered }}" style="{{ btnpushDelivered }}">Push notifications</button>
+    <button type="button" onClick="{{ pickempty }}" aria-pressed="{{ isempty }}" style="{{ btnempty }}">Empty channel</button>
+    <button type="button" onClick="{{ pickloadError }}" aria-pressed="{{ isloadError }}" style="{{ btnloadError }}">Load failed</button>
+  </div>
+  <button type="button" onClick="{{ toggleTheme }}" style="display:flex; height:28px; align-items:center; border-radius:7px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer">{{ themeLabel }}</button>
+  <p style="margin:0 0 0 auto; max-width:340px; font-size:12.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">{{ note }}</p>
+</div>
+    <sc-if value="{{ isskeleton }}" hint-placeholder-val="{{ true }}">
+      <div data-stage="" data-anchor="top" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Loading</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow:hidden; padding:12px 0">
+          <div style="display:flex; gap:10px; padding:9px 16px">
+            <span style="display:block; width:32px; height:32px; flex-shrink:0; border-radius:9px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+            <div style="min-width:0; flex:1; display:flex; flex-direction:column; gap:7px">
+              <span style="display:block; width:62%; height:11px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+              <span style="display:block; width:86%; height:9px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; padding:9px 16px">
+            <span style="display:block; width:32px; height:32px; flex-shrink:0; border-radius:9px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+            <div style="min-width:0; flex:1; display:flex; flex-direction:column; gap:7px">
+              <span style="display:block; width:48%; height:11px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+              <span style="display:block; width:64%; height:9px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; padding:9px 16px">
+            <span style="display:block; width:32px; height:32px; flex-shrink:0; border-radius:9px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+            <div style="min-width:0; flex:1; display:flex; flex-direction:column; gap:7px">
+              <span style="display:block; width:70%; height:11px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+              <span style="display:block; width:92%; height:9px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+              <span style="display:block; width:54%; height:9px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; padding:9px 16px">
+            <span style="display:block; width:32px; height:32px; flex-shrink:0; border-radius:9px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+            <div style="min-width:0; flex:1; display:flex; flex-direction:column; gap:7px">
+              <span style="display:block; width:40%; height:11px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+              <span style="display:block; width:72%; height:9px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span>
+            </div>
+          </div>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:0 15px; font-size:14.5px; color:var(--muted)">Message #design</span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isoffline }}">
+      <div data-stage="" data-anchor="top" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Offline</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div role="status" style="flex-shrink:0; display:flex; align-items:center; gap:9px; border-bottom:1px solid var(--border); background:var(--bg-chip); padding:9px 16px">
+          <span style="display:block; width:8px; height:8px; flex-shrink:0; border-radius:9999px; background:var(--tertiary)"></span>
+          <span style="min-width:0; flex:1; font-size:12.5px; font-weight:600; color:var(--fg-400); text-wrap:pretty">No connection — 2 messages waiting to send</span>
+        </div>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div style="height:100%; box-sizing:border-box; overflow-y:auto; padding-bottom:6px">
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Type scale: 12/14/16/20/24/32?</p>
+              </div>
+            </article>
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Hakim</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:19</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--muted)">Agreed — 32 on mobile, 40 from md up.</p>
+                <p style="margin:5px 0 0; display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--muted)"><svg style="width:12px; height:12px; flex-shrink:0"><use href="#u-clock"/></svg>Queued — will send when you reconnect</p>
+              </div>
+            </article>
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Hakim</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:21</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--muted)">Updating the tokens now.</p>
+                <p style="margin:5px 0 0; display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--muted)"><svg style="width:12px; height:12px; flex-shrink:0"><use href="#u-clock"/></svg>Queued — will send when you reconnect</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:0 15px; font-size:14.5px; color:var(--muted)">Message #design — sends when you reconnect</span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isreconnecting }}">
+      <div data-stage="" data-anchor="top" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Reconnecting</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div role="status" style="flex-shrink:0; display:flex; align-items:center; gap:9px; border-bottom:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:9px 16px">
+          <span style="display:block; width:15px; height:15px; flex-shrink:0; border-radius:9999px; border:2px solid var(--accent-surface-border); border-top-color:var(--accent); animation:commune-spin 700ms linear infinite"></span>
+          <span style="min-width:0; flex:1; font-size:12.5px; font-weight:600; color:var(--accent-fg); text-wrap:pretty">Reconnecting — sending 2 messages</span>
+        </div>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div style="height:100%; box-sizing:border-box; overflow-y:auto; padding-bottom:6px">
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Type scale: 12/14/16/20/24/32?</p>
+              </div>
+            </article>
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Hakim</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:19</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--muted)">Agreed — 32 on mobile, 40 from md up.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:0 15px; font-size:14.5px; color:var(--muted)">Message #design</span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ispushPermission }}">
+      <div data-stage="" data-anchor="bottom" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Permission priming</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:56px; flex-shrink:0; align-items:center; border-bottom:1px solid var(--border); padding:0 16px">
+          <span style="min-width:0; flex:1; font-size:19px; font-weight:600; letter-spacing:-0.025em; color:var(--ink)">Activity</span>
+        </header>
+        <div style="flex:1; min-height:0; overflow:hidden; opacity:0.4">
+          <div style="display:flex; gap:11px; border-bottom:1px solid var(--border-subtle); padding:13px 16px">
+            <span style="display:block; width:36px; height:36px; flex-shrink:0; border-radius:9999px; background:var(--bg-avatar)"></span>
+            <div style="min-width:0; flex:1; display:flex; flex-direction:column; gap:7px"><span style="display:block; width:58%; height:10px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span><span style="display:block; width:82%; height:9px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span></div>
+          </div>
+          <div style="display:flex; gap:11px; border-bottom:1px solid var(--border-subtle); padding:13px 16px">
+            <span style="display:block; width:36px; height:36px; flex-shrink:0; border-radius:9999px; background:var(--bg-avatar)"></span>
+            <div style="min-width:0; flex:1; display:flex; flex-direction:column; gap:7px"><span style="display:block; width:58%; height:10px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span><span style="display:block; width:82%; height:9px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span></div>
+          </div>
+          <div style="display:flex; gap:11px; border-bottom:1px solid var(--border-subtle); padding:13px 16px">
+            <span style="display:block; width:36px; height:36px; flex-shrink:0; border-radius:9999px; background:var(--bg-avatar)"></span>
+            <div style="min-width:0; flex:1; display:flex; flex-direction:column; gap:7px"><span style="display:block; width:58%; height:10px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span><span style="display:block; width:82%; height:9px; border-radius:6px; background:var(--bg-avatar); animation:commune-pulse 1.5s ease-in-out infinite"></span></div>
+          </div>
+        </div>
+        <div aria-hidden="true" style="position:absolute; inset:0; z-index:20; background:rgba(10,10,10,0.5); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px)"></div>
+        <div role="dialog" aria-label="Turn on notifications" style="position:absolute; left:0; right:0; bottom:0; z-index:21; border-radius:20px 20px 0 0; border-top:1px solid var(--border); background:var(--bg-card); box-shadow:0 -10px 34px -8px rgba(0,0,0,0.45); padding:0 20px 20px">
+          <span aria-hidden="true" style="display:block; width:36px; height:4px; margin:9px auto 0; border-radius:9999px; background:var(--border-hover)"></span>
+          <span style="display:grid; width:52px; height:52px; place-items:center; flex-shrink:0; margin:20px 0 0; border-radius:15px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); color:var(--accent-fg)"><svg style="width:24px; height:24px; flex-shrink:0"><use href="#u-bell"/></svg></span>
+          <h2 style="margin:15px 0 0; font-size:20px; font-weight:600; letter-spacing:-0.025em; color:var(--ink); text-wrap:pretty">Get told when someone needs you</h2>
+          <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">We&rsquo;ll only notify you for direct messages and @mentions. Everything else waits until you open the app.</p>
+          <div style="margin-top:18px; display:flex; flex-direction:column; gap:9px">
+            <button type="button" style="display:flex; height:48px; align-items:center; justify-content:center; border-radius:12px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:0 1px 2px 0 var(--shadow-tint-md), inset 0 1px 0 rgba(255,255,255,0.2); font-family:inherit; font-size:15px; font-weight:600; color:#ffffff; cursor:pointer">Turn on notifications</button>
+            <button type="button" style="display:flex; height:48px; align-items:center; justify-content:center; border:0; background:none; border-radius:12px; font-family:inherit; font-size:15px; font-weight:600; color:var(--fg-600); cursor:pointer">Not now</button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ispushDelivered }}">
+      <div data-stage="" data-anchor="bottom" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Push notifications</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <div style="display:flex; flex:1; min-height:0; flex-direction:column; background:linear-gradient(170deg, #2a2622 0%, #14110f 55%, #0a0908 100%)">
+          <div style="flex-shrink:0; padding:38px 0 0; text-align:center">
+            <p style="margin:0; font-size:13px; font-weight:500; color:rgba(255,255,255,0.6)">Thursday, 11 September</p>
+            <p style="margin:2px 0 0; font-size:62px; font-weight:500; letter-spacing:-0.03em; line-height:1.05; color:#ffffff; font-variant-numeric:tabular-nums">9:41</p>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; justify-content:flex-end; gap:9px; padding:20px 14px 22px">
+            <div style="display:flex; gap:11px; border-radius:16px; border:1px solid rgba(255,255,255,0.12); background:rgba(40,40,40,0.72); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:12px 13px">
+              <span style="display:grid; width:34px; height:34px; flex-shrink:0; place-items:center; overflow:hidden; border-radius:9px; background:var(--accent)"><img src="./commune-logo.png" alt="" style="width:34px; height:34px; object-fit:cover; transform:scale(1.1)" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:8px">
+                  <span style="min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13.5px; font-weight:600; color:#ffffff">Sari Wijaya</span>
+                  <span style="flex-shrink:0; font-size:11.5px; color:rgba(255,255,255,0.55)">now</span>
+                </div>
+                <p style="margin:2px 0 0; font-size:13px; line-height:1.5; color:rgba(255,255,255,0.85); text-wrap:pretty">Can you take the contrast audit before the review?</p>
+              </div>
+            </div>
+            <div style="display:flex; gap:11px; border-radius:16px; border:1px solid rgba(255,255,255,0.12); background:rgba(40,40,40,0.72); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:12px 13px">
+              <span style="display:grid; width:34px; height:34px; flex-shrink:0; place-items:center; overflow:hidden; border-radius:9px; background:var(--accent)"><img src="./commune-logo.png" alt="" style="width:34px; height:34px; object-fit:cover; transform:scale(1.1)" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:8px">
+                  <span style="min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13.5px; font-weight:600; color:#ffffff">#design</span>
+                  <span style="flex-shrink:0; font-size:11.5px; color:rgba(255,255,255,0.55)">9:38</span>
+                </div>
+                <p style="margin:2px 0 0; font-size:13px; line-height:1.5; color:rgba(255,255,255,0.85); text-wrap:pretty">Raka mentioned you: sign-off is with @hakim</p>
+              </div>
+            </div>
+            <p style="margin:4px 0 0; text-align:center; font-size:12px; font-weight:500; color:rgba(255,255,255,0.58)">2 notifications from Commune</p>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isempty }}">
+      <div data-stage="" data-anchor="center" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Empty channel</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="display:flex; flex:1; min-height:0; flex-direction:column; align-items:center; justify-content:center; padding:24px 28px; text-align:center">
+          <span style="display:grid; width:56px; height:56px; place-items:center; flex-shrink:0; border-radius:16px; border:1px solid var(--border); background:var(--bg-chip); font-size:22px; font-weight:600; color:var(--tertiary)">#</span>
+          <h2 style="margin:16px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.02em; color:var(--ink); text-wrap:pretty">This is the start of #design</h2>
+          <p style="margin:8px 0 0; max-width:280px; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">Crit, references, and work in progress. Post work early — feedback is a gift.</p>
+          <button type="button" style="margin-top:18px; display:flex; height:44px; flex-shrink:0; align-items:center; gap:8px; border-radius:12px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:0 1px 2px 0 var(--shadow-tint-md), inset 0 1px 0 rgba(255,255,255,0.2); padding:0 18px; font-family:inherit; font-size:14px; font-weight:600; color:#ffffff; cursor:pointer"><svg style="width:16px; height:16px; flex-shrink:0"><use href="#u-pencil"/></svg>Say something</button>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:0 15px; font-size:14.5px; color:var(--muted)">Message #design</span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isloadError }}">
+      <div data-stage="" data-anchor="center" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Load failed</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="display:flex; flex:1; min-height:0; flex-direction:column; align-items:center; justify-content:center; padding:24px 28px; text-align:center">
+          <span style="display:grid; width:56px; height:56px; place-items:center; flex-shrink:0; border-radius:16px; border:1px solid var(--danger); background:var(--danger-surface); color:var(--danger)"><svg style="width:25px; height:25px; flex-shrink:0"><use href="#u-alert-circle"/></svg></span>
+          <h2 style="margin:16px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.02em; color:var(--ink); text-wrap:pretty">Couldn&rsquo;t load this channel</h2>
+          <p style="margin:8px 0 0; max-width:290px; font-size:14px; line-height:1.6; color:var(--fg-600); text-wrap:pretty">The request timed out. Your connection looks fine, so this is probably us.</p>
+          <div style="margin-top:18px; display:flex; flex-shrink:0; flex-direction:column; gap:9px; width:100%; max-width:240px">
+            <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; justify-content:center; border-radius:12px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:0 1px 2px 0 var(--shadow-tint-md), inset 0 1px 0 rgba(255,255,255,0.2); font-family:inherit; font-size:14px; font-weight:600; color:#ffffff; cursor:pointer">Try again</button>
+            <button type="button" style="display:flex; height:44px; align-items:center; justify-content:center; border:0; background:none; border-radius:12px; font-family:inherit; font-size:14px; font-weight:600; color:var(--fg-600); cursor:pointer">Back to channels</button>
+          </div>
+          <p style="margin:16px 0 0; font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; font-size:11px; color:var(--tertiary)">timeout · ch_8f2a1c · 09:41</p>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: null, sState: "skeleton" };
+  notes = {
+    "skeleton": "Skeletons mirror the real row geometry so nothing shifts when content lands. Varying bar widths stop it reading as a stuck grid.",
+    "offline": "Unsent messages stay in place, dimmed, each labelled queued — not hidden or bounced back. The bar counts them so the state is legible from the top.",
+    "reconnecting": "Accent rather than red: this resolves itself. It says what it is doing, not just that it is busy.",
+    "pushPermission": "Asked in-app before the OS prompt, and states exactly what will be sent. You get one shot at the system dialog — spend it after a yes.",
+    "pushDelivered": "A DM shows the sender; a channel mention leads with the channel and names who mentioned you. Both are the two things you decide on from the lock screen.",
+    "empty": "The empty state carries the one action worth taking, sized as a real button rather than a line of grey text.",
+    "loadError": "Says whose fault it probably is, offers a way out as well as a retry, and prints an error id small enough to ignore and precise enough to report."
+  };
+  componentDidMount() {
+    let saved = null;
+    try { saved = localStorage.getItem("commune-theme"); } catch (e) {}
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    this.setState({ theme: saved });
+    requestAnimationFrame(() => this.place());
+  }
+  pillStyle(active) {
+    return [
+      "display:flex", "align-items:center", "height:28px", "border-radius:7px",
+      "padding:0 10px", "font-family:inherit", "font-size:12.5px", "font-weight:600",
+      "cursor:pointer", "white-space:nowrap",
+      active
+        ? "border:1px solid var(--accent-border); background:var(--accent); color:#ffffff; box-shadow:0 1px 2px 0 var(--shadow-tint-sm)"
+        : "border:1px solid var(--border-strong); background:var(--bg-card); color:var(--fg-400)",
+    ].join("; ");
+  }
+  componentDidUpdate() { this.place(); }
+  place() {
+    const stage = document.querySelector("[data-stage]");
+    if (!stage) return;
+    const over = stage.scrollHeight - stage.clientHeight;
+    if (over <= 0) return;
+    const a = stage.getAttribute("data-anchor");
+    stage.scrollTop = a === "bottom" ? over : a === "center" ? Math.round(over / 2) : 0;
+  }
+  renderVals() {
+    const theme = this.state.theme === "dark" ? "dark" : "light";
+    const isDark = theme === "dark";
+    const cur = this.state.sState;
+    const vals = {
+      theme,
+      themeLabel: isDark ? "Light" : "Dark",
+      toggleTheme: () => {
+        const next = isDark ? "light" : "dark";
+        this.setState({ theme: next });
+        try { localStorage.setItem("commune-theme", next); } catch (e) {}
+      },
+      note: this.notes[cur] || "",
+    };
+    ["skeleton","offline","reconnecting","pushPermission","pushDelivered","empty","loadError"].forEach((k) => {
+      vals["is" + k] = cur === k;
+      vals["pick" + k] = () => this.setState({ sState: k });
+      vals["btn" + k] = this.pillStyle(cur === k);
+    });
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

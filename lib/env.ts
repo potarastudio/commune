@@ -26,6 +26,15 @@ const serverSchema = publicSchema.extend({
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),
   R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   R2_BUCKET: z.string().min(1).optional(),
+  // Push to the phone app. Optional: unset = that platform gets no push (lib/push/native.ts).
+  APNS_KEY_ID: z.string().min(1).optional(),
+  APNS_TEAM_ID: z.string().min(1).optional(),
+  APNS_PRIVATE_KEY: z.string().min(1).optional(),
+  APNS_BUNDLE_ID: z.string().min(1).optional(),
+  APNS_PRODUCTION: z.enum(["true", "false"]).optional(),
+  FCM_PROJECT_ID: z.string().min(1).optional(),
+  FCM_CLIENT_EMAIL: z.string().email().optional(),
+  FCM_PRIVATE_KEY: z.string().min(1).optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;

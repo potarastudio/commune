@@ -22,7 +22,7 @@ const PRESETS: { emoji: string; text: string; expiry: StatusExpiry }[] = [
 ];
 
 /** Status editor (§5 Phase 3): emoji + text + when it clears. Lives in a popover off the account block. */
-export function StatusEditor({ profile, onDone }: { profile: Profile; onDone: () => void }) {
+export function StatusEditor({ profile, onDone, className = "w-[320px]" }: { profile: Profile; onDone: () => void; className?: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const active = isStatusActive(profile);
@@ -60,7 +60,7 @@ export function StatusEditor({ profile, onDone }: { profile: Profile; onDone: ()
 
   return (
     <form
-      className="w-[320px] overflow-hidden rounded-[14px]"
+      className={`${className} overflow-hidden rounded-[14px]`}
       onSubmit={(e) => {
         e.preventDefault();
         save();

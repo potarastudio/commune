@@ -41,9 +41,8 @@ const FILTERS: { id: Filter; label: string }[] = [
 /** How long the checkbox holds its checked state before the row leaves the list. */
 const DONE_FLASH_MS = 320;
 
-/** Saved for later (§5 Phase 3): the user's private reading list, newest save first. */
-export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: SavedMessage[] }) {
-  const tz = useViewerTimezone();
+/** The saved list, and clearing an item from it, shared by the desktop list and the phone screen. */
+export function useSavedItems(meId: string, initialSaved: SavedMessage[]) {
   const queryClient = useQueryClient();
   const key = messageKeys.saved(meId);
   const { data: saved } = useQuery({
@@ -53,7 +52,6 @@ export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: 
     staleTime: 30_000,
   });
 
-  const [filter, setFilter] = useState<Filter>("all");
   // Rows whose checkbox is ticked and are on their way out of the list.
   const [done, setDone] = useState<string[]>([]);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -105,7 +103,14 @@ export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: 
     );
   };
 
-  const items = saved ?? [];
+  return { items: saved ?? [], done, markDone, unsave: (messageId: string) => unsave.mutate(messageId) };
+}
+
+/** Saved for later (§5 Phase 3): the user's private reading list, newest save first. */
+export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: SavedMessage[] }) {
+  const tz = useViewerTimezone();
+  const { items, done, markDone, unsave } = useSavedItems(meId, initialSaved);
+  const [filter, setFilter] = useState<Filter>("all");
   const counts = {
     all: items.length,
     channels: items.filter((s) => s.message.channel).length,
@@ -239,7 +244,7 @@ export function SavedList({ meId, initialSaved }: { meId: string; initialSaved: 
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          onClick={() => unsave.mutate(m.id)}
+                          onClick={() => unsave(m.id)}
                           aria-label="Remove from saved"
                           className="grid size-7 place-items-center rounded-[7px] text-fg-600 transition-colors hover:bg-bg-subtle hover:text-ink"
                         >

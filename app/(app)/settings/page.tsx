@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AtSign, Check, ChevronLeft, Hash, Lock, Settings as SettingsIcon, Sun, Users } from "lucide-react";
 import { NotificationLevelControl } from "@/components/channel/notification-level";
+import { MobileSettingsScreen } from "@/components/mobile/settings-screens";
+import { YouScreen } from "@/components/mobile/you-screen";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { CustomEmojiSettings } from "@/components/settings/custom-emoji";
 import { InvitePeople } from "@/components/settings/invite-people";
@@ -11,6 +13,7 @@ import { ThemePicker } from "@/components/settings/theme-picker";
 import { getInvites } from "@/lib/queries/invites";
 import { getJoinedChannels } from "@/lib/queries/channels";
 import { getCurrentProfile } from "@/lib/queries/profile";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -135,13 +138,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
   const asked = (await searchParams).section;
   const wanted = Array.isArray(asked) ? asked[0] : asked;
-  const section: Section = SECTIONS.some((s) => s.value === wanted) ? (wanted as Section) : "profile";
+  const chosen = SECTIONS.some((s) => s.value === wanted) ? (wanted as Section) : null;
+  const mobile = await isMobileRequest();
+  // The phone's You tab is this page without a section; the desktop opens on Profile.
+  const section: Section = chosen ?? "profile";
   // Members is the allowlist, which RLS makes admin-only; it is not in the nav for anyone else either.
   if (section === "members" && !isAdmin) redirect("/settings");
 
-  const [channels, invites] = await Promise.all([
+  const [channels, invites, members] = await Promise.all([
     getJoinedChannels(supabase, profile.id),
     isAdmin ? getInvites(supabase) : Promise.resolve([]),
+    mobile && !chosen ? supabase.from("profiles").select("id", { count: "exact", head: true }) : null,
   ]);
   const joined = invites.filter((i) => i.profile).length;
   const waiting = invites.length - joined;
@@ -163,6 +170,28 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     const client = await createSupabaseServerClient();
     await client.auth.signOut({ scope: "global" });
     redirect("/login");
+  }
+
+  if (mobile && !chosen) {
+    const levels = new Set(channels.map((c) => c.notification_level));
+    const level = levels.size === 1 ? [...levels][0] : null;
+    const notifyValue = channels.length === 0 ? "" : level === "all" ? "All messages" : level === "mentions" ? "Mentions" : level === "muted" ? "Nothing" : "Mixed";
+    return (
+      <YouScreen profile={profile} isAdmin={isAdmin} memberCount={members?.count ?? 0} notifyValue={notifyValue} signOut={signOutHere} />
+    );
+  }
+  if (mobile) {
+    return (
+      <MobileSettingsScreen
+        section={section}
+        profile={profile}
+        isAdmin={isAdmin}
+        channels={channels}
+        invites={invites}
+        signOutHere={signOutHere}
+        signOutEverywhere={signOutEverywhere}
+      />
+    );
   }
 
   return (

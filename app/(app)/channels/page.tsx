@@ -6,6 +6,9 @@ import { redirect } from "next/navigation";
 import { CreateChannelPopover } from "@/components/channel/create-channel-popover";
 import { JoinLeaveButton } from "@/components/channel/join-leave-button";
 import { Button } from "@/components/ui/button";
+import { MobileLink } from "@/components/mobile/mobile-link";
+import { PushedHeader } from "@/components/mobile/screen-header";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { getChannelsForBrowse, type BrowseChannel } from "@/lib/queries/channel";
 import { getCurrentProfile } from "@/lib/queries/profile";
@@ -40,6 +43,9 @@ export default async function BrowseChannelsPage({
   const sort: Sort = rawSort === "members" ? "members" : "name";
 
   const channels = await getChannelsForBrowse(supabase, profile.id);
+  // On the phone this is pushed from You: a back button, rows at the 16px inset, links that push.
+  const mobile = await isMobileRequest();
+  const ChannelLink = mobile ? MobileLink : Link;
 
   // The list is small and already loaded, so the field filters it here rather
   // than going back to Postgres for a search we don't need.
@@ -72,7 +78,7 @@ export default async function BrowseChannelsPage({
   const Row = ({ c }: { c: (typeof channels)[number] }) => {
     const Icon = c.is_archived ? Archive : c.is_private ? Lock : Hash;
     return (
-      <li className="flex items-center gap-[13px] border-b border-border-subtle px-5 py-[13px] transition-colors hover:bg-bg-hover">
+      <li className={`flex items-center gap-[13px] border-b border-border-subtle py-[13px] transition-colors hover:bg-bg-hover ${mobile ? "px-[16px]" : "px-5"}`}>
         <span
           className={`grid size-[38px] shrink-0 place-items-center rounded-[10px] border border-border-subtle ${
             c.is_archived ? "bg-bg-subtle text-tertiary" : "bg-bg-chip text-fg-600"
@@ -82,9 +88,9 @@ export default async function BrowseChannelsPage({
         </span>
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-baseline gap-2 text-[14px] font-semibold text-ink">
-            <Link href={`/channel/${c.id}`} className="hover:underline">
+            <ChannelLink href={`/channel/${c.id}`} className="hover:underline">
               {c.name}
-            </Link>
+            </ChannelLink>
             <span className="text-[12px] font-medium tabular-nums text-muted-foreground">
               {c.member_count} {c.member_count === 1 ? "member" : "members"}
               {c.is_private ? " · private" : ""}
@@ -112,13 +118,32 @@ export default async function BrowseChannelsPage({
   };
 
   const Overline = ({ children }: { children: React.ReactNode }) => (
-    <h2 className="sticky top-0 z-[2] border-b border-border-subtle bg-bg-main px-5 py-[9px] text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground">
+    <h2
+      className={`sticky top-0 z-[2] border-b border-border-subtle bg-bg-main py-[9px] text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground ${mobile ? "px-[16px]" : "px-5"}`}
+    >
       {children}
     </h2>
   );
 
+  const countLabel = query
+    ? `${live.length} of ${allLive.length} ${allLive.length === 1 ? "channel" : "channels"}`
+    : `${allLive.length} ${allLive.length === 1 ? "channel" : "channels"}`;
+
   return (
     <>
+      {mobile ? (
+        <PushedHeader title="Browse channels" subtitle={countLabel} backLabel="Back">
+          <CreateChannelPopover>
+            <button
+              type="button"
+              className="mr-[4px] flex h-[40px] shrink-0 items-center gap-[6px] rounded-[10px] border border-border-strong bg-bg-card px-[12px] text-[13px] font-semibold text-ink active:bg-bg-subtle"
+            >
+              <Plus className="size-[15px] text-fg-600" aria-hidden="true" />
+              Create
+            </button>
+          </CreateChannelPopover>
+        </PushedHeader>
+      ) : (
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
         <h1 className="text-[16px] font-semibold tracking-[-0.02em] text-ink">Browse channels</h1>
         <span className="text-[12.5px] text-muted-foreground">
@@ -135,6 +160,7 @@ export default async function BrowseChannelsPage({
           </CreateChannelPopover>
         </div>
       </header>
+      )}
 
       <div className="flex flex-1 flex-col overflow-y-auto">
         {channels.length === 0 ? (
@@ -150,11 +176,13 @@ export default async function BrowseChannelsPage({
         ) : (
           <>
             {/* Search + sort, the first thing in the scroll area as the design draws it. */}
-            <div className="flex shrink-0 items-center gap-2.5 border-b border-border px-5 py-3">
+            <div className={`flex shrink-0 items-center gap-2.5 border-b border-border py-3 ${mobile ? "px-[16px]" : "px-5"}`}>
               <Form
                 action="/channels"
                 role="search"
-                className="field-focus flex h-[34px] min-w-0 max-w-[360px] flex-1 items-center gap-[9px] rounded-md border border-border-strong bg-bg-chip px-2.5 transition-colors"
+                className={`field-focus flex min-w-0 max-w-[360px] flex-1 items-center gap-[9px] border border-border-strong bg-bg-chip px-2.5 transition-colors ${
+                  mobile ? "h-[40px] rounded-[10px]" : "h-[34px] rounded-md"
+                }`}
               >
                 <Search className="size-[14px] shrink-0 text-muted-foreground" aria-hidden="true" />
                 <input
@@ -162,7 +190,7 @@ export default async function BrowseChannelsPage({
                   defaultValue={query}
                   placeholder="Search channels"
                   aria-label="Search channels"
-                  className="min-w-0 flex-1 bg-transparent text-[13px] text-body outline-none placeholder:text-muted-foreground"
+                  className={`min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-muted-foreground ${mobile ? "text-[15px]" : "text-[13px]"}`}
                 />
                 {sort !== "name" && <input type="hidden" name="sort" value={sort} />}
               </Form>

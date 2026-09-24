@@ -450,3 +450,100 @@
   animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
   animation-iteration-count: infinite;
 }
+
+/* ---- Phone interface (design: Commune Mobile *.dc.html) ------------------------
+   The shell sits under the status bar and above the home indicator. While the
+   keyboard is up the home indicator is hidden, so its inset would only open a
+   gap between the composer and the keys — the app drops it (lib/native.ts). */
+:root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+html.kb-open { --safe-bottom: 0px; }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: var(--safe-bottom); }
+
+/* A phone screen is an app, not a page: no grey flash on tap, no rubber-band
+   on the document (screens scroll their own lists), no callout on long-press
+   where long-press opens our own sheet. */
+.mobile-app { -webkit-tap-highlight-color: transparent; }
+html:has(.mobile-app), html:has(.mobile-app) body { overscroll-behavior: none; }
+.mobile-app [data-long-press] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
+/* loading.tsx and error.tsx render both shells' versions; the shell picks one. */
+.mobile-only { display: none; }
+.mobile-app .mobile-only { display: flex; }
+.mobile-app .desktop-only { display: none; }
+
+/* Push and pop (design: Mobile Navigation → Push). The incoming screen slides
+   over the outgoing one, which parallaxes left and dims — at 28%, the design's
+   "a third of the distance". Pop is the same run backwards, with the leaving
+   screen on top. lib/view-transition.ts sets data-nav for the run. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-nav]::view-transition-group(root) { animation-duration: 360ms; animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1); }
+  html[data-nav]::view-transition-image-pair(root) { isolation: auto; }
+  html[data-nav]::view-transition-old(root),
+  html[data-nav]::view-transition-new(root) {
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    animation-fill-mode: both;
+    mix-blend-mode: normal;
+  }
+  html[data-nav="push"]::view-transition-old(root) { animation-name: nav-behind-out; }
+  html[data-nav="push"]::view-transition-new(root) { animation-name: nav-front-in; }
+  html[data-nav="pop"]::view-transition-old(root) { animation-name: nav-front-out; z-index: 1; }
+  html[data-nav="pop"]::view-transition-new(root) { animation-name: nav-behind-in; }
+}
+@keyframes nav-front-in {
+  from { transform: translateX(100%); box-shadow: -14px 0 28px -8px rgba(10, 10, 10, 0.22); }
+  to { transform: translateX(0); box-shadow: -14px 0 28px -8px rgba(10, 10, 10, 0); }
+}
+@keyframes nav-front-out {
+  from { transform: translateX(0); box-shadow: -14px 0 28px -8px rgba(10, 10, 10, 0.22); }
+  to { transform: translateX(100%); box-shadow: -14px 0 28px -8px rgba(10, 10, 10, 0.22); }
+}
+@keyframes nav-behind-out {
+  from { transform: translateX(0); filter: brightness(1); }
+  to { transform: translateX(-28%); filter: brightness(0.94); }
+}
+@keyframes nav-behind-in {
+  from { transform: translateX(-28%); filter: brightness(0.94); }
+  to { transform: translateX(0); filter: brightness(1); }
+}
+
+/* Bottom sheets on the phone (components/mobile/sheet.tsx): rise on the navigation curve, leave faster. */
+@keyframes sheet-in { from { transform: translateY(100%); } }
+@keyframes sheet-out { to { transform: translateY(100%); } }
+@keyframes scrim-in { from { opacity: 0; } }
+@keyframes scrim-out { to { opacity: 0; } }
+.sheet-panel { transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1); }
+.sheet-panel[data-state="open"] { animation: sheet-in 360ms cubic-bezier(0.32, 0.72, 0, 1); }
+.sheet-panel[data-state="closed"] { animation: sheet-out 220ms cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+.sheet-scrim[data-state="open"] { animation: scrim-in 240ms ease-out; }
+.sheet-scrim[data-state="closed"] { animation: scrim-out 200ms ease-in forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel, .sheet-scrim { animation: none !important; transition: none; }
+}
+
+/* emoji-mart in the phone's emoji sheet: the sheet's card colours, the full sheet height. */
+.emoji-sheet em-emoji-picker {
+  --rgb-accent: 240, 87, 16;
+  --rgb-background: 255, 255, 255;
+  --rgb-input: 245, 245, 245;
+  --rgb-color: 23, 23, 23;
+  --border-radius: 12px;
+  --font-family: var(--font-inter), system-ui, sans-serif;
+  --font-size: 14px;
+  --shadow: none;
+  width: 100%;
+  height: 100%;
+}
+.dark .emoji-sheet em-emoji-picker {
+  --rgb-background: 31, 31, 31;
+  --rgb-input: 33, 33, 33;
+  --rgb-color: 237, 237, 237;
+}
+
+/* The huddle's speaking bars (design: Mobile Huddle): three accent bars breathing out of step. */
+@keyframes commune-bar { 0%, 100% { transform: scaleY(0.45); } 50% { transform: scaleY(1); } }
+.speaking-bars > span { transform-origin: bottom; animation: commune-bar 900ms ease-in-out infinite; }
+.speaking-bars > span:nth-child(2) { animation-delay: 140ms; }
+.speaking-bars > span:nth-child(3) { animation-delay: 280ms; }
+@media (prefers-reduced-motion: reduce) { .speaking-bars > span { animation: none; } }

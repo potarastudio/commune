@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { SavedScreen } from "@/components/mobile/saved-screen";
 import { SavedList } from "@/components/saved/saved-list";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { fetchSaved } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -12,6 +14,7 @@ export default async function SavedPage() {
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
   const saved = await fetchSaved(supabase, profile.id);
+  if (await isMobileRequest()) return <SavedScreen meId={profile.id} initialSaved={saved} />;
 
   return (
     <>

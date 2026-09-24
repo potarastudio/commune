@@ -24,7 +24,14 @@ export function sanitizeHref(href: unknown): string | null {
 
 type Mark = NonNullable<JSONContent["marks"]>[number];
 
-function applyMarks(text: ReactNode, marks: Mark[] | undefined, key: string): ReactNode {
+/**
+ * `inert`: for a preview that is itself a link (a feed row on the phone). A
+ * link inside a link is invalid HTML the parser splits apart, so links and
+ * mentions keep their look but stop being controls.
+ */
+export type RenderOptions = { inert?: boolean };
+
+function applyMarks(text: ReactNode, marks: Mark[] | undefined, key: string, opts: RenderOptions): ReactNode {
   if (!marks?.length) return text;
   return marks.reduce<ReactNode>((node, mark, i) => {
     const k = `${key}-m${i}`;
@@ -47,6 +54,13 @@ function applyMarks(text: ReactNode, marks: Mark[] | undefined, key: string): Re
       case "link": {
         const href = sanitizeHref(mark.attrs?.href);
         if (!href) return node;
+        if (opts.inert) {
+          return (
+            <span key={k} className="link-ink">
+              {node}
+            </span>
+          );
+        }
         return (
           <a
             key={k}
@@ -65,8 +79,8 @@ function applyMarks(text: ReactNode, marks: Mark[] | undefined, key: string): Re
   }, text);
 }
 
-function renderNode(node: JSONContent, key: string): ReactNode {
-  const children = (node.content ?? []).map((child, i) => renderNode(child, `${key}-${i}`));
+function renderNode(node: JSONContent, key: string, opts: RenderOptions): ReactNode {
+  const children = (node.content ?? []).map((child, i) => renderNode(child, `${key}-${i}`, opts));
 
   switch (node.type) {
     case "doc":
@@ -87,7 +101,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       const text = node.text ?? "";
       const inCode = node.marks?.some((m) => m.type === "code");
       const body = !inCode && mayContainShortcode(text) ? <EmojiText text={text} /> : text;
-      return <Fragment key={key}>{applyMarks(body, node.marks, key)}</Fragment>;
+      return <Fragment key={key}>{applyMarks(body, node.marks, key, opts)}</Fragment>;
     }
     case "hardBreak":
       return <br key={key} />;
@@ -124,7 +138,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       const id = typeof node.attrs?.id === "string" ? node.attrs.id : "";
       const label = typeof node.attrs?.label === "string" ? node.attrs.label : id;
       const special = id === "channel" || id === "here";
-      if (!special) return <MentionChip key={key} id={id} label={label} />;
+      if (!special && !opts.inert) return <MentionChip key={key} id={id} label={label} />;
       return (
         <span
           key={key}
@@ -150,7 +164,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
   }
 }
 
-export function renderContent(doc: JSONContent | null | undefined): ReactNode {
+export function renderContent(doc: JSONContent | null | undefined, opts: RenderOptions = {}): ReactNode {
   if (!doc || typeof doc !== "object") return null;
-  return renderNode(doc, "n");
+  return renderNode(doc, "n", opts);
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { NewMessagePicker } from "@/components/dm/new-message-picker";
+import { NewMessageScreen } from "@/components/mobile/new-message-screen";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { getCurrentProfile, type Profile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -13,6 +15,7 @@ export default async function NewMessagePage() {
 
   const { data, error } = await supabase.from("profiles").select("*").order("display_name");
   if (error) throw new Error(error.message);
+  if (await isMobileRequest()) return <NewMessageScreen people={data as Profile[]} meId={profile.id} />;
 
   return (
     <>

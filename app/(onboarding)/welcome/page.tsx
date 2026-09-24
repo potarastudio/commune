@@ -194,7 +194,7 @@ export default async function WelcomePage({
   if (profile.onboarded_at) redirect("/");
 
   const shell = (children: React.ReactNode) => (
-    <main className="min-h-dvh bg-bg-col">
+    <main className="pt-safe pb-safe min-h-dvh bg-bg-col">
       <div className="mx-auto w-full max-w-[540px] px-[24px] pt-[30px] pb-[44px]">{children}</div>
     </main>
   );

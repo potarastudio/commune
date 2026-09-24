@@ -11,16 +11,19 @@ export type ConversationSummary = {
   created_at: string;
   members: ConversationMember[];
   last_message_at: string | null;
+  /** The newest top-level message's plain text and author, for the phone's Messages list. */
+  last_message_text?: string | null;
+  last_message_author_id?: string | null;
 };
 
 const SUMMARY_SELECT =
-  "id, created_at, conversation_members(profiles!conversation_members_user_id_fkey(id, display_name, handle, avatar_url, title)), messages(created_at)";
+  "id, created_at, conversation_members(profiles!conversation_members_user_id_fkey(id, display_name, handle, avatar_url, title)), messages(created_at, content_text, author_id, deleted_at)";
 
 type SummaryRow = {
   id: string;
   created_at: string;
   conversation_members: { profiles: ConversationMember | null }[];
-  messages: { created_at: string }[];
+  messages: { created_at: string; content_text: string; author_id: string | null; deleted_at: string | null }[];
 };
 
 function toSummary(row: SummaryRow): ConversationSummary {
@@ -29,6 +32,8 @@ function toSummary(row: SummaryRow): ConversationSummary {
     created_at: row.created_at,
     members: row.conversation_members.map((m) => m.profiles).filter((p): p is ConversationMember => p !== null),
     last_message_at: row.messages[0]?.created_at ?? null,
+    last_message_text: row.messages[0] ? (row.messages[0].deleted_at ? "This message was deleted" : row.messages[0].content_text) : null,
+    last_message_author_id: row.messages[0]?.author_id ?? null,
   };
 }
 

@@ -10,6 +10,29 @@ import { useCustomEmoji } from "@/lib/queries/custom-emoji";
 
 type PickerModule = typeof import("@emoji-mart/react");
 
+/**
+ * emoji-mart and its data, loaded the first time `active` is true, plus the
+ * studio's custom emoji as their own category. Shared by the desktop popover
+ * and the phone's emoji sheet.
+ */
+export function useEmojiMart(active: boolean) {
+  const { resolvedTheme } = useTheme();
+  const { data: customEmoji } = useCustomEmoji();
+  const custom = customEmoji?.length
+    ? [{ id: "potara", name: "Potara", emojis: customEmoji.map((e) => ({ id: e.name, name: e.name.replace(/_/g, " "), keywords: [e.name], skins: [{ src: e.url }] })) }]
+    : undefined;
+  const [mod, setMod] = useState<{ Picker: PickerModule["default"]; data: unknown } | null>(null);
+
+  useEffect(() => {
+    if (!active || mod) return;
+    void Promise.all([import("@emoji-mart/react"), loadEmoji()]).then(([picker, emoji]) =>
+      setMod({ Picker: picker.default, data: emoji.data }),
+    );
+  }, [active, mod]);
+
+  return { mod, custom, theme: resolvedTheme === "dark" ? ("dark" as const) : ("light" as const) };
+}
+
 /** Full emoji picker (emoji-mart), loaded on first open. */
 export function EmojiPicker({
   children,
@@ -29,19 +52,7 @@ export function EmojiPicker({
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
-  const { resolvedTheme } = useTheme();
-  const { data: customEmoji } = useCustomEmoji();
-  const custom = customEmoji?.length
-    ? [{ id: "potara", name: "Potara", emojis: customEmoji.map((e) => ({ id: e.name, name: e.name.replace(/_/g, " "), keywords: [e.name], skins: [{ src: e.url }] })) }]
-    : undefined;
-  const [mod, setMod] = useState<{ Picker: PickerModule["default"]; data: unknown } | null>(null);
-
-  useEffect(() => {
-    if (!isOpen || mod) return;
-    void Promise.all([import("@emoji-mart/react"), loadEmoji()]).then(([picker, emoji]) =>
-      setMod({ Picker: picker.default, data: emoji.data }),
-    );
-  }, [isOpen, mod]);
+  const { mod, custom, theme } = useEmojiMart(isOpen);
 
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
@@ -56,7 +67,7 @@ export function EmojiPicker({
           <mod.Picker
             data={mod.data}
             custom={custom}
-            theme={resolvedTheme === "dark" ? "dark" : "light"}
+            theme={theme}
             previewPosition="none"
             skinTonePosition="search"
             maxFrequentRows={2}

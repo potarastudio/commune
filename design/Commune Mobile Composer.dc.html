@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Commune mobile — keyboard and composer states." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #ffffff; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "cv11", "ss01", "calt"; }
+  a { color: #171717; text-decoration: none; }
+  a:hover { color: #b44309; }
+  [data-commune] {
+    --bg-main:#ffffff; --bg-card:#ffffff; --bg-hover:#fafafa; --bg-col:#fafafa;
+    --bg-chip:#f6f6f6; --bg-subtle:#f5f5f5; --bg-avatar:#f0f0f0;
+    --border:#e9e9e9; --border-strong:#e2e2e2; --border-subtle:#ebebeb;
+    --border-input:#dcdcdc; --border-hover:#d0d0d0; --ink:#171717; --body:#262626;
+    --fg-400:#404040; --fg-600:#666666; --muted:#6b6b6b; --tertiary:#737373;
+    --presence:#3aa676; --accent:#f05710; --accent-border:#d9490a; --accent-fg:#8a3308;
+    --accent-surface:#fef3ec; --accent-surface-border:#f9c4a6; --accent-text:#b44309;
+    --danger:#b42318; --danger-surface:#fdf2f2; --avatar-ring:rgba(0,0,0,0.04);
+    --kb-bg:#d1d4da; --kb-key:#ffffff; --kb-shadow:#8e9099;
+    --shadow-tint-sm:rgba(16,24,40,0.05); --shadow-tint-lg:rgba(16,24,40,0.1);
+    color-scheme: light;
+  }
+  [data-commune="dark"] {
+    --bg-main:#171717; --bg-card:#1f1f1f; --bg-hover:#1c1c1c; --bg-col:#0f0f0f;
+    --bg-chip:#1f1f1f; --bg-subtle:#212121; --bg-avatar:#262626;
+    --border:#262626; --border-strong:#2e2e2e; --border-subtle:#262626;
+    --border-input:#333333; --border-hover:#3d3d3d; --ink:#ededed; --body:#d6d6d6;
+    --fg-400:#a3a3a3; --fg-600:#9d9d9d; --muted:#9d9d9d; --tertiary:#8a8a8a;
+    --presence:#3fcb8c; --accent:#f05710; --accent-border:#d9490a; --accent-fg:#ffb48a;
+    --accent-surface:#2b1a11; --accent-surface-border:#4a2a14; --accent-text:#ff9a5e;
+    --danger:#f97066; --danger-surface:#2b1414; --avatar-ring:rgba(255,255,255,0.06);
+    --kb-bg:#1c1c1e; --kb-key:#4a4a4d; --kb-shadow:#0d0d0e;
+    --shadow-tint-sm:rgba(0,0,0,0.4); --shadow-tint-lg:rgba(0,0,0,0.6);
+    color-scheme: dark;
+  }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-send-horizontal" viewBox="0 0 24 24"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z"/><path d="M6 12h16"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-file-text" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-bold" viewBox="0 0 24 24"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></symbol>
+</defs></svg>
+
+<div data-commune="{{ theme }}" style="font-family:Inter, ui-sans-serif, system-ui, sans-serif; display:flex; height:100vh; flex-direction:column; overflow:hidden; background:var(--bg-main); color:var(--ink)">
+<div style="flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:8px; border-bottom:1px solid var(--border); background:var(--bg-col); padding:12px 16px">
+  <span style="margin-right:2px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Mobile · composer</span>
+  <div role="group" aria-label="State" style="display:flex; flex-wrap:wrap; gap:4px">
+    <button type="button" onClick="{{ pickkeyboardOpen }}" aria-pressed="{{ iskeyboardOpen }}" style="{{ btnkeyboardOpen }}">Keyboard open</button>
+    <button type="button" onClick="{{ pickmention }}" aria-pressed="{{ ismention }}" style="{{ btnmention }}">Mention autocomplete</button>
+    <button type="button" onClick="{{ pickattachSheet }}" aria-pressed="{{ isattachSheet }}" style="{{ btnattachSheet }}">Attachment sheet</button>
+    <button type="button" onClick="{{ pickattachPreview }}" aria-pressed="{{ isattachPreview }}" style="{{ btnattachPreview }}">Attachment staged</button>
+    <button type="button" onClick="{{ pickediting }}" aria-pressed="{{ isediting }}" style="{{ btnediting }}">Editing</button>
+    <button type="button" onClick="{{ picksendFailed }}" aria-pressed="{{ issendFailed }}" style="{{ btnsendFailed }}">Send failed</button>
+  </div>
+  <button type="button" onClick="{{ toggleTheme }}" style="display:flex; height:28px; align-items:center; border-radius:7px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer">{{ themeLabel }}</button>
+  <p style="margin:0 0 0 auto; max-width:340px; font-size:12.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">{{ note }}</p>
+</div>
+    <sc-if value="{{ iskeyboardOpen }}" hint-placeholder-val="{{ true }}">
+      <div data-stage="" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Keyboard open</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div data-scroll="messages" style="height:100%; box-sizing:border-box; overflow-y:auto; padding-bottom:6px">
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">09:14</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Uploaded v3 of the homepage.</p>
+              </div>
+            </article>
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Type scale: 12/14/16/20/24/32?</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--accent); background:var(--bg-card); box-shadow:0 0 0 3px var(--accent-surface); padding:11px 15px; font-size:14.5px; line-height:1.45; color:var(--body)"><span style="min-width:0; flex:1">Locking the type scale today<span style="display:inline-block; width:1.5px; height:17px; margin-left:1px; vertical-align:-4px; background:var(--accent)"></span></span></span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--accent-border); border-radius:22px; background:var(--accent); box-shadow:inset 0 1px 0 rgba(255,255,255,0.2); color:#ffffff; cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        <div aria-hidden="true" style="flex-shrink:0; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border); background:var(--kb-bg); padding:6px 4px 8px">
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">q</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">w</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">e</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">r</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">t</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">y</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">u</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">i</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">o</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">p</span>
+            </div>
+            <div style="display:flex; gap:5px; padding:0 18px; ">
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">a</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">s</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">d</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">f</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">g</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">h</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">j</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">k</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">l</span>
+            </div>
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; width:40px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">⇧</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">z</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">x</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">c</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">v</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">b</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">n</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">m</span>
+              <span style="display:grid; width:40px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">⌫</span>
+            </div>
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; width:44px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">123</span>
+              <span style="display:grid; width:38px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">🙂</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">space</span>
+              <span style="display:grid; width:74px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">return</span>
+            </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ismention }}">
+      <div data-stage="" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Mention autocomplete</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div data-scroll="messages" style="height:100%; box-sizing:border-box; overflow-y:auto; padding-bottom:6px">
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Type scale: 12/14/16/20/24/32?</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; max-height:216px; overflow-y:auto; border-top:1px solid var(--border); background:var(--bg-card); box-shadow:0 -6px 18px -8px var(--shadow-tint-lg)">
+          <p style="margin:0; padding:10px 14px 6px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">People in #design</p>
+              <button type="button" style="display:flex; width:100%; box-sizing:border-box; min-height:52px; align-items:center; gap:11px; border:0; background:var(--accent-surface); border-top:1px solid var(--border-subtle); padding:0 14px; text-align:left; font-family:inherit; cursor:pointer">
+                <span style="position:relative; display:block; width:32px; height:32px; flex-shrink:0"><span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span><span style="position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:9999px; border:2px solid var(--bg-card); background:var(--presence)"></span></span>
+                <span style="min-width:0; flex:1">
+                  <span style="display:block; font-size:14px; font-weight:600; color:var(--ink)">Sari Wijaya</span>
+                  <span style="display:block; margin-top:1px; font-size:12px; color:var(--muted)">@sari · Design lead</span>
+                </span>
+              </button>
+              <button type="button" style="display:flex; width:100%; box-sizing:border-box; min-height:52px; align-items:center; gap:11px; border:0; background:none; border-top:1px solid var(--border-subtle); padding:0 14px; text-align:left; font-family:inherit; cursor:pointer">
+                <span style="position:relative; display:block; width:32px; height:32px; flex-shrink:0"><span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:32px; height:32px; object-fit:cover" /></span><span style="position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:9999px; border:2px solid var(--bg-card); background:var(--presence)"></span></span>
+                <span style="min-width:0; flex:1">
+                  <span style="display:block; font-size:14px; font-weight:600; color:var(--ink)">Hakim Haiman</span>
+                  <span style="display:block; margin-top:1px; font-size:12px; color:var(--muted)">@hakim · you</span>
+                </span>
+              </button>
+              <button type="button" style="display:flex; width:100%; box-sizing:border-box; min-height:52px; align-items:center; gap:11px; border:0; background:none; border-top:1px solid var(--border-subtle); padding:0 14px; text-align:left; font-family:inherit; cursor:pointer">
+                <span style="position:relative; display:block; width:32px; height:32px; flex-shrink:0"><span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span></span>
+                <span style="min-width:0; flex:1">
+                  <span style="display:block; font-size:14px; font-weight:600; color:var(--ink)">Raka Pratama</span>
+                  <span style="display:block; margin-top:1px; font-size:12px; color:var(--muted)">@raka · away</span>
+                </span>
+              </button>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--accent); background:var(--bg-card); box-shadow:0 0 0 3px var(--accent-surface); padding:11px 15px; font-size:14.5px; line-height:1.45; color:var(--body)"><span style="min-width:0; flex:1">Can you take this <span style="border-radius:5px; border:1px solid var(--accent-surface-border); background:var(--accent-surface); padding:1px 4px; font-weight:600; color:var(--accent-fg)">@sa</span><span style="display:inline-block; width:1.5px; height:17px; margin-left:1px; vertical-align:-4px; background:var(--accent)"></span></span></span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--accent-border); border-radius:22px; background:var(--accent); box-shadow:inset 0 1px 0 rgba(255,255,255,0.2); color:#ffffff; cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        <div aria-hidden="true" style="flex-shrink:0; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border); background:var(--kb-bg); padding:6px 4px 8px">
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">q</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">w</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">e</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">r</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">t</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">y</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">u</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">i</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">o</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">p</span>
+            </div>
+            <div style="display:flex; gap:5px; padding:0 18px; ">
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">a</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">s</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">d</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">f</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">g</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">h</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">j</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">k</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">l</span>
+            </div>
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; width:40px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">⇧</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">z</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">x</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">c</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">v</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">b</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">n</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">m</span>
+              <span style="display:grid; width:40px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">⌫</span>
+            </div>
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; width:44px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">123</span>
+              <span style="display:grid; width:38px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">🙂</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">space</span>
+              <span style="display:grid; width:74px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">return</span>
+            </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isattachSheet }}">
+      <div data-stage="" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Attachment sheet</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div data-scroll="messages" style="height:100%; box-sizing:border-box; overflow-y:auto; padding-bottom:6px">
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Type scale: 12/14/16/20/24/32?</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--accent); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-x"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:11px 15px; font-size:14.5px; line-height:1.45; color:var(--muted)"><span style="min-width:0; flex:1">Message #design</span></span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        <div aria-hidden="true" style="position:absolute; inset:0; z-index:20; background:rgba(10,10,10,0.5); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px)"></div>
+        <div role="dialog" aria-label="Add to message" style="position:absolute; left:0; right:0; bottom:0; z-index:21; border-radius:20px 20px 0 0; border-top:1px solid var(--border); background:var(--bg-card); box-shadow:0 -10px 34px -8px rgba(0,0,0,0.45); padding-bottom:10px">
+          <span aria-hidden="true" style="display:block; width:36px; height:4px; margin:9px auto 4px; border-radius:9999px; background:var(--border-hover)"></span>
+            <button type="button" style="display:flex; width:100%; box-sizing:border-box; min-height:56px; align-items:center; gap:14px; border:0; border-top:1px solid var(--border-subtle); background:none; padding:0 18px; text-align:left; font-family:inherit; font-size:15px; font-weight:500; color:var(--ink); cursor:pointer">
+              <span style="display:grid; width:36px; height:36px; flex-shrink:0; place-items:center; border-radius:10px; border:1px solid var(--border-subtle); background:var(--bg-chip); color:var(--fg-600)"><svg style="width:17px; height:17px; flex-shrink:0"><use href="#u-image"/></svg></span>
+              <span style="min-width:0; flex:1">
+                <span style="display:block">Photo or video</span>
+                <span style="display:block; margin-top:2px; font-size:12.5px; color:var(--muted)">From your library</span>
+              </span>
+            </button>
+            <button type="button" style="display:flex; width:100%; box-sizing:border-box; min-height:56px; align-items:center; gap:14px; border:0; border-top:1px solid var(--border-subtle); background:none; padding:0 18px; text-align:left; font-family:inherit; font-size:15px; font-weight:500; color:var(--ink); cursor:pointer">
+              <span style="display:grid; width:36px; height:36px; flex-shrink:0; place-items:center; border-radius:10px; border:1px solid var(--border-subtle); background:var(--bg-chip); color:var(--fg-600)"><svg style="width:17px; height:17px; flex-shrink:0"><use href="#u-camera"/></svg></span>
+              <span style="min-width:0; flex:1">
+                <span style="display:block">Take a photo</span>
+              </span>
+            </button>
+            <button type="button" style="display:flex; width:100%; box-sizing:border-box; min-height:56px; align-items:center; gap:14px; border:0; border-top:1px solid var(--border-subtle); background:none; padding:0 18px; text-align:left; font-family:inherit; font-size:15px; font-weight:500; color:var(--ink); cursor:pointer">
+              <span style="display:grid; width:36px; height:36px; flex-shrink:0; place-items:center; border-radius:10px; border:1px solid var(--border-subtle); background:var(--bg-chip); color:var(--fg-600)"><svg style="width:17px; height:17px; flex-shrink:0"><use href="#u-file-text"/></svg></span>
+              <span style="min-width:0; flex:1">
+                <span style="display:block">File</span>
+                <span style="display:block; margin-top:2px; font-size:12.5px; color:var(--muted)">PDF, docs, anything up to 50 MB</span>
+              </span>
+            </button>
+            <button type="button" style="display:flex; width:100%; box-sizing:border-box; min-height:56px; align-items:center; gap:14px; border:0; border-top:1px solid var(--border-subtle); background:none; padding:0 18px; text-align:left; font-family:inherit; font-size:15px; font-weight:500; color:var(--ink); cursor:pointer">
+              <span style="display:grid; width:36px; height:36px; flex-shrink:0; place-items:center; border-radius:10px; border:1px solid var(--border-subtle); background:var(--bg-chip); color:var(--fg-600)"><svg style="width:17px; height:17px; flex-shrink:0"><use href="#u-bold"/></svg></span>
+              <span style="min-width:0; flex:1">
+                <span style="display:block">Formatting</span>
+                <span style="display:block; margin-top:2px; font-size:12.5px; color:var(--muted)">Bold, italic, code, lists</span>
+              </span>
+            </button>
+            <button type="button" style="display:flex; width:100%; box-sizing:border-box; min-height:56px; align-items:center; gap:14px; border:0; border-top:1px solid var(--border-subtle); background:none; padding:0 18px; text-align:left; font-family:inherit; font-size:15px; font-weight:500; color:var(--ink); cursor:pointer">
+              <span style="display:grid; width:36px; height:36px; flex-shrink:0; place-items:center; border-radius:10px; border:1px solid var(--border-subtle); background:var(--bg-chip); color:var(--fg-600)"><svg style="width:17px; height:17px; flex-shrink:0"><use href="#u-clock"/></svg></span>
+              <span style="min-width:0; flex:1">
+                <span style="display:block">Send later</span>
+              </span>
+            </button>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isattachPreview }}">
+      <div data-stage="" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Attachment staged</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div data-scroll="messages" style="height:100%; box-sizing:border-box; overflow-y:auto; padding-bottom:6px">
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Type scale: 12/14/16/20/24/32?</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; gap:8px; overflow-x:auto; padding:0 2px 9px">
+            <span style="position:relative; display:block; width:78px; height:78px; flex-shrink:0; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-chip)">
+              <span style="display:grid; width:100%; height:100%; place-items:center; color:var(--tertiary)"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-image"/></svg></span>
+              <button type="button" aria-label="Remove" style="position:absolute; top:0; right:0; display:grid; width:44px; height:44px; place-items:start end; padding:4px; border:0; background:none; cursor:pointer"><span style="display:grid; width:22px; height:22px; place-items:center; border-radius:9999px; background:rgba(10,10,10,0.7); color:#ffffff"><svg style="width:12px; height:12px; flex-shrink:0"><use href="#u-x"/></svg></span></button>
+            </span>
+            <span style="position:relative; display:flex; width:auto; height:78px; flex-shrink:0; align-items:center; gap:10px; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); padding:0 34px 0 12px">
+              <span style="display:grid; width:38px; height:38px; flex-shrink:0; place-items:center; border-radius:10px; border:1px solid var(--border-subtle); background:var(--bg-chip); color:var(--fg-600)"><svg style="width:17px; height:17px; flex-shrink:0"><use href="#u-file-text"/></svg></span>
+              <span style="min-width:0">
+                <span style="display:block; font-size:13px; font-weight:600; color:var(--ink)">contrast-audit.pdf</span>
+                <span style="display:block; margin-top:2px; font-size:11.5px; color:var(--muted)">248 KB</span>
+                <span style="display:block; margin-top:6px; width:104px; height:4px; overflow:hidden; border-radius:9999px; background:var(--bg-avatar)"><span style="display:block; width:64%; height:4px; border-radius:9999px; background:var(--accent)"></span></span>
+              </span>
+              <button type="button" aria-label="Cancel upload" style="position:absolute; top:0; right:0; display:grid; width:44px; height:44px; place-items:start end; padding:5px; border:0; background:none; cursor:pointer"><span style="display:grid; width:22px; height:22px; place-items:center; border-radius:9999px; background:var(--bg-subtle); color:var(--fg-600)"><svg style="width:12px; height:12px; flex-shrink:0"><use href="#u-x"/></svg></span></button>
+            </span>
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--accent); background:var(--bg-card); box-shadow:0 0 0 3px var(--accent-surface); padding:11px 15px; font-size:14.5px; line-height:1.45; color:var(--body)"><span style="min-width:0; flex:1">Here&rsquo;s the audit — slide 6 is the one.<span style="display:inline-block; width:1.5px; height:17px; margin-left:1px; vertical-align:-4px; background:var(--accent)"></span></span></span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--accent-border); border-radius:22px; background:var(--accent); box-shadow:inset 0 1px 0 rgba(255,255,255,0.2); color:#ffffff; cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        <div aria-hidden="true" style="flex-shrink:0; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border); background:var(--kb-bg); padding:6px 4px 8px">
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">q</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">w</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">e</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">r</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">t</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">y</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">u</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">i</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">o</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">p</span>
+            </div>
+            <div style="display:flex; gap:5px; padding:0 18px; ">
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">a</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">s</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">d</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">f</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">g</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">h</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">j</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">k</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">l</span>
+            </div>
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; width:40px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">⇧</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">z</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">x</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">c</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">v</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">b</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">n</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">m</span>
+              <span style="display:grid; width:40px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">⌫</span>
+            </div>
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; width:44px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">123</span>
+              <span style="display:grid; width:38px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">🙂</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">space</span>
+              <span style="display:grid; width:74px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">return</span>
+            </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isediting }}">
+      <div data-stage="" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Editing</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div data-scroll="messages" style="height:100%; box-sizing:border-box; overflow-y:auto; padding-bottom:6px">
+            <article style="display:flex; gap:10px; padding:7px 16px; background:var(--accent-surface)">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Hakim</span>
+                  <span style="border-radius:5px; border:1px solid var(--accent-surface-border); background:var(--bg-card); padding:0 5px; font-size:10px; font-weight:600; color:var(--accent-fg)">EDITING</span>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--fg-600)">Contrast on the secondary button fails AA.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:center; gap:9px; padding:0 4px 9px">
+            <svg style="width:14px; height:14px; flex-shrink:0; color:var(--accent-text)"><use href="#u-pencil"/></svg>
+            <span style="min-width:0; flex:1; font-size:12.5px; font-weight:600; color:var(--accent-text)">Editing message</span>
+            <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; border:0; background:none; border-radius:11px; padding:0 12px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer">Cancel</button>
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--accent); background:var(--bg-card); box-shadow:0 0 0 3px var(--accent-surface); padding:11px 15px; font-size:14.5px; line-height:1.45; color:var(--body)"><span style="min-width:0; flex:1">Colour contrast on the secondary button fails AA in dark mode.<span style="display:inline-block; width:1.5px; height:17px; margin-left:1px; vertical-align:-4px; background:var(--accent)"></span></span></span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--accent-border); border-radius:22px; background:var(--accent); box-shadow:inset 0 1px 0 rgba(255,255,255,0.2); color:#ffffff; cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        <div aria-hidden="true" style="flex-shrink:0; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border); background:var(--kb-bg); padding:6px 4px 8px">
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">q</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">w</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">e</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">r</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">t</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">y</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">u</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">i</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">o</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">p</span>
+            </div>
+            <div style="display:flex; gap:5px; padding:0 18px; ">
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">a</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">s</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">d</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">f</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">g</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">h</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">j</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">k</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">l</span>
+            </div>
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; width:40px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">⇧</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">z</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">x</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">c</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">v</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">b</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">n</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">m</span>
+              <span style="display:grid; width:40px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:17px; font-weight:400; color:var(--ink)">⌫</span>
+            </div>
+            <div style="display:flex; gap:5px; ">
+              <span style="display:grid; width:44px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">123</span>
+              <span style="display:grid; width:38px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">🙂</span>
+              <span style="display:grid; min-width:0; flex:1; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">space</span>
+              <span style="display:grid; width:74px; height:30px; place-items:center; border-radius:5px; background:var(--kb-key); box-shadow:0 1px 0 0 var(--kb-shadow); font-size:12.5px; font-weight:600; color:var(--ink)">return</span>
+            </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ issendFailed }}">
+      <div data-stage="" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Send failed</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div data-scroll="messages" style="height:100%; box-sizing:border-box; overflow-y:auto; padding-bottom:6px">
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Type scale: 12/14/16/20/24/32?</p>
+              </div>
+            </article>
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Hakim</span>
+                  <time style="font-size:11.5px; color:var(--muted)">Just now</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--muted)">Agreed — 32 on mobile, 40 from md up.</p>
+                <div style="margin-top:8px; display:flex; flex-wrap:wrap; align-items:center; gap:8px; border-radius:11px; border:1px solid var(--danger); background:var(--danger-surface); padding:10px 11px">
+                  <span style="display:flex; min-width:0; flex:1; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--danger)"><svg style="width:15px; height:15px; flex-shrink:0"><use href="#u-alert-circle"/></svg>Couldn&rsquo;t send — you&rsquo;re offline</span>
+                  <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; border-radius:11px; border:1px solid var(--danger); background:var(--bg-card); padding:0 16px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--danger); cursor:pointer">Retry</button>
+                  <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; border:0; background:none; border-radius:11px; padding:0 14px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer">Delete</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--danger-surface); border-top:1px solid var(--danger); padding:9px 16px">
+          <span style="display:block; width:7px; height:7px; border-radius:9999px; background:var(--danger)"></span>
+          <span style="font-size:12.5px; font-weight:600; color:var(--danger)">No connection — messages will send when you&rsquo;re back</span>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:11px 15px; font-size:14.5px; line-height:1.45; color:var(--body)"><span style="min-width:0; flex:1">Booking the room now</span></span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: null, cState: "keyboardOpen" };
+  notes = {
+    "keyboardOpen": "The list keeps its scroll position rather than jumping to the bottom — losing your place is the classic keyboard bug. Send turns accent the moment there is text.",
+    "mention": "Suggestions sit between the list and the composer, above the keyboard, so your thumb never has to cross the field. Presence and role are shown — @sari and @sam matter.",
+    "attachSheet": "Formatting lives in here rather than a permanent toolbar. On a phone nobody bolds text often enough to spend 44px of chrome on it.",
+    "attachPreview": "Attachments stage above the field with a live progress bar and a per-item cancel, so a slow upload never blocks the message.",
+    "editing": "The original stays visible and tinted in the list while you edit below. Cancel is always one tap and never hidden behind a back gesture.",
+    "sendFailed": "Failure is attached to the message that failed, not a toast. Retry and Delete sit together, and the banner states when it will resolve itself."
+  };
+  // A channel opens on the newest message. The template streams in after mount, so a
+  // MutationObserver waits for the scroller, a ResizeObserver re-pins on reflow, and
+  // scrolling up releases the pin.
+  componentDidUpdate() { this.attach(); }
+  componentWillUnmount() {
+    if (this.mo) this.mo.disconnect();
+    if (this.ro) this.ro.disconnect();
+    if (this.el && this.onScroll) this.el.removeEventListener("scroll", this.onScroll);
+  }
+  attach() {
+    const el = document.querySelector('[data-scroll="messages"]');
+    if (el && el !== this.el) {
+      if (this.el && this.onScroll) this.el.removeEventListener("scroll", this.onScroll);
+      this.el = el;
+      this.stick = true;
+      this.onScroll = () => { this.stick = el.scrollHeight - el.scrollTop - el.clientHeight < 60; };
+      el.addEventListener("scroll", this.onScroll, { passive: true });
+      this.pin();
+      if (window.ResizeObserver) {
+        if (this.ro) this.ro.disconnect();
+        this.ro = new ResizeObserver(() => this.pin());
+        this.ro.observe(el);
+        if (el.firstElementChild) this.ro.observe(el.firstElementChild);
+      }
+      el.querySelectorAll("img").forEach((img) => {
+        if (!img.complete) img.addEventListener("load", () => this.pin(), { once: true });
+      });
+      if (this.mo) { this.mo.disconnect(); this.mo = null; }
+      return;
+    }
+    if (!this.el && !this.mo && window.MutationObserver) {
+      this.mo = new MutationObserver(() => this.attach());
+      this.mo.observe(document.body, { childList: true, subtree: true });
+    }
+  }
+  pin() {
+    if (this.el && this.stick) this.el.scrollTop = this.el.scrollHeight;
+    const stage = document.querySelector("[data-stage]");
+    if (stage) stage.scrollTop = stage.scrollHeight;
+  }
+  componentDidMount() {
+    this.attach();
+    let saved = null;
+    try { saved = localStorage.getItem("commune-theme"); } catch (e) {}
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    this.setState({ theme: saved });
+  }
+  pillStyle(active) {
+    return [
+      "display:flex", "align-items:center", "height:28px", "border-radius:7px",
+      "padding:0 10px", "font-family:inherit", "font-size:12.5px", "font-weight:600",
+      "cursor:pointer", "white-space:nowrap",
+      active
+        ? "border:1px solid var(--accent-border); background:var(--accent); color:#ffffff; box-shadow:0 1px 2px 0 var(--shadow-tint-sm)"
+        : "border:1px solid var(--border-strong); background:var(--bg-card); color:var(--fg-400)",
+    ].join("; ");
+  }
+  renderVals() {
+    const theme = this.state.theme === "dark" ? "dark" : "light";
+    const isDark = theme === "dark";
+    const cur = this.state.cState;
+    const vals = {
+      theme,
+      themeLabel: isDark ? "Light" : "Dark",
+      toggleTheme: () => {
+        const next = isDark ? "light" : "dark";
+        this.setState({ theme: next });
+        try { localStorage.setItem("commune-theme", next); } catch (e) {}
+      },
+      note: this.notes[cur] || "",
+    };
+    ["keyboardOpen","mention","attachSheet","attachPreview","editing","sendFailed"].forEach((k) => {
+      vals["is" + k] = cur === k;
+      vals["pick" + k] = () => { this.el = null; this.setState({ cState: k }); };
+      vals["btn" + k] = this.pillStyle(cur === k);
+    });
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

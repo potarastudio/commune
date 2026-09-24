@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { headers } from "next/headers";
+import { isPhoneUserAgent } from "@/lib/mobile";
+import { NativeBridge } from "@/components/mobile/native-bridge";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -34,16 +37,32 @@ export const metadata: Metadata = {
  * be hand-synced with --bg-main forever. Providers writes the tag from the
  * resolved token instead. next-themes writes `color-scheme` onto <html> itself.
  */
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-};
+export async function generateViewport(): Promise<Viewport> {
+  const phone = isPhoneUserAgent((await headers()).get("user-agent"));
+  return {
+    width: "device-width",
+    initialScale: 1,
+    // The phone shell draws under the notch and home indicator and pads itself
+    // with env(safe-area-inset-*); the keyboard resizes the page rather than
+    // covering the composer.
+    viewportFit: "cover",
+    interactiveWidget: "resizes-content",
+    // iOS zooms into any field under 16px when it is focused, and never zooms
+    // back out. The design sets the composer at 14.5px, so the zoom is capped
+    // at 1 on phones; iOS still lets people pinch-zoom the page themselves.
+    ...(phone ? { maximumScale: 1 } : {}),
+  };
+}
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-dvh bg-bg-main text-ink">
-        <Providers>{children}</Providers>
+        <Providers>
+          {/* The phone app's links, notification taps, keyboard and status bar; nothing in a browser. */}
+          <NativeBridge />
+          {children}
+        </Providers>
       </body>
     </html>
   );

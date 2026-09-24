@@ -10,6 +10,8 @@ import { findRemembered, rememberedDevices } from "@/lib/utils/media-devices";
 import { HuddleDock } from "./huddle-dock";
 import { HuddleSounds } from "./huddle-sounds";
 import { HuddleStageSlot } from "./huddle-stage-slot";
+import { MobileHuddleBar } from "@/components/mobile/huddle";
+import { useIsMobile } from "@/lib/mobile-context";
 
 const MEDIA_KINDS = ["audioinput", "videoinput", "audiooutput"] as const;
 
@@ -82,6 +84,7 @@ export default function HuddleRoom({
   onLeave: () => void;
   onDisconnected: () => void;
 }) {
+  const mobile = useIsMobile();
   // Start on the devices picked last time, if they are still plugged in.
   // Settled once, before the room exists: LiveKitRoom builds a new Room
   // whenever its options change, which would drop the call.
@@ -129,6 +132,8 @@ export default function HuddleRoom({
       <HuddleSounds />
       {onStage ? (
         <HuddleStageSlot session={session} onLeave={onLeave} />
+      ) : mobile ? (
+        <MobileHuddleBar session={session} onLeave={onLeave} />
       ) : (
         <HuddleDock session={session} onLeave={onLeave} />
       )}

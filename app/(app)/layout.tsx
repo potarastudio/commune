@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { HuddleProvider } from "@/components/huddle/huddle-provider";
+import { MobileShell } from "@/components/mobile/mobile-shell";
 import { Notifier } from "@/components/notifications/notifier";
 import { PresenceProvider } from "@/components/presence/presence-provider";
 import { CommandPalette } from "@/components/search/command-palette";
@@ -11,6 +12,8 @@ import { getMyConversations } from "@/lib/queries/conversations";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { toUnreadMap } from "@/lib/utils/unreads";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { MobileProvider } from "@/lib/mobile-context";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { ViewerTimezoneProvider } from "@/lib/viewer-timezone";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -28,8 +31,38 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     }),
   ]);
   const unreads = toUnreadMap(unreadRows);
+  const notifier = (
+    <Notifier
+      meId={profile.id}
+      channels={channels.map((c) => ({ id: c.id, name: c.name, level: c.notification_level }))}
+      dnd={{ dnd_start: profile.dnd_start, dnd_end: profile.dnd_end, timezone: profile.timezone }}
+    />
+  );
+
+  // Phones get their own shell (design: Commune Mobile Navigation): tab stacks,
+  // pushed screens, no sidebar, no command palette or keyboard shortcuts.
+  if (await isMobileRequest()) {
+    return (
+      <MobileProvider mobile>
+        <ViewerTimezoneProvider timezone={profile.timezone}>
+          <HuddleProvider>
+            <MobileShell
+              me={{ id: profile.id, display_name: profile.display_name, avatar_url: profile.avatar_url }}
+              initialUnreads={unreads}
+              mutedChannelIds={channels.filter((c) => c.notification_level === "muted").map((c) => c.id)}
+            >
+              {children}
+            </MobileShell>
+            <PresenceProvider meId={profile.id} />
+            {notifier}
+          </HuddleProvider>
+        </ViewerTimezoneProvider>
+      </MobileProvider>
+    );
+  }
 
   return (
+    <MobileProvider mobile={false}>
     <ViewerTimezoneProvider timezone={profile.timezone}>
     <HuddleProvider>
     {/* Between 900px and 768px the channel column drops out (see Sidebar) and the
@@ -49,14 +82,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           ]}
         />
         <PresenceProvider meId={profile.id} />
-        <Notifier
-          meId={profile.id}
-          channels={channels.map((c) => ({ id: c.id, name: c.name, level: c.notification_level }))}
-          dnd={{ dnd_start: profile.dnd_start, dnd_end: profile.dnd_end, timezone: profile.timezone }}
-        />
+        {notifier}
       </div>
     </div>
     </HuddleProvider>
     </ViewerTimezoneProvider>
+    </MobileProvider>
   );
 }

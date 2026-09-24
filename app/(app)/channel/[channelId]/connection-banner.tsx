@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BellOff } from "lucide-react";
+import { useIsMobile } from "@/lib/mobile-context";
 
 /**
  * The design's two connection bars (Commune Empty and Error States, isoffline
@@ -17,6 +18,7 @@ import { BellOff } from "lucide-react";
  */
 export function ConnectionBanner() {
   const router = useRouter();
+  const mobile = useIsMobile();
   const [offline, setOffline] = useState(false);
   const [reconnecting, startReconnect] = useTransition();
 
@@ -40,6 +42,30 @@ export function ConnectionBanner() {
       window.removeEventListener("online", goOnline);
     };
   }, [refresh]);
+
+  // The phone (design: Mobile System States): one line each, 16px in. Offline is
+  // grey rather than red, and reconnecting is accent — both resolve themselves.
+  if (mobile && offline) {
+    return (
+      <div role="status" className="flex shrink-0 items-center gap-[9px] border-b border-border bg-bg-chip px-[16px] py-[9px]">
+        <span aria-hidden="true" className="block size-[8px] shrink-0 rounded-full bg-tertiary" />
+        <span className="min-w-0 flex-1 text-[12.5px] font-semibold text-fg-400 [text-wrap:pretty]">
+          No connection — messages will send when you&rsquo;re back
+        </span>
+      </div>
+    );
+  }
+  if (mobile && reconnecting) {
+    return (
+      <div role="status" className="flex shrink-0 items-center gap-[9px] border-b border-accent-surface-border bg-accent-surface px-[16px] py-[9px]">
+        <span
+          aria-hidden="true"
+          className="block size-[15px] shrink-0 animate-[commune-spin_700ms_linear_infinite] rounded-full border-2 border-accent-surface-border border-t-primary"
+        />
+        <span className="min-w-0 flex-1 text-[12.5px] font-semibold text-accent-foreground">Reconnecting — your place is kept</span>
+      </div>
+    );
+  }
 
   if (offline) {
     return (

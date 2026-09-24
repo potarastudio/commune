@@ -1,6 +1,9 @@
 "use client";
 
 import { SmilePlus } from "lucide-react";
+import { useState } from "react";
+import { EmojiSheet } from "@/components/mobile/emoji-sheet";
+import { useIsMobile } from "@/lib/mobile-context";
 import { useProfileMap } from "@/lib/queries/profiles";
 import { useHydrated } from "@/lib/utils/use-hydrated";
 import type { Reaction } from "@/lib/queries/messages";
@@ -23,12 +26,57 @@ export function ReactionBar({
   // If the names land before this part of the page hydrates, using them at
   // once would make the chip's label differ from the server's; wait a frame.
   const hydrated = useHydrated();
+  const mobile = useIsMobile();
+  const [pickerOpen, setPickerOpen] = useState(false);
   if (reactions.length === 0) return null;
 
   const groups = new Map<string, string[]>();
   for (const r of reactions) groups.set(r.emoji, [...(groups.get(r.emoji) ?? []), r.user_id]);
 
   const nameOf = (id: string) => (id === meId ? "You" : ((hydrated && profiles.get(id)?.display_name) || "Someone"));
+
+  // The phone: 30px chips you can hit with a thumb, no tooltips (nothing hovers), and the
+  // full emoji sheet behind the add button.
+  if (mobile) {
+    return (
+      <div className="mt-[7px] flex flex-wrap items-center gap-[6px]">
+        {[...groups.entries()].map(([emoji, users]) => {
+          const active = users.includes(meId);
+          const names = users.map(nameOf);
+          return (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => onToggle(emoji, active)}
+              aria-pressed={active}
+              aria-label={`${emoji} ${users.length}, ${names.join(", ")} reacted`}
+              className={`flex h-[30px] items-center gap-[6px] rounded-[8px] border px-[10px] text-[12.5px] font-semibold whitespace-nowrap tabular-nums ${
+                active ? "border-accent-surface-border bg-accent-surface text-accent-foreground" : "border-border-strong bg-bg-card text-fg-400"
+              }`}
+            >
+              <span aria-hidden="true" className="text-[14px] leading-none">
+                <Emoji value={emoji} />
+              </span>
+              {users.length}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          aria-label="Add reaction"
+          onClick={() => setPickerOpen(true)}
+          className="grid h-[30px] w-[36px] place-items-center rounded-[8px] border border-border-strong bg-bg-card text-muted-foreground"
+        >
+          <SmilePlus className="size-[15px]" aria-hidden="true" />
+        </button>
+        <EmojiSheet
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          onPick={(emoji) => onToggle(emoji, reactions.some((r) => r.emoji === emoji && r.user_id === meId))}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5">

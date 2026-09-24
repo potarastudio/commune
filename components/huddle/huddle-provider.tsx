@@ -8,6 +8,7 @@ import type { Container } from "@/lib/queries/messages";
 import { playHuddleSound } from "@/lib/audio/sounds";
 import { useHuddleStore, type HuddleSession } from "@/lib/store/huddle";
 import { humanError } from "@/lib/utils/human-error";
+import { useIsMobile } from "@/lib/mobile-context";
 
 type HuddleRoomProps = {
   session: HuddleSession;
@@ -43,6 +44,7 @@ export function HuddleProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const onStage = pathname.startsWith("/huddle/");
+  const mobile = useIsMobile();
   const leaving = useRef(false);
   const [Room, setRoom] = useState<ComponentType<HuddleRoomProps> | null>(() => cached ?? null);
 
@@ -53,14 +55,15 @@ export function HuddleProvider({ children }: { children: React.ReactNode }) {
     playHuddleSound("left");
     clear();
     // The stage has nothing left to show once the room is gone; the dock just
-    // disappears in place.
-    if (window.location.pathname.startsWith("/huddle/")) router.push(current.href);
+    // disappears in place. The phone stays put: its huddle route turns into the
+    // design's receipt, which offers the way back itself.
+    if (!mobile && window.location.pathname.startsWith("/huddle/")) router.push(current.href);
     try {
       await leaveHuddleAction({ huddleId: current.huddleId });
     } finally {
       leaving.current = false;
     }
-  }, [clear, router]);
+  }, [clear, router, mobile]);
 
   // enterHuddle flips `connecting` before it asks for a token, so the chunk
   // downloads alongside that round-trip instead of after it.

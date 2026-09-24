@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Commune mobile — huddle: invited, active, minimised, screen share, video and ended." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #ffffff; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "cv11", "ss01", "calt"; }
+  a { color: #171717; text-decoration: none; }
+  a:hover { color: #b44309; }
+  @keyframes commune-bar { 0%, 100% { transform: scaleY(0.45); } 50% { transform: scaleY(1); } }
+  [data-commune] {
+    --bg-main:#ffffff; --bg-card:#ffffff; --bg-hover:#fafafa; --bg-col:#fafafa;
+    --bg-chip:#f6f6f6; --bg-subtle:#f5f5f5; --bg-avatar:#f0f0f0;
+    --border:#e9e9e9; --border-strong:#e2e2e2; --border-subtle:#ebebeb;
+    --border-input:#dcdcdc; --ink:#171717; --body:#262626; --fg-400:#404040;
+    --fg-600:#666666; --muted:#6b6b6b; --tertiary:#737373;
+    --accent:#f05710; --accent-border:#d9490a; --avatar-ring:rgba(0,0,0,0.04);
+    --shadow-tint-sm:rgba(16,24,40,0.05); --shadow-tint-lg:rgba(16,24,40,0.1);
+    color-scheme: light;
+  }
+  [data-commune="dark"] {
+    --bg-main:#171717; --bg-card:#1f1f1f; --bg-hover:#1c1c1c; --bg-col:#0f0f0f;
+    --bg-chip:#1f1f1f; --bg-subtle:#212121; --bg-avatar:#262626;
+    --border:#262626; --border-strong:#2e2e2e; --border-subtle:#262626;
+    --border-input:#333333; --ink:#ededed; --body:#d6d6d6; --fg-400:#a3a3a3;
+    --fg-600:#9d9d9d; --muted:#9d9d9d; --tertiary:#8a8a8a;
+    --accent:#f05710; --accent-border:#d9490a; --avatar-ring:rgba(255,255,255,0.06);
+    --shadow-tint-sm:rgba(0,0,0,0.4); --shadow-tint-lg:rgba(0,0,0,0.6);
+    color-scheme: dark;
+  }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-send-horizontal" viewBox="0 0 24 24"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z"/><path d="M6 12h16"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-headphones" viewBox="0 0 24 24"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-mic-off" viewBox="0 0 24 24"><line x1="2" x2="22" y1="2" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><line x1="12" x2="12" y1="19" y2="22"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-video" viewBox="0 0 24 24"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-video-off" viewBox="0 0 24 24"><path d="M10.66 6H14a2 2 0 0 1 2 2v2.5l5.248-3.062A.5.5 0 0 1 22 7.87v8.196"/><path d="M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2"/><path d="m2 2 20 20"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-monitor-up" viewBox="0 0 24 24"><path d="m9 10 3-3 3 3"/><path d="M12 13V7"/><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M12 17v4"/><path d="M8 21h8"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-phone-off" viewBox="0 0 24 24"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233"/><path d="m2 2 20 20"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-smile-plus" viewBox="0 0 24 24"><path d="M22 11v1a10 10 0 1 1-9-10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/><path d="M16 5h6"/><path d="M19 2v6"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+<symbol fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" id="u-message-square-text" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/></symbol>
+</defs></svg>
+
+<div data-commune="{{ theme }}" style="font-family:Inter, ui-sans-serif, system-ui, sans-serif; display:flex; height:100vh; flex-direction:column; overflow:hidden; background:var(--bg-main); color:var(--ink)">
+<div style="flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:8px; border-bottom:1px solid var(--border); background:var(--bg-col); padding:12px 16px">
+  <span style="margin-right:2px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Mobile · huddle</span>
+  <div role="group" aria-label="State" style="display:flex; flex-wrap:wrap; gap:4px">
+    <button type="button" onClick="{{ pickincoming }}" aria-pressed="{{ isincoming }}" style="{{ btnincoming }}">Invited</button>
+    <button type="button" onClick="{{ pickactive }}" aria-pressed="{{ isactive }}" style="{{ btnactive }}">In a huddle</button>
+    <button type="button" onClick="{{ pickminimised }}" aria-pressed="{{ isminimised }}" style="{{ btnminimised }}">Minimised</button>
+    <button type="button" onClick="{{ pickscreenShare }}" aria-pressed="{{ isscreenShare }}" style="{{ btnscreenShare }}">Screen share</button>
+    <button type="button" onClick="{{ pickvideo }}" aria-pressed="{{ isvideo }}" style="{{ btnvideo }}">Video on</button>
+    <button type="button" onClick="{{ pickended }}" aria-pressed="{{ isended }}" style="{{ btnended }}">Ended</button>
+  </div>
+  <button type="button" onClick="{{ toggleTheme }}" style="display:flex; height:28px; align-items:center; border-radius:7px; border:1px solid var(--border-strong); background:var(--bg-card); padding:0 10px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer">{{ themeLabel }}</button>
+  <p style="margin:0 0 0 auto; max-width:340px; font-size:12.5px; line-height:1.5; color:var(--fg-600); text-wrap:pretty">{{ note }}</p>
+</div>
+    <sc-if value="{{ isincoming }}" hint-placeholder-val="{{ true }}">
+      <div data-stage="" data-anchor="bottom" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Invited</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <div style="display:flex; flex:1; min-height:0; flex-direction:column; background:#121110">
+          <div style="display:flex; flex:1; min-height:0; flex-direction:column; align-items:center; justify-content:center; gap:0; padding:24px 28px; text-align:center">
+            <span style="display:flex; flex-shrink:0">
+              <span style="display:grid; place-items:center; width:66px; height:66px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:66px; height:66px; object-fit:cover" /></span>
+              <span style="display:block; margin-left:-16px; border-radius:9999px; box-shadow:0 0 0 3px #121110"><span style="display:grid; place-items:center; width:66px; height:66px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:66px; height:66px; object-fit:cover" /></span></span>
+            </span>
+            <p style="margin:20px 0 0; font-size:13px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent)">Huddle in #design</p>
+            <h2 style="margin:9px 0 0; font-size:24px; font-weight:600; letter-spacing:-0.03em; line-height:1.2; color:#ffffff; text-wrap:pretty">Sari and Raka are talking</h2>
+            <p style="margin:9px 0 0; max-width:280px; font-size:14px; line-height:1.55; color:rgba(255,255,255,0.6); text-wrap:pretty">Started 3 minutes ago. Nobody is sharing a screen yet.</p>
+          </div>
+          <div style="flex-shrink:0; display:flex; flex-direction:column; gap:10px; padding:0 20px 28px">
+            <button type="button" style="display:flex; height:52px; flex-shrink:0; align-items:center; justify-content:center; gap:9px; border-radius:14px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:inset 0 1px 0 rgba(255,255,255,0.2); font-family:inherit; font-size:16px; font-weight:600; color:#ffffff; cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-headphones"/></svg>Join huddle</button>
+            <button type="button" style="display:flex; height:52px; flex-shrink:0; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.14); background:rgba(255,255,255,0.06); border-radius:14px; font-family:inherit; font-size:16px; font-weight:600; color:#ffffff; cursor:pointer">Not now</button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isactive }}">
+      <div data-stage="" data-anchor="bottom" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — In a huddle</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <div style="display:flex; flex:1; min-height:0; flex-direction:column; background:#121110">
+          <div style="flex-shrink:0; display:flex; align-items:center; gap:10px; padding:16px 14px 6px">
+            <span style="min-width:0; flex:1">
+              <span style="display:flex; align-items:center; gap:6px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:#ffffff"><span style="color:rgba(255,255,255,0.5)">#</span>design</span>
+              <span style="display:block; margin-top:2px; font-size:12px; color:rgba(255,255,255,0.55); font-variant-numeric:tabular-nums">3 people · 04:12</span>
+            </span>
+            <button type="button" aria-label="Minimise" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:11px; color:rgba(255,255,255,0.75); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-chevron-down"/></svg></button>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:8px 14px 0">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+              <div style="position:relative; display:flex; min-width:0; flex-direction:column; align-items:center; justify-content:center; gap:9px; border-radius:16px; border:1px solid var(--accent); background:rgba(240,87,16,0.12); padding:18px 10px; aspect-ratio:1 / 1">
+                <span style="display:grid; place-items:center; width:62px; height:62px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:62px; height:62px; object-fit:cover" /></span>
+                <span style="display:flex; align-items:center; gap:5px; max-width:100%; font-size:12.5px; font-weight:600; color:#ffffff"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Sari</span></span>
+                <span style="position:absolute; top:9px; right:9px; display:flex; align-items:flex-end; gap:2px; height:13px">
+                  <span style="display:block; width:3px; height:6px; border-radius:9999px; background:var(--accent); animation:commune-bar 900ms ease-in-out 0ms infinite"></span>
+                  <span style="display:block; width:3px; height:11px; border-radius:9999px; background:var(--accent); animation:commune-bar 900ms ease-in-out 140ms infinite"></span>
+                  <span style="display:block; width:3px; height:8px; border-radius:9999px; background:var(--accent); animation:commune-bar 900ms ease-in-out 280ms infinite"></span>
+                </span>
+              </div>
+              <div style="position:relative; display:flex; min-width:0; flex-direction:column; align-items:center; justify-content:center; gap:9px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); padding:18px 10px; aspect-ratio:1 / 1">
+                <span style="display:grid; place-items:center; width:62px; height:62px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:62px; height:62px; object-fit:cover" /></span>
+                <span style="display:flex; align-items:center; gap:5px; max-width:100%; font-size:12.5px; font-weight:600; color:#ffffff"><svg style="width:12px; height:12px; flex-shrink:0; color:rgba(255,255,255,0.6)"><use href="#u-mic-off"/></svg><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Raka</span></span>
+              </div>
+              <div style="position:relative; display:flex; min-width:0; flex-direction:column; align-items:center; justify-content:center; gap:9px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); padding:18px 10px; aspect-ratio:1 / 1">
+                <span style="display:grid; place-items:center; width:62px; height:62px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:62px; height:62px; object-fit:cover" /></span>
+                <span style="display:flex; align-items:center; gap:5px; max-width:100%; font-size:12.5px; font-weight:600; color:#ffffff"><svg style="width:12px; height:12px; flex-shrink:0; color:rgba(255,255,255,0.6)"><use href="#u-mic-off"/></svg><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">You</span></span>
+              </div>
+              <button type="button" style="display:flex; min-width:0; flex-direction:column; align-items:center; justify-content:center; gap:9px; border-radius:16px; border:1px dashed rgba(255,255,255,0.18); background:none; padding:18px 10px; aspect-ratio:1 / 1; font-family:inherit; cursor:pointer">
+                <span style="display:grid; width:48px; height:48px; place-items:center; border-radius:9999px; background:rgba(255,255,255,0.08); color:#ffffff"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-plus"/></svg></span>
+                <span style="font-size:12.5px; font-weight:600; color:rgba(255,255,255,0.75)">Invite</span>
+              </button>
+            </div>
+          </div>
+          <div style="flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:11px; padding:18px 14px 26px">
+            <button type="button" aria-label="Unmute" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid #ffffff; border-radius:9999px; background:#ffffff; color:#171717; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-mic-off"/></svg></button>
+            <button type="button" aria-label="Start video" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid rgba(255,255,255,0.14); border-radius:9999px; background:rgba(255,255,255,0.1); color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-video-off"/></svg></button>
+            <button type="button" aria-label="Share screen" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid rgba(255,255,255,0.14); border-radius:9999px; background:rgba(255,255,255,0.1); color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-monitor-up"/></svg></button>
+            <button type="button" aria-label="React" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid rgba(255,255,255,0.14); border-radius:9999px; background:rgba(255,255,255,0.1); color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-smile-plus"/></svg></button>
+            <button type="button" aria-label="Leave huddle" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid #b42318; border-radius:9999px; background:#d92d20; color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-phone-off"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isminimised }}">
+      <div data-stage="" data-anchor="top" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Minimised</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <header style="display:flex; height:52px; flex-shrink:0; align-items:center; gap:4px; border-bottom:1px solid var(--border); padding:0 6px 0 2px">
+          <button type="button" aria-label="Back" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><span style="display:block; transform:rotate(180deg)"><svg style="width:20px; height:20px; flex-shrink:0"><use href="#u-chevron-right"/></svg></span></button>
+          <span style="min-width:0; flex:1">
+            <span style="display:flex; align-items:center; gap:5px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:var(--ink)"><span style="color:var(--tertiary)">#</span>design</span>
+            <span style="display:block; font-size:11.5px; color:var(--muted)">8 members</span>
+          </span>
+          <button type="button" aria-label="Members" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-users"/></svg></button>
+        </header>
+        <div style="flex-shrink:0; padding:8px 12px 0">
+          <div style="display:flex; align-items:center; gap:11px; border-radius:14px; background:#121110; padding:9px 9px 9px 13px">
+            <span style="display:flex; align-items:flex-end; gap:2px; height:15px; flex-shrink:0">
+              <span style="display:block; width:3px; height:7px; border-radius:9999px; background:var(--accent); animation:commune-bar 900ms ease-in-out 0ms infinite"></span>
+              <span style="display:block; width:3px; height:13px; border-radius:9999px; background:var(--accent); animation:commune-bar 900ms ease-in-out 140ms infinite"></span>
+              <span style="display:block; width:3px; height:9px; border-radius:9999px; background:var(--accent); animation:commune-bar 900ms ease-in-out 280ms infinite"></span>
+            </span>
+            <span style="min-width:0; flex:1">
+              <span style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:600; color:#ffffff">Sari is speaking</span>
+              <span style="display:block; margin-top:1px; font-size:11.5px; color:rgba(255,255,255,0.55); font-variant-numeric:tabular-nums">#design · 3 people · 04:12</span>
+            </span>
+            <button type="button" aria-label="Unmute" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; border-radius:11px; background:#ffffff; color:#171717; cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-mic-off"/></svg></button>
+            <button type="button" aria-label="Leave huddle" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; border-radius:11px; background:#d92d20; color:#ffffff; cursor:pointer"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-phone-off"/></svg></button>
+          </div>
+        </div>
+        <div style="flex:1; min-height:0; overflow:hidden">
+          <div style="height:100%; box-sizing:border-box; overflow-y:auto; padding:6px 0">
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:02</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Sharing my screen in a sec.</p>
+              </div>
+            </article>
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Raka</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:03</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Can you scroll to the hero?</p>
+              </div>
+            </article>
+            <article style="display:flex; gap:10px; padding:7px 16px">
+              <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; overflow:hidden; border-radius:9px; background:var(--bg-avatar); box-shadow:inset 0 0 0 1px var(--avatar-ring)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:32px; height:32px; object-fit:cover" /></span>
+              <div style="min-width:0; flex:1">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--ink)">Sari</span>
+                  <time style="font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums">10:04</time>
+                </div>
+                <p style="margin:1px 0 0; font-size:14px; line-height:1.5; color:var(--body)">Yep — one moment.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="flex-shrink:0; border-top:1px solid var(--border); background:var(--bg-main); padding:8px 8px 10px">
+          <div style="display:flex; align-items:flex-end; gap:6px">
+            <button type="button" aria-label="Attach" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:10px; color:var(--fg-600); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-plus"/></svg></button>
+            <span style="display:flex; min-width:0; flex:1; min-height:44px; box-sizing:border-box; align-items:center; border-radius:22px; border:1px solid var(--border-input); background:var(--bg-card); padding:0 15px; font-size:14.5px; color:var(--muted)">Message #design</span>
+            <button type="button" aria-label="Send" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:1px solid var(--border-strong); border-radius:22px; background:var(--bg-subtle); color:var(--muted); cursor:not-allowed"><svg style="width:19px; height:19px; flex-shrink:0"><use href="#u-send-horizontal"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isscreenShare }}">
+      <div data-stage="" data-anchor="bottom" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Screen share</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <div style="display:flex; flex:1; min-height:0; flex-direction:column; background:#121110">
+          <div style="flex-shrink:0; display:flex; align-items:center; gap:10px; padding:16px 14px 6px">
+            <span style="min-width:0; flex:1">
+              <span style="display:flex; align-items:center; gap:6px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:#ffffff"><span style="color:rgba(255,255,255,0.5)">#</span>design</span>
+              <span style="display:block; margin-top:2px; font-size:12px; color:rgba(255,255,255,0.55); font-variant-numeric:tabular-nums">Sari is sharing · 04:12</span>
+            </span>
+            <button type="button" aria-label="Minimise" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:11px; color:rgba(255,255,255,0.75); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-chevron-down"/></svg></button>
+          </div>
+          <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; padding:8px 14px 0">
+            <div style="position:relative; flex:1; min-height:0; overflow:hidden; border-radius:16px; border:1px solid rgba(255,255,255,0.12); background:#1d1c1a">
+              <span aria-hidden="true" style="position:absolute; inset:0; display:flex; flex-direction:column; gap:9px; padding:16px">
+                <span style="display:block; width:44%; height:11px; border-radius:5px; background:rgba(255,255,255,0.16)"></span>
+                <span style="display:block; flex:1; border-radius:10px; background:rgba(255,255,255,0.07)"></span>
+                <span style="display:flex; gap:9px">
+                  <span style="display:block; min-width:0; flex:1; height:46px; border-radius:9px; background:rgba(255,255,255,0.07)"></span>
+                  <span style="display:block; min-width:0; flex:1; height:46px; border-radius:9px; background:rgba(240,87,16,0.28)"></span>
+                </span>
+              </span>
+              <span style="position:absolute; left:11px; bottom:11px; display:flex; align-items:center; gap:7px; border-radius:9px; background:rgba(10,10,10,0.72); padding:6px 10px; font-size:11.5px; font-weight:600; color:#ffffff"><svg style="width:13px; height:13px; flex-shrink:0; color:var(--accent)"><use href="#u-monitor-up"/></svg>Sari&rsquo;s screen</span>
+              <button type="button" aria-label="Full screen" style="position:absolute; right:5px; top:5px; display:grid; width:44px; height:44px; place-items:center; border:0; background:none; padding:6px; cursor:pointer"><span style="display:grid; width:32px; height:32px; place-items:center; border-radius:9px; background:rgba(10,10,10,0.72); color:#ffffff"><svg style="width:16px; height:16px; flex-shrink:0"><use href="#u-maximize"/></svg></span></button>
+            </div>
+            <div style="flex-shrink:0; display:flex; gap:9px; overflow-x:auto; padding-bottom:2px">
+              <span style="position:relative; display:flex; width:84px; height:64px; flex-shrink:0; align-items:flex-end; justify-content:center; overflow:hidden; border-radius:12px; border:1px solid var(--accent); background:rgba(255,255,255,0.05); padding-bottom:6px">
+                <span style="position:absolute; top:8px; left:50%; transform:translateX(-50%)"><span style="display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:30px; height:30px; object-fit:cover" /></span></span>
+                <span style="font-size:11px; font-weight:600; color:#ffffff">Sari</span>
+              </span>
+              <span style="position:relative; display:flex; width:84px; height:64px; flex-shrink:0; align-items:flex-end; justify-content:center; overflow:hidden; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); padding-bottom:6px">
+                <span style="position:absolute; top:8px; left:50%; transform:translateX(-50%)"><span style="display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:30px; height:30px; object-fit:cover" /></span></span>
+                <span style="font-size:11px; font-weight:600; color:#ffffff">Raka</span>
+              </span>
+              <span style="position:relative; display:flex; width:84px; height:64px; flex-shrink:0; align-items:flex-end; justify-content:center; overflow:hidden; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); padding-bottom:6px">
+                <span style="position:absolute; top:8px; left:50%; transform:translateX(-50%)"><span style="display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:30px; height:30px; object-fit:cover" /></span></span>
+                <span style="font-size:11px; font-weight:600; color:#ffffff">You</span>
+              </span>
+            </div>
+          </div>
+          <div style="flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:11px; padding:18px 14px 26px">
+            <button type="button" aria-label="Unmute" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid #ffffff; border-radius:9999px; background:#ffffff; color:#171717; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-mic-off"/></svg></button>
+            <button type="button" aria-label="Start video" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid rgba(255,255,255,0.14); border-radius:9999px; background:rgba(255,255,255,0.1); color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-video-off"/></svg></button>
+            <button type="button" aria-label="Share screen" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid rgba(255,255,255,0.14); border-radius:9999px; background:rgba(255,255,255,0.1); color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-monitor-up"/></svg></button>
+            <button type="button" aria-label="React" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid rgba(255,255,255,0.14); border-radius:9999px; background:rgba(255,255,255,0.1); color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-smile-plus"/></svg></button>
+            <button type="button" aria-label="Leave huddle" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid #b42318; border-radius:9999px; background:#d92d20; color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-phone-off"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isvideo }}">
+      <div data-stage="" data-anchor="bottom" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Video on</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <div style="display:flex; flex:1; min-height:0; flex-direction:column; background:#121110">
+          <div style="flex-shrink:0; display:flex; align-items:center; gap:10px; padding:16px 14px 6px">
+            <span style="min-width:0; flex:1">
+              <span style="display:flex; align-items:center; gap:6px; font-size:15px; font-weight:600; letter-spacing:-0.015em; color:#ffffff"><span style="color:rgba(255,255,255,0.5)">#</span>design</span>
+              <span style="display:block; margin-top:2px; font-size:12px; color:rgba(255,255,255,0.55); font-variant-numeric:tabular-nums">3 people · video on · 04:12</span>
+            </span>
+            <button type="button" aria-label="Minimise" style="display:grid; width:44px; height:44px; flex-shrink:0; place-items:center; border:0; background:none; border-radius:11px; color:rgba(255,255,255,0.75); cursor:pointer"><svg style="width:21px; height:21px; flex-shrink:0"><use href="#u-chevron-down"/></svg></button>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:8px 14px 0">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+              <div style="position:relative; display:flex; min-width:0; align-items:flex-end; overflow:hidden; border-radius:16px; border:1px solid var(--accent); background:linear-gradient(160deg, #2c2a27, #1a1917); padding:9px; aspect-ratio:1 / 1">
+                <span aria-hidden="true" style="position:absolute; inset:0; display:grid; place-items:center; opacity:0.5"><span style="display:grid; place-items:center; width:86px; height:86px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:86px; height:86px; object-fit:cover" /></span></span>
+                <span style="position:relative; display:flex; align-items:center; gap:5px; border-radius:8px; background:rgba(10,10,10,0.6); padding:4px 8px; font-size:11.5px; font-weight:600; color:#ffffff">Sari</span>
+              </div>
+              <div style="position:relative; display:flex; min-width:0; align-items:flex-end; overflow:hidden; border-radius:16px; border:1px solid rgba(255,255,255,0.1); background:linear-gradient(160deg, #2c2a27, #1a1917); padding:9px; aspect-ratio:1 / 1">
+                <span aria-hidden="true" style="position:absolute; inset:0; display:grid; place-items:center; opacity:0.5"><span style="display:grid; place-items:center; width:86px; height:86px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:86px; height:86px; object-fit:cover" /></span></span>
+                <span style="position:relative; display:flex; align-items:center; gap:5px; border-radius:8px; background:rgba(10,10,10,0.6); padding:4px 8px; font-size:11.5px; font-weight:600; color:#ffffff">Raka</span>
+              </div>
+              <div style="position:relative; display:flex; min-width:0; align-items:flex-end; overflow:hidden; border-radius:16px; border:1px solid rgba(255,255,255,0.1); background:linear-gradient(160deg, #2c2a27, #1a1917); padding:9px; aspect-ratio:1 / 1">
+                <span aria-hidden="true" style="position:absolute; inset:0; display:grid; place-items:center; opacity:0.5"><span style="display:grid; place-items:center; width:86px; height:86px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:86px; height:86px; object-fit:cover" /></span></span>
+                <span style="position:relative; display:flex; align-items:center; gap:5px; border-radius:8px; background:rgba(10,10,10,0.6); padding:4px 8px; font-size:11.5px; font-weight:600; color:#ffffff"><svg style="width:11px; height:11px; flex-shrink:0; color:rgba(255,255,255,0.7)"><use href="#u-mic-off"/></svg>You</span>
+              </div>
+              <div style="position:relative; display:flex; min-width:0; align-items:flex-end; overflow:hidden; border-radius:16px; border:1px solid rgba(255,255,255,0.1); background:linear-gradient(160deg, #2c2a27, #1a1917); padding:9px; aspect-ratio:1 / 1">
+                <span aria-hidden="true" style="position:absolute; inset:0; display:grid; place-items:center; opacity:0.5"><span style="display:grid; place-items:center; width:86px; height:86px; flex-shrink:0; overflow:hidden; border-radius:9999px; background:#2a2a2a"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=priya" alt="" style="width:86px; height:86px; object-fit:cover" /></span></span>
+                <span style="position:relative; display:flex; align-items:center; gap:5px; border-radius:8px; background:rgba(10,10,10,0.6); padding:4px 8px; font-size:11.5px; font-weight:600; color:#ffffff">Priya</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:11px; padding:18px 14px 26px">
+            <button type="button" aria-label="Unmute" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid #ffffff; border-radius:9999px; background:#ffffff; color:#171717; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-mic-off"/></svg></button>
+            <button type="button" aria-label="Stop video" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid #ffffff; border-radius:9999px; background:#ffffff; color:#171717; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-video"/></svg></button>
+            <button type="button" aria-label="Share screen" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid rgba(255,255,255,0.14); border-radius:9999px; background:rgba(255,255,255,0.1); color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-monitor-up"/></svg></button>
+            <button type="button" aria-label="React" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid rgba(255,255,255,0.14); border-radius:9999px; background:rgba(255,255,255,0.1); color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-smile-plus"/></svg></button>
+            <button type="button" aria-label="Leave huddle" style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border:1px solid #b42318; border-radius:9999px; background:#d92d20; color:#ffffff; cursor:pointer"><svg style="width:22px; height:22px; flex-shrink:0"><use href="#u-phone-off"/></svg></button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isended }}">
+      <div data-stage="" data-anchor="center" style="display:flex; min-height:0; flex:1; flex-direction:column; align-items:center; gap:11px; padding:0 16px 20px; overflow:auto; background:var(--bg-col)">
+        <span style="position:sticky; top:0; z-index:3; display:flex; flex-shrink:0; align-items:center; gap:7px; margin-top:16px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-card); box-shadow:0 1px 2px 0 var(--shadow-tint-sm); padding:5px 10px; font-size:11.5px; font-weight:600; color:var(--fg-400)">390px — Ended</span>
+        <div style="position:relative; display:flex; width:390px; height:600px; flex-shrink:0; flex-direction:column; overflow:hidden; border-radius:16px; border:1px solid var(--border-strong); background:var(--bg-main); box-shadow:0 12px 28px -10px var(--shadow-tint-lg), 0 2px 6px -2px var(--shadow-tint-sm)">
+        <div style="display:flex; flex:1; min-height:0; flex-direction:column; align-items:center; justify-content:center; padding:24px 28px; text-align:center">
+          <span style="display:grid; width:56px; height:56px; flex-shrink:0; place-items:center; border-radius:16px; border:1px solid var(--border); background:var(--bg-chip); color:var(--fg-600)"><svg style="width:25px; height:25px; flex-shrink:0"><use href="#u-headphones"/></svg></span>
+          <h2 style="margin:16px 0 0; font-size:19px; font-weight:600; letter-spacing:-0.02em; color:var(--ink)">Huddle ended</h2>
+          <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:var(--fg-600)">12 minutes · 3 people</p>
+          <div style="margin-top:18px; width:100%; max-width:290px; flex-shrink:0; overflow:hidden; border-radius:14px; border:1px solid var(--border); background:var(--bg-card); text-align:left">
+            <p style="margin:0; padding:11px 14px 9px; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted)">Who was there</p>
+            <div style="display:flex; align-items:center; gap:11px; border-top:1px solid var(--border-subtle); padding:11px 14px">
+              <span style="display:flex; flex-shrink:0">
+                <span style="display:block; border-radius:9999px; box-shadow:0 0 0 2px var(--bg-card)"><span style="display:grid; place-items:center; width:30px; height:30px; overflow:hidden; border-radius:9999px; background:var(--bg-avatar)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=sari" alt="" style="width:30px; height:30px; object-fit:cover" /></span></span>
+                <span style="display:block; margin-left:-9px; border-radius:9999px; box-shadow:0 0 0 2px var(--bg-card)"><span style="display:grid; place-items:center; width:30px; height:30px; overflow:hidden; border-radius:9999px; background:var(--bg-avatar)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=raka" alt="" style="width:30px; height:30px; object-fit:cover" /></span></span>
+                <span style="display:block; margin-left:-9px; border-radius:9999px; box-shadow:0 0 0 2px var(--bg-card)"><span style="display:grid; place-items:center; width:30px; height:30px; overflow:hidden; border-radius:9999px; background:var(--bg-avatar)"><img src="https://api.dicebear.com/9.x/notionists/svg?seed=hakim" alt="" style="width:30px; height:30px; object-fit:cover" /></span></span>
+              </span>
+              <span style="min-width:0; flex:1; font-size:13px; color:var(--body)">Sari, Raka and you</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:11px; border-top:1px solid var(--border-subtle); padding:11px 14px">
+              <svg style="width:16px; height:16px; flex-shrink:0; color:var(--tertiary)"><use href="#u-message-square-text"/></svg>
+              <span style="min-width:0; flex:1; font-size:13px; color:var(--body)">3 messages posted during the huddle</span>
+            </div>
+          </div>
+          <div style="margin-top:16px; display:flex; flex-shrink:0; flex-direction:column; gap:9px; width:100%; max-width:290px">
+            <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; justify-content:center; gap:8px; border-radius:12px; border:1px solid var(--accent-border); background:var(--accent); box-shadow:inset 0 1px 0 rgba(255,255,255,0.2); font-family:inherit; font-size:14px; font-weight:600; color:#ffffff; cursor:pointer"><svg style="width:16px; height:16px; flex-shrink:0"><use href="#u-headphones"/></svg>Start another</button>
+            <button type="button" style="display:flex; height:44px; flex-shrink:0; align-items:center; justify-content:center; border:0; background:none; border-radius:12px; font-family:inherit; font-size:14px; font-weight:600; color:var(--fg-600); cursor:pointer">Back to #design</button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: null, hState: "incoming" };
+  notes = {
+    "incoming": "Who is already talking, and for how long — the two things that decide whether you join. Not now is a real button, not a dismiss X.",
+    "active": "Audio-first: square avatar tiles, speaking ring on the accent, and Invite as the fourth tile rather than a buried menu item.",
+    "minimised": "Collapses to a dark bar above the channel with the live speaker named. Mute and Leave stay reachable — the two you need in a hurry.",
+    "screenShare": "The shared screen takes the room and people shrink to a filmstrip. Whose screen it is stays labelled on the content itself.",
+    "video": "Same square grid as audio, so turning video on never relayouts the call. Your own mute state stays visible on your tile.",
+    "ended": "Ends with a receipt — duration, who was there, what got posted — then offers the one thing you might want next."
+  };
+  componentDidMount() {
+    let saved = null;
+    try { saved = localStorage.getItem("commune-theme"); } catch (e) {}
+    if (saved !== "light" && saved !== "dark") {
+      saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    this.setState({ theme: saved });
+    requestAnimationFrame(() => this.place());
+  }
+  componentDidUpdate() { this.place(); }
+  place() {
+    const stage = document.querySelector("[data-stage]");
+    if (!stage) return;
+    const over = stage.scrollHeight - stage.clientHeight;
+    if (over <= 0) return;
+    const a = stage.getAttribute("data-anchor");
+    stage.scrollTop = a === "bottom" ? over : a === "center" ? Math.round(over / 2) : 0;
+  }
+  pillStyle(active) {
+    return [
+      "display:flex", "align-items:center", "height:28px", "border-radius:7px",
+      "padding:0 10px", "font-family:inherit", "font-size:12.5px", "font-weight:600",
+      "cursor:pointer", "white-space:nowrap",
+      active
+        ? "border:1px solid var(--accent-border); background:var(--accent); color:#ffffff; box-shadow:0 1px 2px 0 var(--shadow-tint-sm)"
+        : "border:1px solid var(--border-strong); background:var(--bg-card); color:var(--fg-400)",
+    ].join("; ");
+  }
+  renderVals() {
+    const theme = this.state.theme === "dark" ? "dark" : "light";
+    const isDark = theme === "dark";
+    const cur = this.state.hState;
+    const vals = {
+      theme,
+      themeLabel: isDark ? "Light" : "Dark",
+      toggleTheme: () => {
+        const next = isDark ? "light" : "dark";
+        this.setState({ theme: next });
+        try { localStorage.setItem("commune-theme", next); } catch (e) {}
+      },
+      note: this.notes[cur] || "",
+    };
+    ["incoming","active","minimised","screenShare","video","ended"].forEach((k) => {
+      vals["is" + k] = cur === k;
+      vals["pick" + k] = () => this.setState({ hState: k });
+      vals["btn" + k] = this.pillStyle(cur === k);
+    });
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

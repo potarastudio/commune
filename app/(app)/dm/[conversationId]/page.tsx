@@ -7,6 +7,10 @@ import { MessagePane } from "@/components/message/message-pane";
 import { ContainerPanel } from "@/components/panel/container-panel";
 import { ThreadPanel } from "@/components/thread/thread-panel";
 import { HuddleBanner, HuddleButton } from "@/components/huddle/huddle-banner";
+import { DmScreenHeader } from "@/components/mobile/chat-headers";
+import { ConnectionBanner } from "../../channel/[channelId]/connection-banner";
+import { ThreadScreen } from "@/components/mobile/thread-screen";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { reconcileHuddle } from "@/lib/actions/huddles";
 import { getActiveHuddle } from "@/lib/queries/huddles";
 import { conversationLabel, conversationMembership, getConversation } from "@/lib/queries/conversations";
@@ -52,6 +56,67 @@ export default async function ConversationPage({ params, searchParams }: { param
   const others = conversation.members.filter((m) => m.id !== profile.id);
   const me = { id: profile.id, display_name: profile.display_name, handle: profile.handle, avatar_url: profile.avatar_url };
   const huddleProps = { container, label: shortLabel, href: `/dm/${conversation.id}`, initial: huddle, meId: profile.id };
+  const startTitle =
+    others.length === 0
+      ? "This is your space."
+      : others.length === 1
+        ? `This is the start of your direct messages with ${label}.`
+        : `This is the start of your group with ${label}.`;
+  const startBody =
+    others.length === 0
+      ? "Notes to yourself. Nobody else can see this."
+      : others.length === 1
+        ? "Nobody else can read them."
+        : `Only the ${conversation.members.length} of you can read this.`;
+
+  // The phone: the conversation, its thread and its details are separate pushed screens.
+  if (await isMobileRequest()) {
+    if (threadId) {
+      return (
+        <ThreadScreen
+          parentId={threadId}
+          container={container}
+          containerLabel={shortLabel}
+          me={me}
+          isAdmin={profile.role === "admin"}
+          canPost={membership !== null}
+        />
+      );
+    }
+    if (panelOpen && membership) {
+      return (
+        <ContainerPanel
+          container={container}
+          containerLabel={shortLabel}
+          members={conversation.members}
+          isMember
+          isAdmin={profile.role === "admin"}
+          notificationLevel={null}
+          me={me}
+          initialPins={pins}
+        />
+      );
+    }
+    return (
+      <>
+        <DmScreenHeader members={conversation.members} meId={profile.id} huddle={membership ? <HuddleButton {...huddleProps} /> : undefined} />
+        <ConnectionBanner />
+        {membership && <HuddleBanner {...huddleProps} />}
+        <MessagePane
+          container={container}
+          me={me}
+          isAdmin={profile.role === "admin"}
+          canPost={membership !== null}
+          lastReadAt={membership?.last_read_at ?? null}
+          initialPage={firstPage}
+          placeholder={`Message ${shortLabel}`}
+          startTitle={startTitle}
+          startBody={startBody}
+          readOnlyNotice={<span>You&apos;re not part of this conversation.</span>}
+        />
+      </>
+    );
+  }
 
   return (
     <>

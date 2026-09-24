@@ -5,7 +5,7 @@ import { Track, type Participant } from "livekit-client";
 import { Mic, MicOff } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-function avatarFromMetadata(p: Participant): string | null {
+export function avatarFromMetadata(p: Participant): string | null {
   try {
     return p.metadata ? ((JSON.parse(p.metadata) as { avatar_url?: string | null }).avatar_url ?? null) : null;
   } catch {

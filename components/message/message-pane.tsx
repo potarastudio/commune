@@ -33,6 +33,8 @@ import {
 import { formatMessageTime } from "@/lib/utils/time";
 import { useThreadNav } from "@/lib/utils/use-thread-nav";
 import { useViewerTimezone } from "@/lib/viewer-timezone";
+import { MobileComposer } from "@/components/mobile/mobile-composer";
+import { useIsMobile } from "@/lib/mobile-context";
 
 /** Scrolled more than this from the bottom counts as "reading back". */
 const AWAY_FROM_BOTTOM = 240;
@@ -62,6 +64,7 @@ export function MessagePane({
   readOnlyNotice?: React.ReactNode;
 }) {
   const tz = useViewerTimezone();
+  const mobile = useIsMobile();
   const queryClient = useQueryClient();
   const highlightId = useSearchParams().get("message");
   const { messages, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(container, initialPage);
@@ -176,14 +179,18 @@ export function MessagePane({
     <DropZone label={placeholder.replace(/^Message /, "")} onFiles={uploads.addFiles}>
       <div ref={listRef} className="relative flex min-h-0 flex-1 flex-col">
         {unread > 0 && readMarker && (
-          <div className="flex shrink-0 items-center gap-2.5 border-b border-accent-surface-border bg-accent-surface px-6 py-2">
+          <div
+            className={`flex shrink-0 items-center gap-2.5 border-b border-accent-surface-border bg-accent-surface ${mobile ? "px-[16px] py-[6px]" : "px-6 py-2"}`}
+          >
             <span className="text-[12.5px] font-semibold text-accent-foreground">
               {unread} new {unread === 1 ? "message" : "messages"} since {formatMessageTime(readMarker, tz)}
             </span>
             <button
               type="button"
               onClick={markRead}
-              className="ml-auto flex h-[26px] shrink-0 items-center rounded-[7px] border border-accent-surface-border bg-bg-card px-[9px] text-[12px] font-semibold text-ink hover:bg-bg-card-hover focus-visible:outline-2 focus-visible:outline-ring"
+              className={`ml-auto flex shrink-0 items-center border border-accent-surface-border bg-bg-card font-semibold text-ink hover:bg-bg-card-hover focus-visible:outline-2 focus-visible:outline-ring ${
+                mobile ? "h-[32px] rounded-[9px] px-[11px] text-[12.5px]" : "h-[26px] rounded-[7px] px-[9px] text-[12px]"
+              }`}
             >
               Mark as read
             </button>
@@ -225,6 +232,31 @@ export function MessagePane({
           </div>
         )}
       </div>
+      {mobile ? (
+        <>
+          <div className="shrink-0 px-[16px]">
+            <TypingIndicator people={typing.others} />
+            {canPost && <ScheduledNotice container={container} />}
+          </div>
+          {canPost ? (
+            <MobileComposer
+              draftKey={`${container.kind}:${container.id}`}
+              placeholder={placeholder}
+              onSend={handleSend}
+              onSchedule={handleSchedule}
+              onSaveEdit={(messageId, content) => edit.mutate({ messageId, content })}
+              allowBroadcast={container.kind === "channel"}
+              uploads={uploads}
+              onTyping={typing.onKeystroke}
+              onStopTyping={typing.stopTyping}
+            />
+          ) : (
+            <div className="shrink-0 border-t border-border bg-bg-chip px-[16px] pt-[12px] pb-[calc(12px+var(--safe-bottom))] text-[13px] text-fg-600">
+              {readOnlyNotice}
+            </div>
+          )}
+        </>
+      ) : (
       <div className="shrink-0 px-6 pb-5">
         <TypingIndicator people={typing.others} />
         {canPost && <ScheduledNotice container={container} />}
@@ -243,6 +275,7 @@ export function MessagePane({
           <div className="rounded-xl border border-dashed border-border-input bg-bg-chip px-4 py-3.5 text-[13px] text-fg-600">{readOnlyNotice}</div>
         )}
       </div>
+      )}
     </DropZone>
   );
 }

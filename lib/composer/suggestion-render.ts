@@ -5,7 +5,18 @@ import type { SuggestionListRef } from "@/components/message/suggestion-list";
 /**
  * Tiptap suggestion `render()` that mounts a React list above the caret. The
  * composer sits at the bottom of the screen, so the popup always opens upward.
+ *
+ * On the phone the list is instead a full-width band resting on the
+ * composer's top edge (design: Mobile Composer → Mention), between the
+ * messages and the field, so your thumb never has to cross the field. The
+ * list is told with a `mobile` prop.
  */
+export type SuggestionExtraProps = { mobile?: boolean };
+
+function mobileComposerOf(props: { editor: { view: { dom: Element } } }): HTMLElement | null {
+  return (props.editor.view.dom as HTMLElement).closest<HTMLElement>("[data-mobile-composer]");
+}
+
 export function suggestionRender<Item>(
   Component: React.ComponentType<SuggestionProps<Item> & { ref?: React.Ref<SuggestionListRef> }>,
 ): NonNullable<SuggestionOptions<Item>["render"]> {
@@ -31,6 +42,13 @@ export function suggestionRender<Item>(
       const el = renderer.element as HTMLElement;
       el.style.position = "fixed";
       el.style.zIndex = "60";
+      const composer = mobileComposerOf(props);
+      if (composer) {
+        el.style.left = "0px";
+        el.style.right = "0px";
+        el.style.bottom = `${window.innerHeight - composer.getBoundingClientRect().top}px`;
+        return;
+      }
       // Clamp against the popover's *real* width. A fixed 300px constant cut the
       // last 40px off the 340px mention list whenever the caret sat near the
       // right edge (routine in the 380px thread panel).
@@ -42,13 +60,14 @@ export function suggestionRender<Item>(
 
     return {
       onStart(props) {
-        renderer = new ReactRenderer(Component, { props, editor: props.editor });
+        const withMobile = { ...props, mobile: mobileComposerOf(props) !== null } as SuggestionProps<Item>;
+        renderer = new ReactRenderer(Component, { props: withMobile, editor: props.editor });
         document.body.appendChild(renderer.element);
         position(props);
         flag(props, true);
       },
       onUpdate(props) {
-        renderer?.updateProps(props);
+        renderer?.updateProps({ ...props, mobile: mobileComposerOf(props) !== null });
         position(props);
         flag(props, true);
       },

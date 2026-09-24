@@ -4,6 +4,8 @@ import { useCallback, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import type { HuddleSession } from "@/lib/store/huddle";
 import { HuddleStage } from "./huddle-stage";
+import { MobileHuddleStage } from "@/components/mobile/huddle";
+import { useIsMobile } from "@/lib/mobile-context";
 
 /**
  * The huddle route and the huddle connection live in different parts of the
@@ -41,11 +43,15 @@ export function HuddleStageOutlet() {
 
 /** Rendered by the provider, inside the live room. */
 export function HuddleStageSlot({ session, onLeave }: { session: HuddleSession; onLeave: () => void }) {
+  const mobile = useIsMobile();
   const target = useSyncExternalStore(
     subscribe,
     useCallback(() => host, []),
     useCallback(() => null, []),
   );
   if (!target) return null;
-  return createPortal(<HuddleStage session={session} onLeave={onLeave} />, target);
+  return createPortal(
+    mobile ? <MobileHuddleStage session={session} onLeave={onLeave} /> : <HuddleStage session={session} onLeave={onLeave} />,
+    target,
+  );
 }

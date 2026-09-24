@@ -3,6 +3,8 @@ import { Hash, Lock } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ProfileActions } from "@/components/profile/profile-actions";
+import { ProfileScreen } from "@/components/mobile/profile-screen";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PresenceLabel } from "@/components/presence/online-dot";
 import { getCurrentProfile, getProfileByHandle, getVisibleChannelsFor } from "@/lib/queries/profile";
@@ -38,6 +40,13 @@ export default async function ProfilePage({ params }: { params: Params }) {
   const clock = localTimeLabel(person.timezone, me.timezone);
   const joined = formatLongDate(person.created_at, safeTimeZone(me.timezone));
   const shared = channels.filter((c) => c.mutual);
+
+  if (await isMobileRequest()) {
+    const since = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: safeTimeZone(me.timezone) }).format(
+      new Date(person.created_at),
+    );
+    return <ProfileScreen person={person} meId={me.id} viewerTimezone={safeTimeZone(me.timezone)} since={since} shared={shared} />;
+  }
 
   return (
     <>

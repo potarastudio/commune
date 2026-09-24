@@ -1,3 +1,4 @@
+import { MobileRouteSkeleton } from "@/components/mobile/route-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -21,6 +22,11 @@ const ROWS = [
 export default function AppLoading() {
   return (
     <>
+      {/* The phone's shell swaps these by CSS: this file cannot tell which shell it is in. */}
+      <div className="mobile-only min-h-0 flex-1 flex-col">
+        <MobileRouteSkeleton />
+      </div>
+      <div className="desktop-only flex min-h-0 flex-1 flex-col">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-bg-main px-5">
         <Skeleton className="h-[14px] w-[104px] rounded-[4px]" />
         <span className="h-5 w-px shrink-0 bg-border" aria-hidden="true" />
@@ -46,6 +52,7 @@ export default function AppLoading() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </>
   );

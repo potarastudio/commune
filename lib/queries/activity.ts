@@ -59,3 +59,28 @@ export function messageHref(m: { id: string; parent_id: string | null } & Contai
   const base = m.channel ? `/channel/${m.channel.id}` : m.conversation ? `/dm/${m.conversation.id}` : "/";
   return m.parent_id ? `${base}?thread=${m.parent_id}` : `${base}?message=${m.id}`;
 }
+
+/**
+ * When I last read each channel and DM I belong to, keyed like the unread map
+ * ("channel:<id>", "conversation:<id>"). Mentions and reactions carry no read
+ * flag of their own; one that arrived after I last read its conversation is new.
+ */
+export async function getMyReadMarks(supabase: Supabase, meId: string): Promise<Record<string, string>> {
+  const [channels, conversations] = await Promise.all([
+    supabase.from("channel_members").select("channel_id, last_read_at").eq("user_id", meId),
+    supabase.from("conversation_members").select("conversation_id, last_read_at").eq("user_id", meId),
+  ]);
+  if (channels.error) throw new Error(channels.error.message);
+  if (conversations.error) throw new Error(conversations.error.message);
+  const marks: Record<string, string> = {};
+  for (const r of channels.data) if (r.last_read_at) marks[`channel:${r.channel_id}`] = r.last_read_at;
+  for (const r of conversations.data) if (r.last_read_at) marks[`conversation:${r.conversation_id}`] = r.last_read_at;
+  return marks;
+}
+
+/** Whether something that happened at `at` in this message's conversation is newer than my last read of it. */
+export function isNewSince(marks: Record<string, string>, m: ContainerRef, at: string): boolean {
+  const key = m.channel ? `channel:${m.channel.id}` : m.conversation ? `conversation:${m.conversation.id}` : null;
+  const mark = key ? marks[key] : undefined;
+  return mark !== undefined && new Date(at).getTime() > new Date(mark).getTime();
+}

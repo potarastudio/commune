@@ -3,16 +3,19 @@ import { AtSign, Hash, MessagesSquare, SmilePlus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ActivityItem, MarkAllReadButton } from "@/components/activity/activity-item";
+import { ActivityScreen } from "@/components/mobile/activity-screen";
 import { RemindersList } from "@/components/activity/reminders-list";
 import { fetchUpcomingReminders } from "@/lib/queries/scheduling";
 import {
   getMentionsOfMe,
+  getMyReadMarks,
   getReactionsOnMyMessages,
   messageHref,
   type MentionActivity,
   type ReactionActivity,
 } from "@/lib/queries/activity";
 import { getCurrentProfile } from "@/lib/queries/profile";
+import { isMobileRequest } from "@/lib/mobile-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/utils/render";
@@ -59,13 +62,28 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const { tab: rawTab } = await searchParams;
   const tab: Tab = rawTab === "mentions" || rawTab === "reactions" || rawTab === "threads" ? rawTab : "all";
 
-  const [mentions, reactions, reminders] = await Promise.all([
+  const mobile = await isMobileRequest();
+  const [mentions, reactions, reminders, readMarks] = await Promise.all([
     getMentionsOfMe(supabase, profile.id),
     getReactionsOnMyMessages(supabase, profile.id),
     fetchUpcomingReminders(supabase),
+    mobile ? getMyReadMarks(supabase, profile.id) : null,
   ]);
 
   const tz = safeTimeZone(profile.timezone);
+  if (mobile) {
+    return (
+      <ActivityScreen
+        tab={tab}
+        handle={profile.handle}
+        mentions={mentions}
+        reactions={reactions}
+        reminders={reminders}
+        readMarks={readMarks ?? {}}
+        timeZone={tz}
+      />
+    );
+  }
   const now = new Date();
 
   type Row = { key: string; at: string; thread: boolean; node: React.ReactNode };

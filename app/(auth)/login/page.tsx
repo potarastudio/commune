@@ -6,6 +6,8 @@ import Image from "next/image";
 import { HashError } from "@/components/auth/hash-error";
 import { LoginPreview } from "@/components/auth/login-preview";
 import { SignInForm } from "@/components/auth/magic-link-form";
+import { MobileSignIn } from "@/components/auth/mobile-sign-in";
+import { isPhoneUserAgent } from "@/lib/mobile";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -35,13 +37,24 @@ export default async function LoginPage({
   // browser the page is otherwise identical to the one the person just left in
   // the app, so it reads as a loop; say where it leads. The app window tags
   // every request with CommuneDesktop, so it never shows the note to itself.
-  const inApp = ((await headers()).get("user-agent") ?? "").includes("CommuneDesktop");
+  const userAgent = (await headers()).get("user-agent") ?? "";
+  const inApp = userAgent.includes("CommuneDesktop");
   const forDesktopApp = next === "/desktop/handoff" && !inApp;
   // The app sent this browser here to sign in. Start Google at once, so the
   // browser opens on the account chooser instead of asking for the same click
   // again. Not when something went wrong: that page has to be readable, and
   // redirecting back into Google would loop.
   if (forDesktopApp && !error) redirect(`/auth/google?next=${encodeURIComponent(next)}`);
+
+  // Phones — and the phone app — get one column, no split panel (design: Mobile Onboarding).
+  if (isPhoneUserAgent(userAgent)) {
+    return (
+      <main className="pt-safe pb-safe flex min-h-dvh flex-col bg-bg-main">
+        <HashError />
+        <MobileSignIn next={next ?? "/"} error={err} expired={error === "link"} />
+      </main>
+    );
+  }
 
   return (
     /*

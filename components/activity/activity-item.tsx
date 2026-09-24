@@ -108,7 +108,7 @@ function containerFromKey(key: string): Container | null {
  * channel and DM carrying an unread count. Same path as Shift+Esc — patch the
  * unread cache first so the sidebar settles instantly, then persist.
  */
-export function MarkAllReadButton() {
+export function useMarkAllRead() {
   const queryClient = useQueryClient();
   const [pending, startTransition] = useTransition();
   const { data: unreads } = useQuery({ queryKey: unreadKeys.all, queryFn: fetchUnreadMap, staleTime: 15_000 });
@@ -136,6 +136,11 @@ export function MarkAllReadButton() {
       }
     });
 
+  return { markAllRead, pending };
+}
+
+export function MarkAllReadButton() {
+  const { markAllRead, pending } = useMarkAllRead();
   return (
     <Button type="button" variant="outline" size="sm" disabled={pending} onClick={markAllRead} className="h-8 px-[11px]">
       Mark all read

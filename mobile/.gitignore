@@ -23,6 +23,10 @@ android/local.properties
 *.apk
 *.aab
 
+# Firebase's app config for Android push. The repo is public; each machine that
+# builds Android keeps its own copy (README: What needs the owner's accounts).
+android/app/google-services.json
+
 # Signing keys never belong in the repo.
 *.jks
 *.keystore

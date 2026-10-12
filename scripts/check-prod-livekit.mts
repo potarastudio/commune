@@ -15,7 +15,7 @@ const local = Object.fromEntries(
     return [l.slice(0, i), l.slice(i + 1).trim().replace(/^"(.*)"$/, "$1")];
   }),
 );
-const PROD = "https://commune-tan.vercel.app";
+const PROD = "https://commune.potarastudio.com";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ref = new URL(url).hostname.split(".")[0];
 const admin = createClient<Database>(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });

@@ -88,17 +88,17 @@ Locally the link lands in Mailpit at http://127.0.0.1:54324. Links work once and
 
 When someone has been away from Commune for a while, @mentions they have not read after 15 minutes are emailed to them (Settings → Notifications can turn it off). Postgres decides who is due (`pending_mention_digest()`), the app sends via Resend (`app/api/cron/digest`), and `mention_digest_log` guarantees each mention is emailed once. Quiet hours and muted channels are respected; `@here` never emails.
 
-Vercel Hobby only runs cron once a day, so the trigger is `pg_cron` inside Supabase calling the app every minute (migration 19 tightened it from every 5). The same tick also posts scheduled messages (`lib/cron/scheduled.ts`) and fires reminders (`lib/cron/reminders.ts`). The job reads its URL and secret from Supabase Vault and does nothing until both exist:
+Vercel Hobby only runs cron once a day, so the trigger is `pg_cron` inside Supabase. It looks every minute and calls the app only in a minute that has work: `cron_work_due()` (migration 25) answers that in Postgres, so an idle workspace costs no function calls at all. The same tick also posts scheduled messages (`lib/cron/scheduled.ts`) and fires reminders (`lib/cron/reminders.ts`); a new time-based job needs a clause in `cron_work_due()`. The job reads its URL and secret from Supabase Vault and does nothing until both exist:
 
 1. Generate a secret: `openssl rand -hex 32`.
 2. Add it to Vercel as `CRON_SECRET` (Production) and redeploy.
-3. Store both values in Vault, once, from the CLI (replace the secret):
+3. Store both values in Vault, once, from the CLI (replace the secret). Use the custom domain, not the project's `vercel.app` address: the domain follows the app to another Vercel account, the address does not.
 
    ```bash
-   pnpm supabase db query --linked "select vault.create_secret('https://commune-tan.vercel.app/api/cron/digest', 'commune_digest_url'); select vault.create_secret('<the secret>', 'commune_cron_secret');"
+   pnpm supabase db query --linked "select vault.create_secret('https://commune.potarastudio.com/api/cron/digest', 'commune_digest_url'); select vault.create_secret('<the secret>', 'commune_cron_secret');"
    ```
 
-4. Watch it run: `pnpm supabase db query --linked "select status, return_message, start_time from cron.job_run_details order by start_time desc limit 5"`.
+4. Watch it run: `pnpm supabase db query --linked "select status, return_message, start_time from cron.job_run_details order by start_time desc limit 5"` (three days of runs are kept), and what the app answered when it was called: `select status_code, timed_out, left(content, 200) from net._http_response order by created desc limit 5`. A column of timeouts there means the app could not finish, which is how a stuck Supabase data API shows itself.
 
 Dry run without sending: `curl -H "Authorization: Bearer $CRON_SECRET" "$NEXT_PUBLIC_APP_URL/api/cron/digest?dry=1"`.
 

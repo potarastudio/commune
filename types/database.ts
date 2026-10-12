@@ -1005,6 +1005,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cron_work_due: { Args: never; Returns: boolean }
       extract_mentions: {
         Args: { p_content: Json }
         Returns: {
@@ -1024,6 +1025,15 @@ export type Database = {
           has_mention: boolean
           unread: number
         }[]
+      }
+      in_do_not_disturb: {
+        Args: {
+          p_end: string
+          p_now?: string
+          p_start: string
+          p_timezone: string
+        }
+        Returns: boolean
       }
       insert_message: {
         Args: {

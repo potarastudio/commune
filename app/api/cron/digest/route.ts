@@ -6,13 +6,17 @@ import { runMentionDigest } from "@/lib/email/digest";
 import { serverEnv } from "@/lib/env";
 
 /**
- * The app's minute tick. pg_cron calls this with the shared CRON_SECRET
- * (README → Mention digest) and it runs everything time-based: scheduled
- * messages, reminders, and the missed-mentions digest. `?dry=1` previews the
- * digest without sending anything (scheduled and reminders still run).
+ * The app's tick. pg_cron looks every minute and calls this, with the shared
+ * CRON_SECRET (README → Mention digest), only in a minute that has work:
+ * `cron_work_due()` in Postgres mirrors the three jobs below, so keep the two
+ * in step. It runs everything time-based: scheduled messages, reminders, and
+ * the missed-mentions digest. `?dry=1` previews the digest without sending
+ * anything (scheduled and reminders still run).
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// pg_net stops listening after 30 seconds; nothing here should outlive that.
+export const maxDuration = 30;
 
 function authorized(request: NextRequest): boolean {
   const secret = serverEnv().CRON_SECRET;

@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 import { publicEnv } from "@/lib/env";
+import { fetchWithTimeout } from "./timeout";
 
 // /api/cron authenticates with its own shared secret (no user session).
 // /api/desktop/session is how the desktop app *obtains* a session, so it must
@@ -17,6 +18,7 @@ export async function updateSession(request: NextRequest) {
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
     publicEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      global: { fetch: fetchWithTimeout() },
       cookies: {
         getAll() {
           return request.cookies.getAll();

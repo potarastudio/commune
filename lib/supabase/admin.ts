@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { publicEnv, serverEnv } from "@/lib/env";
+import { fetchWithTimeout } from "./timeout";
 
 /**
  * Service-role client. Bypasses RLS: use only in trusted server code
@@ -11,5 +12,6 @@ import { publicEnv, serverEnv } from "@/lib/env";
 export function createSupabaseAdminClient() {
   return createClient<Database>(publicEnv.NEXT_PUBLIC_SUPABASE_URL, serverEnv().SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: fetchWithTimeout() },
   });
 }

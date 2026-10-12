@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { touchPresenceAction } from "@/lib/actions/profile";
 import { useCustomEmoji } from "@/lib/queries/custom-emoji";
-import { useProfilesRealtime } from "@/lib/queries/profiles";
+import { touchLastSeen, useProfilesRealtime } from "@/lib/queries/profiles";
 import { useSessionStore } from "@/lib/store/session";
 import { useOnlinePresence } from "@/lib/realtime/presence";
 
@@ -23,19 +22,14 @@ export function PresenceProvider({ meId }: { meId: string }) {
 /**
  * Persists "last seen" while the tab is visible so the mention digest knows
  * who is away. Realtime presence is per-connection and gone the moment the
- * tab closes; this survives it.
- *
- * The first beat is deferred a tick on purpose. touchPresenceAction is a server
- * action, and calling one inside the hydration commit makes Next's router
- * re-render while React is still hydrating, which throws "Rendered more hooks
- * than during the previous render" and drops the whole page onto the global
- * error screen. Nothing depends on the heartbeat landing immediately — it is a
- * once-a-minute timestamp — so it waits until hydration is done.
+ * tab closes; this survives it. The beat is a database call from the browser,
+ * not a server action: nothing on the app's server needs to hear it. The first
+ * one waits a tick, so nothing extra starts inside the hydration commit.
  */
 function useLastSeenHeartbeat() {
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;
-    const beat = () => void touchPresenceAction();
+    const beat = () => void touchLastSeen();
     const start = () => {
       if (timer) return;
       beat();

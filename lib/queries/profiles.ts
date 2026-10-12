@@ -24,6 +24,17 @@ export function useProfiles() {
   });
 }
 
+/**
+ * Stamps the signed-in person's "last seen", which is how the mention digest
+ * knows who is away. Straight from the browser to the database: it is a single
+ * statement, and sent through a server action it cost a function call a minute
+ * for every open window. A beat that fails is not worth a word; the next one
+ * is a minute away.
+ */
+export async function touchLastSeen(): Promise<void> {
+  await getSupabaseBrowserClient().rpc("touch_last_seen");
+}
+
 /** Mounted once in the app shell: any profile change (status, name, avatar) refreshes the shared profiles query. */
 export function useProfilesRealtime() {
   const queryClient = useQueryClient();

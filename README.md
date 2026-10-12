@@ -47,7 +47,7 @@ The hosted database is not seeded with the fake team; only the allowlist is popu
 
 ## Deployment
 
-Production: https://commune-tan.vercel.app (Vercel project `potara-studio/commune`, linked to this GitHub repo: pushes to `main` deploy production, pull requests get previews). Environment variables live in the Vercel project settings; the non-secret ones were set from the CLI, secrets are added in the dashboard. `NEXT_PUBLIC_APP_URL` must match the production domain, and that domain's `/auth/callback` must be in Supabase's redirect URL list.
+Production: https://commune.potarastudio.com (Vercel project `commune` on the `pota4` team, the design@potarastudio.com account, linked to this GitHub repo: pushes to `main` deploy production, pull requests get previews). The project moved there from the agency's `potara-studio` team on 2026-10-12 by project transfer; settings, domains and deployments came along, the GitHub link had to be reconnected by hand. Deploy by pushing, not with `vercel deploy`: the CLI reads only the root `.gitignore`, so from a working checkout it tries to upload `desktop/release`. Environment variables live in the Vercel project settings; the non-secret ones were set from the CLI, secrets are added in the dashboard. `NEXT_PUBLIC_APP_URL` must match the production domain, and that domain's `/auth/callback` must be in Supabase's redirect URL list.
 
 ```bash
 vercel --prod   # manual production deploy from this folder
@@ -79,7 +79,7 @@ Hosted setup for magic links (Supabase dashboard → Authentication):
 
 1. **Providers → Email**: enabled (it is by default). "Confirm email" can stay on; magic links verify the address anyway.
 2. **SMTP settings**: turn on custom SMTP so links aren't capped by Supabase's built-in sender. With Resend: host `smtp.resend.com`, port `465`, username `resend`, password = a Resend API key, sender `commune@potarastudio.com`, sender name `Commune`.
-3. **URL configuration**: `https://commune-tan.vercel.app/auth/callback` must be in the redirect allowlist (it already is for Google).
+3. **URL configuration**: `https://commune.potarastudio.com/auth/callback` must be in the redirect allowlist (it already is for Google).
 4. Optional, **Email templates → Magic Link**: subject "Your Commune sign-in link". Keep `{{ .ConfirmationURL }}` in the body.
 
 Locally the link lands in Mailpit at http://127.0.0.1:54324. Links work once and expire after an hour; a used link sends people back to `/login?error=link`.

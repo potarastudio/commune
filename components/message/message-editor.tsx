@@ -8,7 +8,7 @@ import { useMemo, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EmojiSuggestion } from "@/lib/composer/emoji";
 import { BROADCAST_ITEMS, createMentionExtension, type MentionItem } from "@/lib/composer/mentions";
-import { useProfiles } from "@/lib/queries/profiles";
+import { usePeople } from "@/lib/queries/profiles";
 import { isEmptyDoc } from "@/lib/utils/tiptap";
 
 const KBD = "rounded-[4px] border border-border-strong bg-bg-subtle px-[5px] py-px font-sans text-[11px] font-medium text-fg-600";
@@ -45,7 +45,7 @@ export function MessageEditor({
   onCancel: () => void;
 }) {
   const [empty, setEmpty] = useState(isEmptyDoc(content));
-  const { data: profiles } = useProfiles();
+  const { data: profiles } = usePeople();
   const mentionItems = useMemo<MentionItem[]>(
     () => [
       ...(profiles ?? []).map((p) => ({ id: p.id, label: p.handle, name: p.display_name, avatar_url: p.avatar_url })),

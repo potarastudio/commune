@@ -4,11 +4,14 @@ import type { Database } from "@/types/database";
 import { publicEnv } from "@/lib/env";
 import { fetchWithTimeout } from "./timeout";
 
-// /api/cron authenticates with its own shared secret (no user session).
-// /api/desktop/session is how the desktop app *obtains* a session, so it must
-// be reachable without one. /desktop/handoff is deliberately not public: it
-// needs the browser's session cookie, and the redirect to /login is the point.
-const PUBLIC_PATHS = ["/login", "/privacy", "/auth/callback", "/auth/google", "/auth/error", "/auth/dev-login", "/api/cron", "/api/desktop/session"];
+// /api/cron and /api/hub authenticate with their own shared secrets (no user
+// session). Potara Hub's fetch follows redirects, so a redirect to /login
+// would reach it as a page that answers 200 and the notification would be
+// lost. /api/desktop/session is how the desktop app *obtains* a session, so
+// it must be reachable without one. /desktop/handoff is deliberately not
+// public: it needs the browser's session cookie, and the redirect to /login is
+// the point.
+const PUBLIC_PATHS = ["/login", "/privacy", "/auth/callback", "/auth/google", "/auth/error", "/auth/dev-login", "/api/cron", "/api/hub", "/api/desktop/session"];
 
 /** Refreshes the Supabase session cookie and gates the authenticated shell. */
 export async function updateSession(request: NextRequest) {

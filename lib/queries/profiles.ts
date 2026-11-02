@@ -8,20 +8,29 @@ import type { Profile } from "./profile";
 
 export const profileKeys = { all: ["profiles"] as const };
 
+async function fetchProfiles(): Promise<Profile[]> {
+  const { data, error } = await getSupabaseBrowserClient()
+    .from("profiles")
+    .select("*")
+    .order("display_name");
+  if (error) throw new Error(error.message);
+  return data as Profile[];
+}
+
 /** Every member's profile. The team is ~12 people, so one query and a long cache. */
 export function useProfiles() {
-  return useQuery({
-    queryKey: profileKeys.all,
-    queryFn: async () => {
-      const { data, error } = await getSupabaseBrowserClient()
-        .from("profiles")
-        .select("*")
-        .order("display_name");
-      if (error) throw new Error(error.message);
-      return data as Profile[];
-    },
-    staleTime: 5 * 60_000,
-  });
+  return useQuery({ queryKey: profileKeys.all, queryFn: fetchProfiles, staleTime: 5 * 60_000 });
+}
+
+const withoutBots = (profiles: Profile[]) => profiles.filter((p) => !p.is_bot);
+
+/**
+ * The same profiles, for picking someone: mention suggestions, the quick
+ * switcher, adding people to a channel. Service accounts such as Potara Hub
+ * post but never read, so they are left out. Shares useProfiles' cache.
+ */
+export function usePeople() {
+  return useQuery({ queryKey: profileKeys.all, queryFn: fetchProfiles, staleTime: 5 * 60_000, select: withoutBots });
 }
 
 /**

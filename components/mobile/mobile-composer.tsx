@@ -24,7 +24,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EmojiSuggestion } from "@/lib/composer/emoji";
 import { BROADCAST_ITEMS, createMentionExtension, type MentionItem } from "@/lib/composer/mentions";
-import { useProfileMap, useProfiles } from "@/lib/queries/profiles";
+import { useProfileMap, usePeople } from "@/lib/queries/profiles";
 import type { useAttachmentUploads } from "@/lib/queries/use-uploads";
 import { useMobileEditStore } from "@/lib/store/mobile-edit";
 import { useSessionStore } from "@/lib/store/session";
@@ -199,7 +199,7 @@ export function MobileComposer({
   const editingRef = useRef(editing);
   editingRef.current = editing;
 
-  const { data: profiles } = useProfiles();
+  const { data: profiles } = usePeople();
   const mentionItems = useMemo<MentionItem[]>(
     () => [
       ...(profiles ?? []).map((p) => ({ id: p.id, label: p.handle, name: p.display_name, avatar_url: p.avatar_url })),

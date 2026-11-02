@@ -10,7 +10,7 @@ do $$ begin
 end $$;
 set local search_path = public, extensions;
 
-select plan(60);
+select plan(76);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as superuser)
@@ -303,6 +303,72 @@ select throws_ok(
   null, 'members cannot run pending_mention_digest');
 select is((select count(*) from public.mention_digest_log), 0::bigint,
   'members see nothing in mention_digest_log');
+
+-- ---------------------------------------------------------------------------
+-- Potara Hub notifications: a service account, posting through the service role
+-- ---------------------------------------------------------------------------
+select throws_ok(
+  $$ select * from public.post_hub_notification('40000000-0000-4000-8000-000000000001', 'rls-bob@test.local',
+       '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"forged"}]}]}'::jsonb, 'forged') $$,
+  '42501', null, 'members cannot post as Potara Hub');
+select throws_ok($$ select * from public.hub_notifications $$, '42501', null, 'members cannot read hub_notifications');
+select throws_ok(
+  $$ select public.find_or_create_conversation(array['10000000-0000-4000-8000-000000000001',
+       '10000000-0000-4000-8000-000000000002']::uuid[]) $$,
+  '42501', null, 'members cannot open a DM between other people');
+select throws_ok(
+  $$ update public.profiles set is_bot = true where id = '10000000-0000-4000-8000-000000000003' $$,
+  '42501', null, 'members cannot mark themselves a service account');
+
+reset role;
+select is((select is_bot from public.profiles where id = 'b0000000-0000-4000-8000-000000000001'), true,
+  'the Potara Hub account is a service account');
+select is((select count(*) from public.channel_members where user_id = 'b0000000-0000-4000-8000-000000000001'), 0::bigint,
+  'the Potara Hub account is in no channel, #general included');
+
+select is(
+  (select posted from public.post_hub_notification('40000000-0000-4000-8000-000000000001', ' RLS-Bob@Test.Local ',
+     '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Lead baru belum direspon","marks":[{"type":"bold"}]}]}]}'::jsonb,
+     'Lead baru belum direspon')),
+  true, 'a Hub notification posts, matching the email case-insensitively');
+select is(
+  (select count(*) from public.messages m
+    join public.conversation_members cm on cm.conversation_id = m.conversation_id
+    where m.author_id = 'b0000000-0000-4000-8000-000000000001' and m.channel_id is null
+      and cm.user_id = '10000000-0000-4000-8000-000000000002'),
+  1::bigint, 'it is a DM from Potara Hub to the recipient');
+select is(
+  (select message_id from public.post_hub_notification('40000000-0000-4000-8000-000000000001', 'rls-bob@test.local',
+     '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"again"}]}]}'::jsonb, 'again')),
+  (select id from public.messages where author_id = 'b0000000-0000-4000-8000-000000000001'),
+  'the same Hub id returns the first message');
+select is((select count(*) from public.messages where author_id = 'b0000000-0000-4000-8000-000000000001'), 1::bigint,
+  'and posts nothing the second time');
+select is(
+  (select count(*) from public.post_hub_notification('40000000-0000-4000-8000-000000000002', 'nobody@test.local',
+     '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"hi"}]}]}'::jsonb, 'hi')),
+  0::bigint, 'an email with no member posts nothing');
+select is(
+  (select count(*) from public.post_hub_notification('40000000-0000-4000-8000-000000000003', 'potara-hub@commune.invalid',
+     '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"hi"}]}]}'::jsonb, 'hi')),
+  0::bigint, 'Potara Hub is never a recipient');
+
+select pg_temp.login('10000000-0000-4000-8000-000000000002');
+select is((select count(*) from public.messages where author_id = 'b0000000-0000-4000-8000-000000000001'), 1::bigint,
+  'the recipient can read the Hub DM');
+select is(
+  (select u.unread from public.get_unread_counts() u
+    where u.conversation_id = (select conversation_id from public.messages where author_id = 'b0000000-0000-4000-8000-000000000001')),
+  1, 'the Hub DM counts as unread, even in a conversation it just created');
+select is(
+  public.get_or_create_conversation(array['b0000000-0000-4000-8000-000000000001']::uuid[]),
+  (select conversation_id from public.messages where author_id = 'b0000000-0000-4000-8000-000000000001'),
+  'opening a DM with Potara Hub finds the same conversation');
+
+reset role;
+select pg_temp.login('10000000-0000-4000-8000-000000000003');
+select is((select count(*) from public.messages where author_id = 'b0000000-0000-4000-8000-000000000001'), 0::bigint,
+  'nobody else can read the Hub DM');
 
 reset role;
 select * from finish();

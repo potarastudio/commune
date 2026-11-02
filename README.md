@@ -102,6 +102,31 @@ Vercel Hobby only runs cron once a day, so the trigger is `pg_cron` inside Supab
 
 Dry run without sending: `curl -H "Authorization: Bearer $CRON_SECRET" "$NEXT_PUBLIC_APP_URL/api/cron/digest?dry=1"`.
 
+## Potara Hub notifications
+
+Potara Hub, the studio's sales tool (https://hub.potarastudio.com, repo `potarastudio/potara-hub`), sends its staff notifications here: each arrives as a DM from the **Potara Hub** account and is pushed like any DM, so notification settings and Do Not Disturb apply. While Commune is not set up, or does not know the person, the Hub sends an email instead.
+
+The Hub posts to `POST /api/hub/notify` with `Authorization: Bearer <HUB_WEBHOOK_SECRET>`:
+
+```json
+{ "id": "<the Hub's notification id, a uuid>", "recipientEmail": "someone@potarastudio.com",
+  "title": "Lead baru belum direspon", "body": "PT Kopi Nusantara · website",
+  "url": "https://hub.potarastudio.com/leads/<id>" }
+```
+
+- The DM goes to the member with that email, in any case. It is the title in bold, the body with its line breaks, and a "Buka di Hub" link, as in the Hub's own email. Only links on `https://hub.potarastudio.com` are taken, and they get no preview card: every Hub page is behind the Hub's sign-in.
+- `id` is kept in `hub_notifications`, so a retry never posts twice: the same id answers with the first message.
+- Answers: `201 { messageId }` posted; `200 { messageId }` that id was posted before; `400` with `invalid_json`, `invalid_body` (a title of 1 to 200 characters, a body of up to 4,000) or `invalid_url`; `401 unauthorized`; `404 unknown_recipient`; `503 not_configured` while the secret is unset; `500 post_failed`, which the Hub tries again. Errors are `{ "error": "<code>" }`. This is the contract in the Hub's spec, section 7, and the Hub is built against it, so keep it.
+- The Potara Hub account (migration 26) is a service account: its profile has `is_bot`, and it never signs in (no password, an address on `.invalid`, banned in Supabase Auth). It is in no channel, and mention suggestions, the quick switcher and the other people pickers leave it out.
+
+Setup, once the migration is on the hosted project: the Hub generates the secret (`openssl rand -hex 32`) and sets it as `COMMUNE_WEBHOOK_SECRET`, with `COMMUNE_WEBHOOK_URL=https://commune.potarastudio.com/api/hub/notify`, in its own Vercel project. Add the same value to Commune's Vercel project as `HUB_WEBHOOK_SECRET` (Production, sensitive) and redeploy.
+
+Try it with your own address and any new uuid:
+
+```bash
+curl -i -X POST https://commune.potarastudio.com/api/hub/notify -H "Authorization: Bearer $HUB_WEBHOOK_SECRET" -H "Content-Type: application/json" -d '{"id":"'"$(uuidgen | tr A-Z a-z)"'","recipientEmail":"you@potarastudio.com","title":"Test from the Hub","body":"","url":"https://hub.potarastudio.com/"}'
+```
+
 ## Schema notes
 
 - Migrations live in `supabase/migrations/` and are the only way the schema changes.

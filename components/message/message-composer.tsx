@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EmojiSuggestion } from "@/lib/composer/emoji";
 import { BROADCAST_ITEMS, createMentionExtension, type MentionItem } from "@/lib/composer/mentions";
-import { useProfiles } from "@/lib/queries/profiles";
+import { usePeople } from "@/lib/queries/profiles";
 import { useUiStore } from "@/lib/store/ui";
 import type { useAttachmentUploads } from "@/lib/queries/use-uploads";
 import { isEmptyDoc } from "@/lib/utils/tiptap";
@@ -71,7 +71,7 @@ export function MessageComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mention candidates come from the profiles cache; a ref keeps the extension stable.
-  const { data: profiles } = useProfiles();
+  const { data: profiles } = usePeople();
   const mentionItems = useMemo<MentionItem[]>(
     () => [
       ...(profiles ?? []).map((p) => ({ id: p.id, label: p.handle, name: p.display_name, avatar_url: p.avatar_url })),

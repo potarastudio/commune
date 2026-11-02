@@ -148,7 +148,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const [channels, invites, members] = await Promise.all([
     getJoinedChannels(supabase, profile.id),
     isAdmin ? getInvites(supabase) : Promise.resolve([]),
-    mobile && !chosen ? supabase.from("profiles").select("id", { count: "exact", head: true }) : null,
+    mobile && !chosen ? supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_bot", false) : null,
   ]);
   const joined = invites.filter((i) => i.profile).length;
   const waiting = invites.length - joined;

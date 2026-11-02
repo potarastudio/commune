@@ -78,6 +78,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           supabase
             .from("profiles")
             .select("id, handle, display_name, avatar_url, title")
+            .eq("is_bot", false)
             .or(`display_name.ilike.%${word}%,handle.ilike.%${word}%`)
             .order("display_name")
             .limit(6),

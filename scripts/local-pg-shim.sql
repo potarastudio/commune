@@ -111,4 +111,5 @@ alter table auth.users
   add column if not exists email_change_token_new text,
   add column if not exists email_change text,
   add column if not exists is_sso_user boolean default false,
+  add column if not exists banned_until timestamptz,
   add column if not exists updated_at timestamptz default now();

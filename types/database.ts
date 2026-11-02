@@ -357,6 +357,32 @@ export type Database = {
           },
         ]
       }
+      hub_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          message_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_notifications_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       huddle_participants: {
         Row: {
           huddle_id: string
@@ -713,6 +739,7 @@ export type Database = {
           email_digest: boolean
           handle: string
           id: string
+          is_bot: boolean
           last_seen_at: string | null
           onboarded_at: string | null
           role: string
@@ -732,6 +759,7 @@ export type Database = {
           email_digest?: boolean
           handle: string
           id: string
+          is_bot?: boolean
           last_seen_at?: string | null
           onboarded_at?: string | null
           role?: string
@@ -751,6 +779,7 @@ export type Database = {
           email_digest?: boolean
           handle?: string
           id?: string
+          is_bot?: boolean
           last_seen_at?: string | null
           onboarded_at?: string | null
           role?: string
@@ -1013,6 +1042,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      find_or_create_conversation: {
+        Args: { p_user_ids: string[] }
+        Returns: string
+      }
       get_or_create_conversation: {
         Args: { user_ids: string[] }
         Returns: string
@@ -1101,6 +1134,18 @@ export type Database = {
           parent_id: string
           timezone: string
           user_id: string
+        }[]
+      }
+      post_hub_notification: {
+        Args: {
+          p_content: Json
+          p_content_text: string
+          p_id: string
+          p_recipient_email: string
+        }
+        Returns: {
+          message_id: string
+          posted: boolean
         }[]
       }
       search_messages: {

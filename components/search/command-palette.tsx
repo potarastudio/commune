@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/command";
 import { startConversationAction } from "@/lib/actions/conversations";
 import { useBrowseableChannels } from "@/lib/queries/channels-client";
-import { useProfiles } from "@/lib/queries/profiles";
+import { usePeople } from "@/lib/queries/profiles";
 import { useUiStore } from "@/lib/store/ui";
 
 /** The keycap chip used in the query row and the footer hint. */
@@ -150,7 +150,7 @@ export function CommandPalette({ meId, joinedChannelIds }: { meId: string; joine
   const [query, setQuery] = useState("");
   const [pending, startTransition] = useTransition();
   const { data: channels } = useBrowseableChannels(open);
-  const { data: people } = useProfiles();
+  const { data: people } = usePeople();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

@@ -13,7 +13,8 @@ export default async function NewMessagePage() {
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
 
-  const { data, error } = await supabase.from("profiles").select("*").order("display_name");
+  // Service accounts (Potara Hub) post but never read, so they are not offered.
+  const { data, error } = await supabase.from("profiles").select("*").eq("is_bot", false).order("display_name");
   if (error) throw new Error(error.message);
   if (await isMobileRequest()) return <NewMessageScreen people={data as Profile[]} meId={profile.id} />;
 

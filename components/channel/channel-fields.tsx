@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { addChannelMembersAction } from "@/lib/actions/channels";
 import type { ChannelRow } from "@/lib/queries/channel";
 import type { Profile } from "@/lib/queries/profile";
-import { useProfiles } from "@/lib/queries/profiles";
+import { usePeople } from "@/lib/queries/profiles";
 
 export type Member = Pick<Profile, "id" | "display_name" | "handle" | "avatar_url" | "title">;
 
@@ -109,7 +109,7 @@ export function InlineField({
 /** Multi-select of people not yet in the channel. */
 export function AddPeople({ channel, members, onDone }: { channel: ChannelRow; members: Member[]; onDone?: () => void }) {
   const router = useRouter();
-  const { data: people } = useProfiles();
+  const { data: people } = usePeople();
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [pending, startTransition] = useTransition();

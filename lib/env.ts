@@ -21,6 +21,8 @@ const serverSchema = publicSchema.extend({
   VAPID_PRIVATE_KEY: z.string().min(1),
   // Shared with the pg_cron job that triggers the mention digest. Optional: unset = digest off.
   CRON_SECRET: z.string().min(16).optional(),
+  // Shared with Potara Hub, which posts notifications to app/api/hub/notify. Optional: unset = 503 there.
+  HUB_WEBHOOK_SECRET: z.string().min(16).optional(),
   // Cloudflare R2 for attachments over the Supabase cap. Optional: unset = 50 MB limit.
   R2_ACCOUNT_ID: z.string().min(1).optional(),
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),

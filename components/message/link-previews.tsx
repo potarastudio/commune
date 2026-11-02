@@ -1,5 +1,6 @@
 "use client";
 
+import { isHubUrl } from "@/lib/hub/links";
 import { useLinkPreview } from "@/lib/queries/link-previews";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -56,12 +57,17 @@ function PreviewCard({ url }: { url: string }) {
   );
 }
 
-/** Cards for the first links in a message (§5 Phase 2). Missing or failed previews render nothing. */
+/**
+ * Cards for the first links in a message (§5 Phase 2). Missing or failed
+ * previews render nothing. Potara Hub links get none: every Hub page is
+ * behind its sign-in, so the card would only ever show that page.
+ */
 export function LinkPreviews({ urls }: { urls: string[] }) {
-  if (urls.length === 0) return null;
+  const shown = urls.filter((u) => !isHubUrl(u));
+  if (shown.length === 0) return null;
   return (
     <div className="mt-2 space-y-2">
-      {urls.map((u) => (
+      {shown.map((u) => (
         <PreviewCard key={u} url={u} />
       ))}
     </div>

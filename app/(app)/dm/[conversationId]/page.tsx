@@ -13,7 +13,7 @@ import { ThreadScreen } from "@/components/mobile/thread-screen";
 import { isMobileRequest } from "@/lib/mobile-server";
 import { reconcileHuddle } from "@/lib/actions/huddles";
 import { getActiveHuddle } from "@/lib/queries/huddles";
-import { conversationLabel, conversationMembership, getConversation } from "@/lib/queries/conversations";
+import { conversationLabel, conversationMembership, getConversation, serviceAccountIn } from "@/lib/queries/conversations";
 import { fetchMessages, fetchPins } from "@/lib/queries/messages";
 import { getCurrentProfile } from "@/lib/queries/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -54,6 +54,11 @@ export default async function ConversationPage({ params, searchParams }: { param
   const label = conversationLabel(conversation.members, profile.id);
   const shortLabel = conversationLabel(conversation.members, profile.id, { short: true });
   const others = conversation.members.filter((m) => m.id !== profile.id);
+  // A DM with a service account (Potara Hub) is where its notifications land:
+  // nobody reads replies there, so no composer, threads, huddle or away line.
+  const service = serviceAccountIn(conversation.members, profile.id);
+  const canReply = membership !== null && !service;
+  const replyNotice = service ? <span>{service.display_name} only sends notifications, so you can&apos;t reply here.</span> : undefined;
   const me = { id: profile.id, display_name: profile.display_name, handle: profile.handle, avatar_url: profile.avatar_url };
   const huddleProps = { container, label: shortLabel, href: `/dm/${conversation.id}`, initial: huddle, meId: profile.id };
   const startTitle =
@@ -79,7 +84,7 @@ export default async function ConversationPage({ params, searchParams }: { param
           containerLabel={shortLabel}
           me={me}
           isAdmin={profile.role === "admin"}
-          canPost={membership !== null}
+          canPost={canReply}
         />
       );
     }
@@ -99,7 +104,12 @@ export default async function ConversationPage({ params, searchParams }: { param
     }
     return (
       <>
-        <DmScreenHeader members={conversation.members} meId={profile.id} huddle={membership ? <HuddleButton {...huddleProps} /> : undefined} />
+        <DmScreenHeader
+          members={conversation.members}
+          meId={profile.id}
+          subtitle={service ? (service.title ?? "Sends notifications") : undefined}
+          huddle={canReply ? <HuddleButton {...huddleProps} /> : undefined}
+        />
         <ConnectionBanner />
         {membership && <HuddleBanner {...huddleProps} />}
         <MessagePane
@@ -113,6 +123,7 @@ export default async function ConversationPage({ params, searchParams }: { param
           startTitle={startTitle}
           startBody={startBody}
           readOnlyNotice={<span>You&apos;re not part of this conversation.</span>}
+          replyNotice={replyNotice}
         />
       </>
     );
@@ -125,14 +136,14 @@ export default async function ConversationPage({ params, searchParams }: { param
       <DmHeader
         members={conversation.members}
         meId={profile.id}
-        huddle={membership ? <HuddleButton key="huddle" {...huddleProps} /> : undefined}
+        huddle={canReply ? <HuddleButton key="huddle" {...huddleProps} /> : undefined}
         files={membership ? <DmFilesButton key="files" container={container} /> : undefined}
       />
       {membership && <HuddleBanner {...huddleProps} />}
       <div className="flex min-h-0 flex-1">
       {/* The away line belongs in the 22px slot above the composer, which the
           message pane owns — so it is handed down rather than stacked here. */}
-      <ComposerNoticeProvider notice={membership && others.length === 1 ? <DmAwayNotice key="away" person={others[0]} /> : null}>
+      <ComposerNoticeProvider notice={canReply && others.length === 1 ? <DmAwayNotice key="away" person={others[0]} /> : null}>
       <MessagePane
         container={{ kind: "conversation", id: conversation.id }}
         me={me}
@@ -156,6 +167,7 @@ export default async function ConversationPage({ params, searchParams }: { param
               : `Only the ${conversation.members.length} of you can read this.`
         }
         readOnlyNotice={<span>You&apos;re not part of this conversation.</span>}
+        replyNotice={replyNotice}
       />
       </ComposerNoticeProvider>
       {threadId && (
@@ -165,7 +177,7 @@ export default async function ConversationPage({ params, searchParams }: { param
           containerLabel={shortLabel}
           me={me}
           isAdmin={profile.role === "admin"}
-          canPost={membership !== null}
+          canPost={canReply}
         />
       )}
       {panelOpen && membership && (

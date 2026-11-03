@@ -71,7 +71,8 @@ export function MessageList({
   /** Failed send: drop the unsent draft row. */
   onDiscard?: (messageId: string) => void;
   allowBroadcast: boolean;
-  onOpenThread: (messageId: string) => void;
+  /** Left out where the conversation takes no replies (a DM with a service account): no "Reply in thread". */
+  onOpenThread?: (messageId: string) => void;
   participants: Record<string, string[]>;
   /** From ?message=<id>: scroll to it and flash it once. */
   highlightId?: string | null;
@@ -243,14 +244,14 @@ export function MessageList({
                 onRetry={onRetry && m.failed ? () => onRetry(m.id) : undefined}
                 onDiscard={onDiscard && m.failed ? () => onDiscard(m.id) : undefined}
                 allowBroadcast={allowBroadcast}
-                onReply={() => onOpenThread(m.id)}
+                onReply={onOpenThread ? () => onOpenThread(m.id) : undefined}
                 replySummary={
                   m.reply_count > 0 ? (
                     <ReplySummary
                       count={m.reply_count}
                       lastReplyAt={m.last_reply_at}
                       participantIds={participants[m.id] ?? []}
-                      onOpen={() => onOpenThread(m.id)}
+                      onOpen={() => onOpenThread?.(m.id)}
                     />
                   ) : null
                 }

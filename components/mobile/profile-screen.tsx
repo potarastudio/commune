@@ -4,6 +4,7 @@ import { Clock, Headphones, Lock, Mail, MessageSquareText, Pencil, Search, Users
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { enterHuddle } from "@/components/huddle/huddle-provider";
+import { AppBadge } from "@/components/profile/app-badge";
 import { startConversationAction } from "@/lib/actions/conversations";
 import type { Profile } from "@/lib/queries/profile";
 import { useHuddleStore } from "@/lib/store/huddle";
@@ -105,9 +106,15 @@ export function ProfileScreen({
             <RoundFace person={person} size={88} />
             {online && <span aria-hidden="true" className="absolute right-[3px] bottom-[3px] size-[18px] rounded-full border-[3px] border-bg-main bg-presence" />}
           </span>
-          <h1 className="mt-[14px] text-[21px] font-semibold tracking-[-0.025em] text-ink">{person.display_name}</h1>
+          <h1 className="mt-[14px] text-[21px] font-semibold tracking-[-0.025em] text-ink">
+            {person.display_name}
+            {person.is_bot && <AppBadge className="ml-[8px] align-[3px] text-[10px] tracking-normal" />}
+          </h1>
+          {/* The handle never breaks at its own hyphen ("@potara-" / "hub"). */}
           <p className="mt-[3px] text-[13.5px] text-fg-600">
-            {[person.title, `@${person.handle}`, person.role === "admin" ? "Admin" : null].filter(Boolean).join(" · ")}
+            {person.title && `${person.title} · `}
+            <span className="whitespace-nowrap">@{person.handle}</span>
+            {person.role === "admin" && " · Admin"}
           </p>
           {status && (status.status_text || status.status_emoji) && (
             <p className="mt-[11px] flex max-w-full items-center gap-[7px] rounded-[9px] border border-border-strong bg-bg-chip px-[11px] py-[6px] text-[13px] text-body">
@@ -138,56 +145,69 @@ export function ProfileScreen({
             <>
               <button type="button" disabled={pending} onClick={() => openDm()} className={primaryButtonClass("min-w-0 flex-1 rounded-[11px]")}>
                 <MessageSquareText aria-hidden="true" />
-                {pending && !calling ? "Opening…" : "Message"}
+                {pending && !calling ? "Opening…" : person.is_bot ? "Open DM" : "Message"}
               </button>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={huddle}
-                className={secondaryButtonClass("min-w-0 flex-1 rounded-[11px]")}
-              >
-                <Headphones aria-hidden="true" />
-                {calling ? "Calling…" : "Huddle"}
-              </button>
+              {/* A service account (Potara Hub) only sends notifications: nobody to call. */}
+              {!person.is_bot && (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={huddle}
+                  className={secondaryButtonClass("min-w-0 flex-1 rounded-[11px]")}
+                >
+                  <Headphones aria-hidden="true" />
+                  {calling ? "Calling…" : "Huddle"}
+                </button>
+              )}
             </>
           )}
         </div>
 
         <section className="mx-[16px] overflow-hidden rounded-[12px] border border-border bg-bg-card">
           <h2 className="px-[16px] pt-[11px] pb-[9px] text-[11.5px] font-bold tracking-[0.06em] text-muted-foreground uppercase">Details</h2>
-          <Detail icon={<Clock />} label="Local time">
-            {clock ? (isMe ? clock : `${clock} · ${offset ?? ""}`.replace(/ · $/, "")) : " "}
-          </Detail>
-          <Detail icon={<Mail />} label="Email">
-            <a href={`mailto:${person.email}`} className="text-body">
-              {person.email}
-            </a>
-          </Detail>
-          <Detail icon={<Users />} label="In the studio since">
+          {/* A service account keeps no clock, and its address takes no mail. */}
+          {!person.is_bot && (
+            <>
+              <Detail icon={<Clock />} label="Local time">
+                {clock ? (isMe ? clock : `${clock} · ${offset ?? ""}`.replace(/ · $/, "")) : " "}
+              </Detail>
+              <Detail icon={<Mail />} label="Email">
+                <a href={`mailto:${person.email}`} className="text-body">
+                  {person.email}
+                </a>
+              </Detail>
+            </>
+          )}
+          <Detail icon={<Users />} label={person.is_bot ? "Added" : "In the studio since"}>
             {since}
           </Detail>
         </section>
 
-        <h2 className="px-[16px] pt-[20px] pb-[6px] text-[11.5px] font-bold tracking-[0.06em] text-muted-foreground uppercase">
-          {isMe ? "Your channels" : shared.length === 1 ? "1 channel in common" : `${shared.length} channels in common`}
-        </h2>
-        {shared.length === 0 ? (
-          <p className="px-[16px] text-[13.5px] leading-[1.55] text-fg-600">
-            {isMe ? "You are not in any channels yet." : `You and ${person.display_name.split(" ")[0]} are not in any of the same channels yet.`}
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-[7px] px-[16px]">
-            {shared.map((c) => (
-              <MobileLink
-                key={c.id}
-                href={`/channel/${c.id}`}
-                className="flex h-[36px] items-center gap-[5px] rounded-[9px] border border-border-strong bg-bg-chip px-[11px] text-[13px] font-semibold text-fg-400 active:bg-bg-subtle"
-              >
-                {c.is_private ? <Lock className="size-[12px] text-tertiary" aria-hidden="true" /> : <span className="text-tertiary">#</span>}
-                {c.name}
-              </MobileLink>
-            ))}
-          </div>
+        {/* A service account is in no channel by design; it only sends DMs. */}
+        {!person.is_bot && (
+          <>
+            <h2 className="px-[16px] pt-[20px] pb-[6px] text-[11.5px] font-bold tracking-[0.06em] text-muted-foreground uppercase">
+              {isMe ? "Your channels" : shared.length === 1 ? "1 channel in common" : `${shared.length} channels in common`}
+            </h2>
+            {shared.length === 0 ? (
+              <p className="px-[16px] text-[13.5px] leading-[1.55] text-fg-600">
+                {isMe ? "You are not in any channels yet." : `You and ${person.display_name.split(" ")[0]} are not in any of the same channels yet.`}
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-[7px] px-[16px]">
+                {shared.map((c) => (
+                  <MobileLink
+                    key={c.id}
+                    href={`/channel/${c.id}`}
+                    className="flex h-[36px] items-center gap-[5px] rounded-[9px] border border-border-strong bg-bg-chip px-[11px] text-[13px] font-semibold text-fg-400 active:bg-bg-subtle"
+                  >
+                    {c.is_private ? <Lock className="size-[12px] text-tertiary" aria-hidden="true" /> : <span className="text-tertiary">#</span>}
+                    {c.name}
+                  </MobileLink>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </>

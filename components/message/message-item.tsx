@@ -4,6 +4,7 @@ import { AlertCircle, Bookmark, MessageSquareText, Pin } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AppBadge } from "@/components/profile/app-badge";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { EditHistory } from "./edit-history";
 import { UserStatus } from "@/components/profile/user-status";
@@ -208,6 +209,7 @@ export function MessageItem({
                 <span className="shrink-0 rounded-[5px] border border-border-strong bg-bg-chip px-[5px] text-[10px] font-semibold text-fg-600">YOU</span>
               )
             )}
+            {author?.is_bot && <AppBadge className="text-[10px] tracking-normal" />}
             {author && <UserStatus userId={author.id} className="self-center" />}
             <time dateTime={message.created_at} className="shrink-0 text-[11.5px] text-muted-foreground tabular-nums">
               {time}
@@ -229,6 +231,7 @@ export function MessageItem({
                 YOU
               </span>
             )}
+            {author?.is_bot && <AppBadge />}
             {author && <UserStatus userId={author.id} className="self-center" />}
             <Tooltip>
               <TooltipTrigger asChild>

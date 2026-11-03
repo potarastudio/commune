@@ -4,7 +4,7 @@ import type { Profile } from "./profile";
 
 type Supabase = SupabaseClient<Database>;
 
-export type ConversationMember = Pick<Profile, "id" | "display_name" | "handle" | "avatar_url" | "title">;
+export type ConversationMember = Pick<Profile, "id" | "display_name" | "handle" | "avatar_url" | "title" | "is_bot">;
 
 export type ConversationSummary = {
   id: string;
@@ -17,7 +17,7 @@ export type ConversationSummary = {
 };
 
 const SUMMARY_SELECT =
-  "id, created_at, conversation_members(profiles!conversation_members_user_id_fkey(id, display_name, handle, avatar_url, title)), messages(created_at, content_text, author_id, deleted_at)";
+  "id, created_at, conversation_members(profiles!conversation_members_user_id_fkey(id, display_name, handle, avatar_url, title, is_bot)), messages(created_at, content_text, author_id, deleted_at)";
 
 type SummaryRow = {
   id: string;
@@ -76,6 +76,15 @@ export function conversationLabel(members: ConversationMember[], meId: string, o
   if (others.length === 0) return "You";
   if (others.length === 1) return others[0].display_name;
   return others.map((m) => (opts.short ? m.display_name.split(" ")[0] : m.display_name)).join(", ");
+}
+
+/**
+ * The other member of a 1:1 DM when it is a service account (Potara Hub). It
+ * posts but never reads, so that DM has no composer, threads, presence or huddle.
+ */
+export function serviceAccountIn<T extends { id: string; is_bot?: boolean }>(members: T[], meId: string): T | null {
+  const others = members.filter((m) => m.id !== meId);
+  return others.length === 1 && others[0].is_bot ? others[0] : null;
 }
 
 export function conversationMembership(supabase: Supabase, conversationId: string, userId: string) {

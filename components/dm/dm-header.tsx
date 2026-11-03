@@ -2,6 +2,7 @@
 
 import { ChevronDown, Clock, FileText } from "lucide-react";
 import { PresenceDot, usePresenceKnown } from "@/components/presence/online-dot";
+import { AppBadge } from "@/components/profile/app-badge";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { UserStatus } from "@/components/profile/user-status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -120,13 +121,17 @@ export function DmHeader({
   const others = members.filter((m) => m.id !== meId);
   const label = conversationLabel(members, meId, { short: true });
   const single = others.length === 1 ? others[0] : null;
+  // A service account (Potara Hub) is never "Active now" and has no clock of its own.
+  const bot = single?.is_bot ? single : null;
   const shown = others.length === 0 ? members : others;
   // Nobody is "Away" until the workspace presence channel has actually reported.
   const presenceKnown = usePresenceKnown();
   const isHere = single ? online.has(single.id) : false;
 
   let subline: string;
-  if (single) {
+  if (bot) {
+    subline = bot.title ?? "Sends notifications";
+  } else if (single) {
     const their = hydrated ? profiles.get(single.id) : undefined;
     // The design's sub-line is always two parts — "Active now · 15:04 local",
     // "Away · likely back after 16:00" — so their clock stays even when the
@@ -148,7 +153,7 @@ export function DmHeader({
       {single ? (
         <span className="relative block size-8 shrink-0">
           <HeadAvatar person={single} />
-          {presenceKnown && <PresenceDot active={isHere} className="absolute -right-px -bottom-px block" />}
+          {presenceKnown && !bot && <PresenceDot active={isHere} className="absolute -right-px -bottom-px block" />}
         </span>
       ) : (
         <span className="flex shrink-0">
@@ -160,7 +165,10 @@ export function DmHeader({
         </span>
       )}
       <span className="min-w-0 text-left">
-        <span className="block truncate text-[16px] font-semibold tracking-[-0.02em] text-ink">{label}</span>
+        <span className="flex min-w-0 items-center gap-[7px]">
+          <span className="min-w-0 truncate text-[16px] font-semibold tracking-[-0.02em] text-ink">{label}</span>
+          {bot && <AppBadge />}
+        </span>
         <span className="flex min-w-0 items-center gap-1.5">
           {subline && <span className="truncate text-[12px] text-muted-foreground">{subline}</span>}
           {single && (

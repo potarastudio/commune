@@ -12,7 +12,7 @@ import { startConversationAction } from "@/lib/actions/conversations";
  * said. Search already understands `from:@handle`, so that link is the honest
  * way to "see their messages" without a second query path.
  */
-export function ProfileActions({ userId, handle, isMe }: { userId: string; handle: string; isMe: boolean }) {
+export function ProfileActions({ userId, handle, isMe, isBot = false }: { userId: string; handle: string; isMe: boolean; isBot?: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -34,7 +34,7 @@ export function ProfileActions({ userId, handle, isMe }: { userId: string; handl
         </Button>
       ) : (
         <Button type="button" disabled={pending} onClick={message}>
-          {pending ? "Opening…" : "Message"}
+          {pending ? "Opening…" : isBot ? "Open DM" : "Message"}
         </Button>
       )}
       <Button asChild variant="outline">

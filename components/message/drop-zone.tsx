@@ -4,8 +4,11 @@ import { Upload } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { MAX_ATTACHMENTS_PER_MESSAGE, attachmentLimitLabel } from "@/lib/utils/files";
 
-/** Whole-pane drag-and-drop target with an overlay while a file is over it. */
-export function DropZone({ label, onFiles, children }: { label: string; onFiles: (files: FileList) => void; children: React.ReactNode }) {
+/**
+ * Whole-pane drag-and-drop target with an overlay while a file is over it.
+ * Without `onFiles` (no composer to attach to) it is only the pane's wrapper.
+ */
+export function DropZone({ label, onFiles, children }: { label: string; onFiles?: (files: FileList) => void; children: React.ReactNode }) {
   const [over, setOver] = useState(false);
   const depth = useRef(0);
 
@@ -39,11 +42,12 @@ export function DropZone({ label, onFiles, children }: { label: string; onFiles:
       e.preventDefault();
       depth.current = 0;
       setOver(false);
-      if (e.dataTransfer.files.length) onFiles(e.dataTransfer.files);
+      if (e.dataTransfer.files.length) onFiles?.(e.dataTransfer.files);
     },
     [onFiles],
   );
 
+  if (!onFiles) return <div className="relative flex min-h-0 flex-1 flex-col">{children}</div>;
   return (
     <div className="relative flex min-h-0 flex-1 flex-col" onDragEnter={onDragEnter} onDragLeave={onDragLeave} onDragOver={onDragOver} onDrop={onDrop}>
       {children}

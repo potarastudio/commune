@@ -320,7 +320,8 @@ export function SidebarNav({
                         {face.display_name.slice(0, 1).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {others.length === 1 && <AvatarPresence userId={face.id} ring="border-bg-col" size="sm" away={presenceKnown} />}
+                    {/* A service account (Potara Hub) is never around, so it gets no "away" ring. */}
+                    {others.length === 1 && !face.is_bot && <AvatarPresence userId={face.id} ring="border-bg-col" size="sm" away={presenceKnown} />}
                   </span>
                 )}
                 <span className="min-w-0 truncate">{conversationLabel(c.members, me.id, { short: true })}</span>

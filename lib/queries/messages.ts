@@ -20,7 +20,8 @@ export function containerColumn(c: Container): "channel_id" | "conversation_id" 
 
 export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 export type AttachmentRow = Database["public"]["Tables"]["attachments"]["Row"];
-export type MessageAuthor = Pick<Profile, "id" | "display_name" | "handle" | "avatar_url">;
+/** `is_bot` comes with the messages list; the author objects built in pages (`me`) leave it out. */
+export type MessageAuthor = Pick<Profile, "id" | "display_name" | "handle" | "avatar_url"> & { is_bot?: boolean };
 export type Reaction = { emoji: string; user_id: string };
 
 export type Message = MessageRow & {
@@ -52,7 +53,7 @@ export type AttachmentInput = {
 };
 
 export const MESSAGE_SELECT =
-  "*, author:profiles!messages_author_id_fkey(id, display_name, handle, avatar_url), reactions(emoji, user_id), attachments(*), pins(pinned_by), saved_messages(user_id)";
+  "*, author:profiles!messages_author_id_fkey(id, display_name, handle, avatar_url, is_bot), reactions(emoji, user_id), attachments(*), pins(pinned_by), saved_messages(user_id)";
 
 export type Thread = { parent: Message; replies: Message[] };
 

@@ -51,6 +51,7 @@ export function MessagePane({
   startTitle,
   startBody,
   readOnlyNotice,
+  replyNotice,
 }: {
   container: Container;
   me: MessageAuthor;
@@ -62,6 +63,12 @@ export function MessagePane({
   startTitle: string;
   startBody: string;
   readOnlyNotice?: React.ReactNode;
+  /**
+   * Shown in place of the composer where nobody would read a reply: a DM with
+   * a service account (Potara Hub). Unlike `readOnlyNotice` the viewer is a
+   * member, so reading still clears unread; threads and file drops are off.
+   */
+  replyNotice?: React.ReactNode;
 }) {
   const tz = useViewerTimezone();
   const mobile = useIsMobile();
@@ -79,6 +86,7 @@ export function MessagePane({
   const pin = useTogglePin(keys);
   const save = useToggleSave(keys);
   const threaded = messages.filter((m) => m.reply_count > 0).map((m) => m.id);
+  const composerOpen = canPost && !replyNotice;
   const { data: participants } = useReplyParticipants(container, threaded);
 
   // Esc (keyboard shortcuts) and the unread bar both mark the pane read now and drop the
@@ -176,7 +184,7 @@ export function MessagePane({
   );
 
   return (
-    <DropZone label={placeholder.replace(/^Message /, "")} onFiles={uploads.addFiles}>
+    <DropZone label={placeholder.replace(/^Message /, "")} onFiles={composerOpen ? uploads.addFiles : undefined}>
       <div ref={listRef} className="relative flex min-h-0 flex-1 flex-col">
         {unread > 0 && readMarker && (
           <div
@@ -210,7 +218,7 @@ export function MessagePane({
           onTogglePin={(messageId, on) => pin.mutate({ messageId, on })}
           onToggleSave={(messageId, on) => save.mutate({ messageId, on })}
           allowBroadcast={container.kind === "channel"}
-          onOpenThread={openThread}
+          onOpenThread={replyNotice ? undefined : openThread}
           participants={participants ?? {}}
           highlightId={highlightId}
           startTitle={startTitle}
@@ -236,9 +244,9 @@ export function MessagePane({
         <>
           <div className="shrink-0 px-[16px]">
             <TypingIndicator people={typing.others} />
-            {canPost && <ScheduledNotice container={container} />}
+            {composerOpen && <ScheduledNotice container={container} />}
           </div>
-          {canPost ? (
+          {composerOpen ? (
             <MobileComposer
               draftKey={`${container.kind}:${container.id}`}
               placeholder={placeholder}
@@ -252,15 +260,15 @@ export function MessagePane({
             />
           ) : (
             <div className="shrink-0 border-t border-border bg-bg-chip px-[16px] pt-[12px] pb-[calc(12px+var(--safe-bottom))] text-[13px] text-fg-600">
-              {readOnlyNotice}
+              {replyNotice ?? readOnlyNotice}
             </div>
           )}
         </>
       ) : (
       <div className="shrink-0 px-6 pb-5">
         <TypingIndicator people={typing.others} />
-        {canPost && <ScheduledNotice container={container} />}
-        {canPost ? (
+        {composerOpen && <ScheduledNotice container={container} />}
+        {composerOpen ? (
           <MessageComposer
             draftKey={`${container.kind}:${container.id}`}
             placeholder={placeholder}
@@ -272,7 +280,7 @@ export function MessagePane({
             onStopTyping={typing.stopTyping}
           />
         ) : (
-          <div className="rounded-xl border border-dashed border-border-input bg-bg-chip px-4 py-3.5 text-[13px] text-fg-600">{readOnlyNotice}</div>
+          <div className="rounded-xl border border-dashed border-border-input bg-bg-chip px-4 py-3.5 text-[13px] text-fg-600">{replyNotice ?? readOnlyNotice}</div>
         )}
       </div>
       )}

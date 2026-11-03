@@ -340,10 +340,16 @@ select is(
 select is(
   (select message_id from public.post_hub_notification('40000000-0000-4000-8000-000000000001', 'rls-bob@test.local',
      '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"again"}]}]}'::jsonb, 'again')),
-  (select id from public.messages where author_id = 'b0000000-0000-4000-8000-000000000001'),
+  (select m.id from public.messages m
+    join public.conversation_members cm on cm.conversation_id = m.conversation_id
+    where m.author_id = 'b0000000-0000-4000-8000-000000000001' and cm.user_id = '10000000-0000-4000-8000-000000000002'),
   'the same Hub id returns the first message');
-select is((select count(*) from public.messages where author_id = 'b0000000-0000-4000-8000-000000000001'), 1::bigint,
-  'and posts nothing the second time');
+-- Counted in Bob's DM only: a database the Hub has posted to has other Hub DMs.
+select is(
+  (select count(*) from public.messages m
+    join public.conversation_members cm on cm.conversation_id = m.conversation_id
+    where m.author_id = 'b0000000-0000-4000-8000-000000000001' and cm.user_id = '10000000-0000-4000-8000-000000000002'),
+  1::bigint, 'and posts nothing the second time');
 select is(
   (select count(*) from public.post_hub_notification('40000000-0000-4000-8000-000000000002', 'nobody@test.local',
      '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"hi"}]}]}'::jsonb, 'hi')),

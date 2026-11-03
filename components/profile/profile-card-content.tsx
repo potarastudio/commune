@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { AppBadge } from "@/components/profile/app-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { startConversationAction } from "@/lib/actions/conversations";
@@ -65,6 +66,7 @@ export function ProfileCardContent({ userId, onDone }: { userId: string; onDone:
 
         <p className="mt-[10px] flex items-center gap-[7px] text-[15px] font-semibold tracking-[-0.015em] text-ink">
           <span className="min-w-0 truncate">{p.display_name}</span>
+          {p.is_bot && <AppBadge />}
           {status?.status_emoji && (
             <span aria-hidden={detailed ? "true" : undefined} className="shrink-0 text-[13px] leading-none">
               {!detailed && <span className="sr-only">Status: </span>}
@@ -92,16 +94,19 @@ export function ProfileCardContent({ userId, onDone }: { userId: string; onDone:
           </p>
         )}
 
-        <p className="mt-[9px] flex items-center gap-[6px] text-[12px] text-muted-foreground">
-          <span
-            aria-hidden="true"
-            className={`size-[7px] shrink-0 rounded-full ${online ? "bg-presence" : "border border-tertiary bg-transparent"}`}
-          />
-          <span className="min-w-0 truncate">
-            {online ? "Active now" : "Away"}
-            {clock ? ` · ${clock} local` : ""}
-          </span>
-        </p>
+        {/* A service account (Potara Hub) is never around and keeps no clock. */}
+        {!p.is_bot && (
+          <p className="mt-[9px] flex items-center gap-[6px] text-[12px] text-muted-foreground">
+            <span
+              aria-hidden="true"
+              className={`size-[7px] shrink-0 rounded-full ${online ? "bg-presence" : "border border-tertiary bg-transparent"}`}
+            />
+            <span className="min-w-0 truncate">
+              {online ? "Active now" : "Away"}
+              {clock ? ` · ${clock} local` : ""}
+            </span>
+          </p>
+        )}
 
         {/* The design left "View profile" with nowhere to go; it goes to /u/<handle> now. */}
         <div className="mt-[13px] flex gap-[7px]">
@@ -113,7 +118,7 @@ export function ProfileCardContent({ userId, onDone }: { userId: string; onDone:
             </Button>
           ) : (
             <Button type="button" className="flex-1" disabled={pending} onClick={message}>
-              {pending ? "Opening…" : "Message"}
+              {pending ? "Opening…" : p.is_bot ? "Open DM" : "Message"}
             </Button>
           )}
           <Button asChild variant="outline" className="flex-1">

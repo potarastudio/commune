@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Hash, Lock } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { AppBadge } from "@/components/profile/app-badge";
 import { ProfileActions } from "@/components/profile/profile-actions";
 import { ProfileScreen } from "@/components/mobile/profile-screen";
 import { isMobileRequest } from "@/lib/mobile-server";
@@ -70,6 +71,7 @@ export default async function ProfilePage({ params }: { params: Params }) {
 
               <h2 className="mt-3 flex items-center gap-2 text-[22px] font-semibold tracking-[-0.025em] text-ink">
                 <span className="min-w-0 truncate">{person.display_name}</span>
+                {person.is_bot && <AppBadge className="self-center" />}
                 {status?.status_emoji && (
                   <span aria-hidden={status.status_text ? "true" : undefined} className="shrink-0 text-[17px] leading-none">
                     {!status.status_text && <span className="sr-only">Status: </span>}
@@ -99,11 +101,14 @@ export default async function ProfilePage({ params }: { params: Params }) {
               )}
 
               <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-muted-foreground">
-                <PresenceLabel userId={person.id} />
-                <span aria-hidden="true">·</span>
-                {clock && <span>{clock} local time</span>}
-                {clock && <span aria-hidden="true">·</span>}
-                <span>Joined {joined}</span>
+                {/* A service account (Potara Hub) is never around and keeps no clock.
+                    One condition per element, not a fragment: the children keep
+                    their slots, and with them the ids React hydrates against. */}
+                {!person.is_bot && <PresenceLabel userId={person.id} />}
+                {!person.is_bot && <span aria-hidden="true">·</span>}
+                {!person.is_bot && clock && <span>{clock} local time</span>}
+                {!person.is_bot && clock && <span aria-hidden="true">·</span>}
+                <span>{person.is_bot ? `Added ${joined}` : `Joined ${joined}`}</span>
                 {isMe && (
                   <>
                     <span aria-hidden="true">·</span>
@@ -113,39 +118,42 @@ export default async function ProfilePage({ params }: { params: Params }) {
               </p>
 
               <div className="mt-4">
-                <ProfileActions userId={person.id} handle={person.handle} isMe={isMe} />
+                <ProfileActions userId={person.id} handle={person.handle} isMe={isMe} isBot={person.is_bot} />
               </div>
             </div>
           </section>
 
-          <section className="mt-8">
-            <h3 className={overline}>{isMe ? "Your channels" : "Channels you share"}</h3>
-            {shared.length === 0 ? (
-              <p className="mt-2 rounded-lg border border-dashed border-border px-4 py-5 text-center text-[13px] text-fg-600">
-                {isMe
-                  ? "You are not in any channels yet."
-                  : `You and ${person.display_name.split(" ")[0]} are not in any of the same channels yet.`}
-              </p>
-            ) : (
-              <ul className="mt-2 divide-y divide-border-subtle rounded-lg border border-border">
-                {shared.map((c) => (
-                  <li key={c.id}>
-                    <Link
-                      href={`/channel/${c.id}`}
-                      className="flex h-9 items-center gap-2.5 px-3 text-[13.5px] text-body hover:bg-bg-hover"
-                    >
-                      {c.is_private ? (
-                        <Lock className="size-[13px] shrink-0 text-tertiary" aria-hidden="true" />
-                      ) : (
-                        <Hash className="size-[13px] shrink-0 text-tertiary" aria-hidden="true" />
-                      )}
-                      <span className="min-w-0 truncate">{c.name}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          {/* A service account is in no channel by design; it only sends DMs. */}
+          {!person.is_bot && (
+            <section className="mt-8">
+              <h3 className={overline}>{isMe ? "Your channels" : "Channels you share"}</h3>
+              {shared.length === 0 ? (
+                <p className="mt-2 rounded-lg border border-dashed border-border px-4 py-5 text-center text-[13px] text-fg-600">
+                  {isMe
+                    ? "You are not in any channels yet."
+                    : `You and ${person.display_name.split(" ")[0]} are not in any of the same channels yet.`}
+                </p>
+              ) : (
+                <ul className="mt-2 divide-y divide-border-subtle rounded-lg border border-border">
+                  {shared.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        href={`/channel/${c.id}`}
+                        className="flex h-9 items-center gap-2.5 px-3 text-[13.5px] text-body hover:bg-bg-hover"
+                      >
+                        {c.is_private ? (
+                          <Lock className="size-[13px] shrink-0 text-tertiary" aria-hidden="true" />
+                        ) : (
+                          <Hash className="size-[13px] shrink-0 text-tertiary" aria-hidden="true" />
+                        )}
+                        <span className="min-w-0 truncate">{c.name}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
         </div>
       </div>
     </>
